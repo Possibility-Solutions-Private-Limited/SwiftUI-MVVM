@@ -65,7 +65,6 @@ struct YourselfView: View {
                         .padding(.horizontal)
                         Button {
                             adjustDayIfNeeded()
-                            
                             let monthIndex = months.firstIndex(of: selectedMonth)! + 1
                             dobToSend = String(
                                 format: "%04d-%02d-%02d",

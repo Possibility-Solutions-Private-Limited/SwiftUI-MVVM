@@ -6,6 +6,8 @@ struct ForgotView: View {
     @StateObject private var validator = ValidationHelper()
     @StateObject private var FORGOT = ForgotModel()
     @State private var goToVerifyOTP = false
+    @Binding var goToForgotView: Bool
+    @State private var isUploading = false
     var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
@@ -52,21 +54,33 @@ struct ForgotView: View {
                             )
                         }
                         Button(action: forgotTapped) {
-                            Text("Send Reset Link")
-                                .frame(maxWidth: .infinity)
-                                .font(AppFont.manropeMedium(16))
-                                .padding()
-                                .background(AppColors.primaryYellow)
-                                .foregroundColor(.black)
-                                .cornerRadius(16)
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(AppColors.primaryYellow)
+                                    .frame(height: 50)
+                                HStack(spacing: 8) {
+                                    if isUploading {
+                                        ProgressView()
+                                            .progressViewStyle(
+                                                CircularProgressViewStyle(tint: .black)
+                                            )
+                                    }
+                                    Text("Send Reset Link")
+                                        .font(AppFont.manropeMedium(16))
+                                        .foregroundColor(.black)
+                                }
+                            }
                         }
+                        .frame(maxWidth: .infinity)
                         .padding(.top, 10)
+                        .allowsHitTesting(!isUploading)
+                        .opacity(isUploading ? 0.7 : 1)
                         Button(action: { dismiss() }) {
                             HStack {
                                 Image(systemName: "arrow.left")
                                 Text("Back to Login")
                             }
-                            .font(AppFont.manropeMedium(14))
+                            .font(AppFont.manropeMedium(16))
                             .foregroundColor(.black)
                             .padding(.vertical, 12)
                             .padding(.horizontal, 20)
@@ -87,7 +101,7 @@ struct ForgotView: View {
             }
         }
         .navigationDestination(isPresented: $goToVerifyOTP) {
-            ForgotOTPView(email: email,goToVerifyOTP:$goToVerifyOTP)
+            ForgotOTPView(email: email,goToVerifyOTP:$goToVerifyOTP,goToForgotView:$goToForgotView)
         }
         .navigationBarBackButtonHidden(true)
         .toast(message: validator.validationMessage, isPresented: $validator.showToast)
@@ -105,10 +119,12 @@ struct ForgotView: View {
         let param: [String: Any] = [
             "email": email
         ]
+        isUploading = true
         FORGOT.ForgotAPI(param: param) { response in
             guard let response else {
                 validator.showValidation("Something went wrong")
                 validator.showToast = true
+                isUploading = false
                 return
             }
             validator.showValidation(response.message ?? "")
@@ -116,7 +132,10 @@ struct ForgotView: View {
             if response.success == true {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                     goToVerifyOTP = true
+                    isUploading = false
                 }
+            }else {
+                isUploading = false
             }
         }
     }

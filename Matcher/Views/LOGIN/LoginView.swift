@@ -22,6 +22,8 @@ struct LoginView: View {
     }
     @FocusState private var focusedField: FormField?
     @State private var isUploading = false
+    @State private var goToForgotView = false
+
     var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
@@ -122,6 +124,9 @@ struct LoginView: View {
             .navigationDestination(isPresented: $goToVerifyOTP) {
                 VerifyOTPView(firstName: firstName, lastName: lastName, email: email, password: password, phone: phone)
             }
+            .navigationDestination(isPresented: $goToForgotView) {
+                ForgotView(goToForgotView: $goToForgotView)
+            }
         }
         .navigationBarBackButtonHidden(true)
         .toast(message: validator.validationMessage, isPresented: $validator.showToast)
@@ -190,26 +195,36 @@ struct LoginView: View {
                     }
                 }
                 Spacer()
-                NavigationLink(destination: ForgotView()) {
-                    Text("Forgot Password?").foregroundColor(AppColors.textGray).font(AppFont.manrope(14))
+                Button {
+                    goToForgotView = true
+                } label: {
+                    Text("Forgot Password?")
+                        .font(AppFont.manrope(14))
+                        .foregroundColor(AppColors.textGray)
                 }
             }
-            Button(action: { logIn() }) {
-                if isUploading {
-                    ProgressView()
-                        .frame(width:260, height:50)
-                } else {
-                    Text("Log in")
-                        .frame(maxWidth: .infinity)
-                        .font(AppFont.manropeMedium(16))
-                        .padding()
-                        .background(AppColors.primaryYellow)
-                        .foregroundColor(.black)
-                        .cornerRadius(16)
+            Button(action: logIn) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(AppColors.primaryYellow)
+                        .frame(height: 50)
+                    HStack(spacing: 8) {
+                        if isUploading {
+                            ProgressView()
+                                .progressViewStyle(
+                                    CircularProgressViewStyle(tint: .black)
+                                )
+                        }
+                        Text("Log in")
+                            .font(AppFont.manropeMedium(16))
+                            .foregroundColor(.black)
+                    }
                 }
             }
+            .frame(maxWidth: .infinity)
             .padding(.top, 10)
-            .disabled(isUploading)
+            .allowsHitTesting(!isUploading)
+            .opacity(isUploading ? 0.7 : 1)
         }
         .padding(.horizontal)
     }
@@ -307,23 +322,29 @@ struct LoginView: View {
                         .stroke(Color.gray.opacity(0.3))
                 )
             }
-            Button(action: { signUp() }) {
-                if isUploading {
-                    ProgressView()
-                        .frame(width:260, height:50)
-                } else {
-                    Text("Sign Up")
-                        .frame(maxWidth: .infinity)
-                        .font(AppFont.manropeMedium(16))
-                        .padding()
-                        .background(AppColors.primaryYellow)
-                        .foregroundColor(.black)
-                        .cornerRadius(16)
+            Button(action: signUp) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(AppColors.primaryYellow)
+                        .frame(height: 50)
+                    HStack(spacing: 8) {
+                        if isUploading {
+                            ProgressView()
+                                .progressViewStyle(
+                                    CircularProgressViewStyle(tint: .black)
+                                )
+                        }
+                        Text("Sign Up")
+                            .font(AppFont.manropeMedium(16))
+                            .foregroundColor(.black)
+                    }
                 }
             }
+            .frame(maxWidth: .infinity)
             .padding(.top, 10)
-            .disabled(isUploading)
-        }
+            .allowsHitTesting(!isUploading)
+            .opacity(isUploading ? 0.7 : 1)
+         }
         .padding(.horizontal)
     }
     func logIn() {
@@ -434,6 +455,8 @@ struct LoginView: View {
                     isUploading = false
                     goToVerifyOTP = true
                 }
+            }else{
+                isUploading = false
             }
         }
     }

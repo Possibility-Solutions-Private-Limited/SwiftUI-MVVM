@@ -69,20 +69,28 @@ struct ProfilePicView: View {
                             )
                     }
                     Spacer()
-                    Button(action: { uploadImages() }) {
-                        if isUploading {
-                            ProgressView()
-                                .frame(width:260, height:50)
-                        } else {
-                            Text("Next")
-                                .font(AppFont.manropeMedium(16))
-                                .frame(width:260, height:50)
-                                .background(AppColors.primaryYellow)
-                                .foregroundColor(.black)
-                                .cornerRadius(20)
+                    Button(action: uploadImages) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(AppColors.primaryYellow)
+                                .frame(height: 50)
+                            HStack(spacing: 8) {
+                                if isUploading {
+                                    ProgressView()
+                                        .progressViewStyle(
+                                            CircularProgressViewStyle(tint: .black)
+                                        )
+                                }
+                                Text("Submit")
+                                    .font(AppFont.manropeMedium(16))
+                                    .foregroundColor(.black)
+                            }
                         }
                     }
-                    .disabled(isUploading)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 10)
+                    .allowsHitTesting(!isUploading)
+                    .opacity(isUploading ? 0.7 : 1)
                 }
                 .padding(.horizontal,24)
                 .padding(.bottom,40)

@@ -84,21 +84,27 @@ struct VerifyOTPView: View {
                             .font(AppFont.manrope(14))
                             .foregroundColor(.gray)
                 }
-                Button(action: { submitOTP() }) {
-                    if isUploading {
-                        ProgressView()
-                            .frame(width:260, height:50)
-                    } else {
-                        Text("Verify OTP")
-                            .frame(maxWidth: .infinity)
-                            .font(AppFont.manropeMedium(16))
-                            .padding()
-                            .background(AppColors.primaryYellow)
-                            .foregroundColor(.black)
-                            .cornerRadius(16)
+                Button(action: submitOTP) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(AppColors.primaryYellow)
+                            .frame(height: 50)
+                        HStack(spacing: 8) {
+                            if isUploading {
+                                ProgressView()
+                                    .progressViewStyle(
+                                        CircularProgressViewStyle(tint: .black)
+                                    )
+                            }
+                            Text("Verify OTP")
+                                .font(AppFont.manropeMedium(16))
+                                .foregroundColor(.black)
+                        }
                     }
                 }
-                .disabled(isUploading)
+                .frame(maxWidth: .infinity)
+                .allowsHitTesting(!isUploading)
+                .opacity(isUploading ? 0.7 : 1)
             }
             .padding(.horizontal)
             .padding(.top, 12)
@@ -186,7 +192,7 @@ struct VerifyOTPView: View {
                     KeychainHelper.shared.save(data?.gender ?? "", forKey: "gender")
                     validator.showValidation(response.message ?? "")
                     validator.showToast = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                         goToYourself = true
                         isUploading = false
                     }
@@ -228,7 +234,7 @@ struct VerifyOTPView: View {
                     timerCount = 30
                     isResendActive = false
                     isUploading = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                         focusedField = 0
                     }
                 }
