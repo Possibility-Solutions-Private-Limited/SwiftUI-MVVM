@@ -1,3 +1,9 @@
+//
+//  ChatListView.swift
+//  Matcher
+//
+//  Created by POSSIBILITY on 18/12/25.
+//
 import SwiftUI
 
 struct ChatListView: View {
@@ -32,7 +38,7 @@ struct ChatListView: View {
             .listStyle(InsetGroupedListStyle())
             .navigationTitle("Chats")
             .onAppear {
-                ChatModel.fetchChat()
+//                ChatModel.fetchChat()
             }
             .navigationDestination(item: $selectedChat) { chat in
                 let currentUserId = KeychainHelper.shared.getInt(forKey: "userId") ?? 0

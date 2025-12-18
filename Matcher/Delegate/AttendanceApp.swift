@@ -47,7 +47,7 @@ struct MainView: View {
         ZStack(alignment: .bottom) {
             TabView(selection: $selectedIndex) {
                 HomeView().tag(0)
-                SettingView().tag(1)
+                LikeView().tag(1)
                 ChatListView().tag(2)
                 ProfileView().tag(3)
             }
@@ -73,7 +73,7 @@ struct CustomTabBar: View {
                 tabCount: tabs.count
             )
             .fill(Color.black)
-            .frame(height: 65)
+            .frame(height: 68)
             .clipShape(RoundedRectangle(cornerRadius: 40))
             .shadow(color: .black.opacity(0.2), radius: 8, y: -4)
             .animation(.spring(response: 0.5, dampingFraction: 0.8), value: selectedIndex)
@@ -112,11 +112,11 @@ struct TabBarButton: View {
                         .foregroundColor(.white)
                 }
                 Text(title)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(AppFont.manropeMedium(14))
                     .foregroundColor(isSelected ? .yellow : .white.opacity(0.6))
             }
             .offset(y: isSelected ? -15 : 0)
-            .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isSelected)
+            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: isSelected)
             .frame(maxWidth: .infinity)
         }
     }
