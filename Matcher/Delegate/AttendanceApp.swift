@@ -54,10 +54,10 @@ struct MainView: View {
                 ProfileView().tag(3)
             }
             CustomTabBar(selectedIndex: $selectedIndex)
-        }
-        .padding(.horizontal, 12)
-        .padding(.bottom, 10)
-        .ignoresSafeArea()
+                .padding(.horizontal, 10)
+                .padding(.bottom, 10)
+               
+        }.ignoresSafeArea()
     }
 }
 struct CustomTabBar: View {

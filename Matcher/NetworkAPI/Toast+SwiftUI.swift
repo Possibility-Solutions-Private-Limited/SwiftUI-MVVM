@@ -38,6 +38,7 @@ struct ToastView: UIViewRepresentable {
         }
     }
 }
+
 // MARK: - Font Helper
 extension UIFont {
     static func manrope(_ size: CGFloat, weight: UIFont.Weight = .regular) -> UIFont {
