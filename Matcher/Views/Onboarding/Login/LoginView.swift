@@ -1,5 +1,7 @@
 import SwiftUI
-
+import AuthenticationServices
+import CryptoKit
+import GoogleSignIn
 struct LoginView: View {
     @State private var selectedTab = 0
     @State private var email = ""
@@ -15,6 +17,7 @@ struct LoginView: View {
     @State private var goToVerifyOTP = false
     @StateObject private var LOGIN = LoginModel()
     @StateObject private var SIGNUP = SignUpModel()
+    @StateObject private var SOCIAL = SocialloginModel()
     @EnvironmentObject var userAuth: UserAuth
     enum FormField: Hashable {
         case loginEmail, loginPassword
@@ -23,6 +26,7 @@ struct LoginView: View {
     @FocusState private var focusedField: FormField?
     @State private var isUploading = false
     @State private var goToForgotView = false
+    @State private var appleDelegate: AppleSignInDelegate?
 
     var body: some View {
         NavigationStack {
@@ -92,11 +96,21 @@ struct LoginView: View {
                                 }
                                 .padding(.vertical, 20)
                                 HStack(spacing: 0) {
-                                    Button(action: {}) {
-                                        Image("google_icon").resizable().frame(width: 50, height: 50).padding(10)
+                                    Button {
+                                        signInWithGoogle()
+                                    } label: {
+                                        Image("google_icon")
+                                            .resizable()
+                                            .frame(width: 50, height: 50)
+                                            .padding(10)
                                     }
-                                    Button(action: {}) {
-                                        Image("apple_logo").resizable().frame(width: 50, height: 50).padding(10)
+                                    Button {
+                                        signInWithApple()
+                                    } label: {
+                                        Image("apple_logo")
+                                            .resizable()
+                                            .frame(width: 50, height: 50)
+                                            .padding(10)
                                     }
                                 }
                                 .frame(maxWidth: .infinity)
@@ -461,6 +475,79 @@ struct LoginView: View {
             }else{
                 isUploading = false
             }
+        }
+    }
+    func signInWithGoogle() {
+        guard let windowScene = UIApplication.shared.connectedScenes
+                .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+              let rootVC = windowScene.windows.first?.rootViewController
+        else {
+            print("No root view controller found")
+            return
+        }
+        GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { result, error in
+            guard let user = result?.user else { return }
+            let socialId = user.userID
+            let email = user.profile?.email
+            let name = user.profile?.name
+            socialLogin(
+                provider: "google",
+                socialId: socialId ?? "",
+                name: name,
+                email: email
+            )
+        }
+    }
+    func signInWithApple() {
+        let request = ASAuthorizationAppleIDProvider().createRequest()
+        request.requestedScopes = [.fullName, .email]
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        let delegate = AppleSignInDelegate { idToken, socialId, fullName, email in
+            socialLogin(
+                provider: "apple",
+                socialId: socialId,
+                name: fullName,
+                email: email
+            )
+        }
+        self.appleDelegate = delegate
+        controller.delegate = delegate
+        guard let windowScene = UIApplication.shared.connectedScenes
+                .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+              let rootVC = windowScene.windows.first?.rootViewController
+        else { return }
+        controller.presentationContextProvider = rootVC as? ASAuthorizationControllerPresentationContextProviding
+        controller.performRequests()
+    }
+    func socialLogin(provider: String,socialId: String,name: String?,email: String?) {
+        isUploading = true
+        let param: [String: Any] = [
+            "provider": provider,
+            "social_id": socialId,
+            "email": email ?? "",
+            "first_name": name ?? "",
+            "device_token": KeychainHelper.shared.get(forKey: "device_token") ?? "",
+            "device_type": "ios"
+        ]
+        SOCIAL.SocialloginAPI(param: param) { response in
+            isUploading = false
+            guard let response, response.success == true else {
+                validator.showValidation(response?.message ?? "Login failed")
+                validator.showToast = true
+                return
+            }
+            let data = response.data
+            KeychainHelper.shared.save(response.token ?? "", forKey: "access_token")
+            KeychainHelper.shared.save(data?.first_name ?? name ?? "", forKey: "first_name")
+            KeychainHelper.shared.save(data?.email ?? email ?? "", forKey: "email")
+            KeychainHelper.shared.save(data?.mobile ?? "", forKey: "mobile")
+            if let image = data?.photos?.first?.file {
+                KeychainHelper.shared.save(image, forKey: "image")
+                userAuth.image = image
+            }
+            userAuth.firstName = data?.first_name ?? ""
+            userAuth.email = data?.email ?? ""
+            userAuth.login(email: email ?? "", password: "12345")
         }
     }
 }

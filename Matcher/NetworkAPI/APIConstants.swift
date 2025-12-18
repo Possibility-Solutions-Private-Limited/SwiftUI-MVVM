@@ -12,6 +12,7 @@ struct APIConstants {
     static let socketURL = "http://192.168.1.111:3000"
     struct Endpoints {
         static let login = "login"
+        static let Sociallogin = "social-login"
         static let SignUp = "signup"
         static let verifyOTP = "verify-otp"
         static let StepOne = "profile/step/1"

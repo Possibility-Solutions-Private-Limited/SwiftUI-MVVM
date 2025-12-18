@@ -47,6 +47,30 @@ class SignUpModel: ObservableObject {
         }
     }
 }
+class SocialloginModel: ObservableObject {
+    func SocialloginAPI(param: [String: Any], completion: @escaping (UserModel?) -> Void) {
+        print(param)
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.Sociallogin,
+            method: "POST",
+            parameters: param
+        ) { (result: Result<UserModel, Error>) in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                print("SIGNUP Success: \(response)")
+                if response.success {
+                    completion(response)
+                } else {
+                    completion(response)
+                }
+                case .failure(_):
+                    completion(nil)
+                }
+            }
+        }
+    }
+}
 class ProfileModel: ObservableObject {
     func SignUpWithImages(
         images: [MultipartImage],

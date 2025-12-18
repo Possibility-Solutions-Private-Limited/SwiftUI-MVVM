@@ -1,9 +1,11 @@
 import SwiftUI
+import AuthenticationServices
 import Firebase
 import UserNotifications
 import FirebaseMessaging
 import Foundation
 import CoreLocation
+import GoogleSignIn
 @main
 struct AttendanceApp: App {
     @StateObject private var userAuth = UserAuth()
@@ -181,6 +183,26 @@ class LocationPermissionManager: NSObject, ObservableObject, CLLocationManagerDe
         manager.stopUpdatingLocation()
     }
 }
+final class AppleSignInDelegate: NSObject, ASAuthorizationControllerDelegate {
+    let completion: (String, String, String?, String?) -> Void
+    init(completion: @escaping (String, String, String?, String?) -> Void) {
+        self.completion = completion
+    }
+    func authorizationController(
+        controller: ASAuthorizationController,
+        didCompleteWithAuthorization authorization: ASAuthorization
+    ) {
+        guard
+            let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+            let tokenData = credential.identityToken,
+            let idToken = String(data: tokenData, encoding: .utf8)
+        else { return }
+        let socialId = credential.user
+        let name = "\(credential.fullName?.givenName ?? "") \(credential.fullName?.familyName ?? "")"
+        let email = credential.email
+        completion(idToken, socialId, name.isEmpty ? nil : name, email)
+    }
+}
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     let gcmMessageIDKey = "gcm.message_id"
     func application(_ application: UIApplication,
@@ -201,6 +223,13 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         Messaging.messaging().delegate = self
         CLLocationManager().requestWhenInUseAuthorization()
         return true
+    }
+    func application(
+        _ app: UIApplication,
+        open url: URL,
+        options: [UIApplication.OpenURLOptionsKey : Any] = [:]
+    ) -> Bool {
+        return GIDSignIn.sharedInstance.handle(url)
     }
     func application(_ application: UIApplication,
                      didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
@@ -231,7 +260,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
-        
         let userInfo = response.notification.request.content.userInfo
         print("UserInfo:", userInfo)
         let route = "ChatView"

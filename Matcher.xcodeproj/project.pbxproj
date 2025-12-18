@@ -26,6 +26,8 @@
 		5D43316E2DE43B910016B700 /* ChatModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D43316D2DE43B910016B700 /* ChatModel.swift */; };
 		5D4331722DE48F120016B700 /* MessageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D4331712DE48F120016B700 /* MessageModel.swift */; };
 		5D5056612EF3D3930013453F /* LikeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D5056602EF3D38D0013453F /* LikeView.swift */; };
+		5D5056672EF3DC220013453F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 5D5056662EF3DC220013453F /* GoogleSignIn */; };
+		5D5056692EF3DC220013453F /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 5D5056682EF3DC220013453F /* GoogleSignInSwift */; };
 		5D5194CA2EEBF3EC009B56F0 /* Stripe in Frameworks */ = {isa = PBXBuildFile; productRef = 5D5194C92EEBF3EC009B56F0 /* Stripe */; };
 		5D5194CC2EEBF3EC009B56F0 /* StripeApplePay in Frameworks */ = {isa = PBXBuildFile; productRef = 5D5194CB2EEBF3EC009B56F0 /* StripeApplePay */; };
 		5D5194CE2EEBF3EC009B56F0 /* StripeCardScan in Frameworks */ = {isa = PBXBuildFile; productRef = 5D5194CD2EEBF3EC009B56F0 /* StripeCardScan */; };
@@ -108,6 +110,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5D5056692EF3DC220013453F /* GoogleSignInSwift in Frameworks */,
 				5D5194CE2EEBF3EC009B56F0 /* StripeCardScan in Frameworks */,
 				5D04CB392EEC2D4200FB6A21 /* FirebaseAnalyticsIdentitySupport in Frameworks */,
 				5D5194CC2EEBF3EC009B56F0 /* StripeApplePay in Frameworks */,
@@ -121,6 +124,7 @@
 				5D5194D02EEBF3EC009B56F0 /* StripeConnect in Frameworks */,
 				5D04CB412EEC35D800FB6A21 /* Toast in Frameworks */,
 				5DFDE8C32EEBD7A9004CD35B /* IQKeyboardManagerSwift in Frameworks */,
+				5D5056672EF3DC220013453F /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -318,6 +322,8 @@
 				5D04CB3A2EEC2D4200FB6A21 /* FirebaseAnalyticsOnDeviceConversion */,
 				5D04CB3D2EEC349200FB6A21 /* FirebaseMessaging */,
 				5D04CB402EEC35D800FB6A21 /* Toast */,
+				5D5056662EF3DC220013453F /* GoogleSignIn */,
+				5D5056682EF3DC220013453F /* GoogleSignInSwift */,
 			);
 			productName = Attendance;
 			productReference = 5D9AB2642DB8ED8C00E3480F /* Matcher.app */;
@@ -354,6 +360,7 @@
 				5D5194C82EEBF3EC009B56F0 /* XCRemoteSwiftPackageReference "stripe-ios" */,
 				5D04CB312EEC2D4200FB6A21 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				5D04CB3F2EEC35D800FB6A21 /* XCRemoteSwiftPackageReference "Toast-Swift" */,
+				5D5056652EF3DC220013453F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			productRefGroup = 5D9AB2652DB8ED8C00E3480F /* Products */;
 			projectDirPath = "";
@@ -540,6 +547,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Matcher/Matcher.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -580,6 +588,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Matcher/Matcher.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -655,6 +664,14 @@
 				minimumVersion = 5.1.1;
 			};
 		};
+		5D5056652EF3DC220013453F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
 		5D5194C82EEBF3EC009B56F0 /* XCRemoteSwiftPackageReference "stripe-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/stripe/stripe-ios.git";
@@ -714,6 +731,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 5D04CB3F2EEC35D800FB6A21 /* XCRemoteSwiftPackageReference "Toast-Swift" */;
 			productName = Toast;
+		};
+		5D5056662EF3DC220013453F /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D5056652EF3DC220013453F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		5D5056682EF3DC220013453F /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5D5056652EF3DC220013453F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
 		};
 		5D5194C92EEBF3EC009B56F0 /* Stripe */ = {
 			isa = XCSwiftPackageProductDependency;
