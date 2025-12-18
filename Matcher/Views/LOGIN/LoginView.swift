@@ -441,7 +441,6 @@ struct LoginView: View {
             "device_type": "ios"
         ]
         SIGNUP.SignUpAPI(param: param) { response in
-           
             guard let response else {
                 validator.showValidation("Something went wrong")
                 validator.showToast = true

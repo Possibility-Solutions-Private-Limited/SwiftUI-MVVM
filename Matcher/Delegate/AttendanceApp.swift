@@ -31,7 +31,6 @@ struct ContentView: View {
         }
     }
 }
-// MARK: - APP ROUTER (Sample)
 class AppRouter: ObservableObject {
     @Published var selectedTab: Int = 0
     @Published var navigationPath = NavigationPath()
@@ -41,202 +40,111 @@ class AppRouter: ObservableObject {
     @Published var userImg: String = ""
     @Published var userName: String = ""
 }
-// MARK: - MAIN VIEW (Side Menu + TabBar)
+
 struct MainView: View {
     @EnvironmentObject var router: AppRouter
-    @State private var showMenu: Bool = false
-    @GestureState private var dragOffset: CGFloat = 0
+    @State private var selectedIndex: Int = 0
+    
     var body: some View {
-        ZStack(alignment: .leading) {
-            // MARK: - TabView as main content
-            tabContent
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .disabled(showMenu) // Disable interactions when menu is open
-                .overlay(
-                    Group {
-                        if showMenu {
-                            Color.black.opacity(0.25)
-                                .ignoresSafeArea()
-                                .onTapGesture { withAnimation { showMenu = false } }
-                        }
-                    }
-                )
-                .offset(x: showMenu ? 260 : 0)
-                .offset(x: dragOffset)
-                .animation(.easeInOut(duration: 0.25), value: showMenu)
+        ZStack(alignment: .bottom) {
 
-            // MARK: - Side Menu
-            SideMenuView(showMenu: $showMenu)
-                .frame(width: 260)
-                .offset(x: showMenu ? 0 : -260)
-                .offset(x: dragOffset)
-                .animation(.easeInOut(duration: 0.25), value: showMenu)
-                .ignoresSafeArea()
-        }
-        .gesture(dragGesture)
-    }
-
-    // MARK: - Drag Gesture
-    private var dragGesture: some Gesture {
-        DragGesture()
-            .updating($dragOffset) { value, state, _ in
-                let translation = value.translation.width
-                if showMenu && translation < 0 { state = translation }      // Closing drag
-                if !showMenu && translation > 0 { state = translation }     // Opening drag
-            }
-            .onEnded { value in
-                let translation = value.translation.width
-                if showMenu && translation < -80 { withAnimation { showMenu = false } }
-                if !showMenu && translation > 80 { withAnimation { showMenu = true } }
-            }
-    }
-
-    // MARK: - TabView Content
-    @ViewBuilder
-    private var tabContent: some View {
-        TabView(selection: $router.selectedTab) {
-            NavigationStack {
+            TabView(selection: $selectedIndex) {
                 HomeView()
-            }
-            .tabItem { Label("Home", systemImage: "house.fill") }
-            .tag(0)
-
-            NavigationStack(path: $router.navigationPath) {
-                ChatListView()
-                    .navigationDestination(for: String.self) { route in
-                        if route == "ChatView" {
-                            ChatView(
-                                senderId: router.senderId,
-                                chatId: router.chatId,
-                                receiverId: router.receiverId,
-                                UserImg: router.userImg,
-                                userName: router.userName
-                            )
-                        }
-                    }
-            }
-            .tabItem { Label("Chat", systemImage: "bubble.left.and.bubble.right.fill") }
-            .tag(1)
-
-            NavigationStack {
+                    .tag(0)
                 SettingView()
-            }
-            .tabItem { Label("Map", systemImage: "creditcard.fill") }
-            .tag(2)
-
-            NavigationStack {
+                    .tag(1)
+                ChatListView()
+                    .tag(2)
                 ProfileView()
+                    .tag(3)
             }
-            .tabItem { Label("Setting", systemImage: "gearshape.fill") }
-            .tag(3)
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .onAppear {
+                UITabBar.appearance().isHidden = true
+            }
+
+            CustomTabBar(selectedIndex: $selectedIndex)
         }
+        .ignoresSafeArea(.keyboard)
     }
 }
-// MARK: - SIDE MENU VIEW
-struct SideMenuView: View {
-    @Binding var showMenu: Bool
-    @EnvironmentObject var userAuth: UserAuth
-    @EnvironmentObject var router: AppRouter
+
+struct CustomTabBar: View {
+    @Binding var selectedIndex: Int
+
+    let tabs = [
+        ("Home", "home_icon"),
+        ("Like", "like_icon"),
+        ("Chat", "chat_icon"),
+        ("Profile", "profile_icon")
+    ]
+    
     var body: some View {
-        VStack(alignment: .leading ,spacing: 10) {
-            HStack(spacing: 10) {
-                Circle()
-                    .frame(width: 52, height: 52)
-                    .overlay(
-                        Group {
-                            if let url = URL(string: router.userImg), !router.userImg.isEmpty {
-                                AsyncImage(url: url) { phase in
-                                    if let image = phase.image {
-                                        image.resizable().scaledToFill()
-                                    } else {
-                                        Image(systemName: "person.fill").resizable().scaledToFit()
-                                    }
-                                }
-                            } else {
-                                Image(systemName: "person.fill").resizable().scaledToFit()
-                            }
-                        }
-                    )
-                    .clipShape(Circle())
-                VStack(alignment: .leading) {
-                    Text(router.userName.isEmpty ? "Guest" : router.userName)
-                        .font(.headline)
-                    Text("View Profile")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .padding(.top, 40)
-            .padding(.horizontal)
-            Divider()
-            // Menu Items
-            VStack(alignment: .leading, spacing: 5) {
-                menuButton(title: "Home", systemImage: "house.fill", tab: 0)
-                menuButton(title: "Chat", systemImage: "bubble.left.and.bubble.right.fill", tab: 1)
-                menuButton(title: "Map", systemImage: "creditcard.fill", tab: 2)
-                menuButton(title: "Settings", systemImage: "gearshape.fill", tab: 3)
-                menuButton(title: "Stock", systemImage: "chart.bar.fill", tab: 4)
-            }
-            .padding(.horizontal)
-            Spacer()
-            // Logout
-            Button(action: {
-                NotificationCenter.default.post(name: Notification.Name("LogoutTapped"), object: nil)
-                withAnimation { showMenu = false }
-            }) {
-                HStack {
-                    Image(systemName: "arrow.turn.up.left")
-                    Button(action: {
-                        userAuth.logout()
-                    }) {
-                        Text("Logout")
+        ZStack(alignment: .bottom) {
+            // MARK: - Background Shape
+            RoundedRectangle(cornerRadius: 40)
+                .fill(Color.black)
+                .frame(height: 85)
+                .shadow(color: .black.opacity(0.2), radius: 8, y: -4)
+                .padding(.horizontal, 12)
+
+            // MARK: - Tab Items
+            HStack(spacing: 0) {
+                ForEach(0..<tabs.count, id: \.self) { index in
+                    TabBarButton(
+                        title: tabs[index].0,
+                        icon: tabs[index].1,
+                        isSelected: selectedIndex == index
+                    ) {
+                        selectedIndex = index
                     }
-                }.padding(.horizontal)
-                .padding(.bottom, 30)
-            }
-            .padding()
-        }
-        .foregroundColor(.primary)
-        .background(Color(UIColor.systemBackground))
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .shadow(radius: 3)
-    }
-    // Menu item helper
-    private func menuButton(title: String, systemImage: String, tab: Int) -> some View {
-        Button(action: {
-            withAnimation {
-                router.selectedTab = tab
-                if tab != 1 { router.navigationPath = NavigationPath() }
-                showMenu = false
-            }
-        }) {
-            HStack(spacing: 12) {
-                Image(systemName: systemImage).frame(width: 28)
-                Text(title).font(.system(size: 16, weight: .medium))
-                Spacer()
-                if router.selectedTab == tab {
-                    Image(systemName: "chevron.right")
                 }
             }
-            .padding(.vertical, 10)
-            .contentShape(Rectangle())
+            .padding(.horizontal, 30)
         }
+        .padding(.bottom, 0)
     }
 }
-// MARK: - MENU BUTTON
-struct MenuButton: View {
-    @Binding var showMenu: Bool
+
+struct TabBarButton: View {
+    let title: String
+    let icon: String
+    let isSelected: Bool
+    let action: () -> Void
+    
     var body: some View {
-        Button(action: { withAnimation { showMenu.toggle() } }) {
-            Image(systemName: "line.horizontal.3")
-                .imageScale(.large)
-                .frame(width: 44, height: 44)
+        Button(action: action) {
+            VStack(spacing: 4) {
+                
+                ZStack {
+                    if isSelected {
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 56, height: 56)
+                            .offset(y: -20)
+                            .shadow(color: .red.opacity(0.3), radius: 8, y: 4)
+                            .animation(.spring(), value: isSelected)
+                    }
+                    
+                    Image(icon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 26, height: 26)
+                        .foregroundColor(.white)
+                        .offset(y: isSelected ? -20 : 0)
+                        .animation(.spring(), value: isSelected)
+                }
+
+                Text(title)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(isSelected ? .yellow : .white.opacity(0.6))
+                    .padding(.bottom, 10)
+                    .animation(.easeOut(duration: 0.25), value: isSelected)
+            }
+            .frame(maxWidth: .infinity)
         }
-        .buttonStyle(PlainButtonStyle())
-        .contentShape(Rectangle())
     }
 }
-// SIDEMENU----------
 class LocationPermissionManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     @Published var latitude: Double = 0.0
