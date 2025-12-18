@@ -390,6 +390,10 @@ struct LoginView: View {
             KeychainHelper.shared.save(data?.email ?? "", forKey: "email")
             KeychainHelper.shared.save(data?.mobile ?? "", forKey: "mobile")
             KeychainHelper.shared.save(data?.gender ?? "", forKey: "gender")
+            if let imageFile = data?.photos?.first?.file, !imageFile.isEmpty {
+                KeychainHelper.shared.save(imageFile, forKey: "image")
+                userAuth.image = imageFile
+            }
             userAuth.firstName = data?.first_name ?? ""
             userAuth.email = data?.email ?? ""
             userAuth.mobile = data?.mobile ?? ""

@@ -213,10 +213,12 @@ struct ProfilePicView: View {
                 let emailKey  = KeychainHelper.shared.get(forKey: "email") ?? ""
                 let mobile    = KeychainHelper.shared.get(forKey: "mobile") ?? ""
                 let gender    = KeychainHelper.shared.get(forKey: "gender") ?? ""
+                let image    = KeychainHelper.shared.get(forKey: "image") ?? ""
                 userAuth.firstName = firstName
                 userAuth.email     = emailKey
                 userAuth.mobile    = mobile
                 userAuth.gender    = gender
+                userAuth.image = image
                 userAuth.login(email: emailKey, password: "12345")
                 print("Uploaded successfully!")
             } else {

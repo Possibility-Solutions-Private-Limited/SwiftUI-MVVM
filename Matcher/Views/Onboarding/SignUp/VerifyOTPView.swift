@@ -190,6 +190,9 @@ struct VerifyOTPView: View {
                     KeychainHelper.shared.save(data?.email ?? "", forKey: "email")
                     KeychainHelper.shared.save(data?.mobile ?? "", forKey: "mobile")
                     KeychainHelper.shared.save(data?.gender ?? "", forKey: "gender")
+                    if let imageFile = data?.photos?.first?.file, !imageFile.isEmpty {
+                        KeychainHelper.shared.save(imageFile, forKey: "image")
+                    }
                     validator.showValidation(response.message ?? "")
                     validator.showToast = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {

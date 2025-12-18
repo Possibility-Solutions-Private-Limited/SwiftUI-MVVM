@@ -55,7 +55,6 @@ struct ProfileView: View {
                             .font(.title2)
                     }
                 )
-
                 Button(action: {
                     userAuth.logout()
                 }) {
