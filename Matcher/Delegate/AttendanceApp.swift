@@ -40,56 +40,44 @@ class AppRouter: ObservableObject {
     @Published var userImg: String = ""
     @Published var userName: String = ""
 }
-
 struct MainView: View {
     @EnvironmentObject var router: AppRouter
     @State private var selectedIndex: Int = 0
-    
     var body: some View {
         ZStack(alignment: .bottom) {
-
             TabView(selection: $selectedIndex) {
-                HomeView()
-                    .tag(0)
-                SettingView()
-                    .tag(1)
-                ChatListView()
-                    .tag(2)
-                ProfileView()
-                    .tag(3)
+                HomeView().tag(0)
+                SettingView().tag(1)
+                ChatListView().tag(2)
+                ProfileView().tag(3)
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .onAppear {
-                UITabBar.appearance().isHidden = true
-            }
-
             CustomTabBar(selectedIndex: $selectedIndex)
         }
-        .ignoresSafeArea(.keyboard)
+        .padding(.horizontal, 12)
+        .padding(.bottom, 10)
+        .ignoresSafeArea()
     }
 }
-
 struct CustomTabBar: View {
     @Binding var selectedIndex: Int
-
     let tabs = [
         ("Home", "home_icon"),
         ("Like", "like_icon"),
         ("Chat", "chat_icon"),
         ("Profile", "profile_icon")
     ]
-    
     var body: some View {
         ZStack(alignment: .bottom) {
-            // MARK: - Background Shape
-            RoundedRectangle(cornerRadius: 40)
-                .fill(Color.black)
-                .frame(height: 85)
-                .shadow(color: .black.opacity(0.2), radius: 8, y: -4)
-                .padding(.horizontal, 12)
-
-            // MARK: - Tab Items
-            HStack(spacing: 0) {
+            FloatingTabBarShape(
+                selectedIndex: selectedIndex,
+                tabCount: tabs.count
+            )
+            .fill(Color.black)
+            .frame(height: 65)
+            .clipShape(RoundedRectangle(cornerRadius: 40))
+            .shadow(color: .black.opacity(0.2), radius: 8, y: -4)
+            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: selectedIndex)
+            HStack {
                 ForEach(0..<tabs.count, id: \.self) { index in
                     TabBarButton(
                         title: tabs[index].0,
@@ -100,49 +88,67 @@ struct CustomTabBar: View {
                     }
                 }
             }
-            .padding(.horizontal, 30)
         }
-        .padding(.bottom, 0)
     }
 }
-
 struct TabBarButton: View {
     let title: String
     let icon: String
     let isSelected: Bool
     let action: () -> Void
-    
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 4) {
-                
+            VStack(spacing:4) {
                 ZStack {
                     if isSelected {
                         Circle()
                             .fill(Color.red)
                             .frame(width: 56, height: 56)
-                            .offset(y: -20)
-                            .shadow(color: .red.opacity(0.3), radius: 8, y: 4)
-                            .animation(.spring(), value: isSelected)
                     }
-                    
                     Image(icon)
                         .resizable()
                         .scaledToFit()
                         .frame(width: 26, height: 26)
                         .foregroundColor(.white)
-                        .offset(y: isSelected ? -20 : 0)
-                        .animation(.spring(), value: isSelected)
                 }
-
                 Text(title)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(isSelected ? .yellow : .white.opacity(0.6))
-                    .padding(.bottom, 10)
-                    .animation(.easeOut(duration: 0.25), value: isSelected)
             }
+            .offset(y: isSelected ? -15 : 0)
+            .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isSelected)
             .frame(maxWidth: .infinity)
         }
+    }
+}
+struct FloatingTabBarShape: Shape {
+    var selectedIndex: Int
+    let tabCount: Int
+    func path(in rect: CGRect) -> Path {
+        let width = rect.width
+        let height = rect.height
+        let tabWidth = width / CGFloat(tabCount)
+        let centerX = tabWidth * CGFloat(selectedIndex) + tabWidth / 2
+        let curveWidth: CGFloat = 120
+        let curveDepth: CGFloat = 36
+        var path = Path()
+        path.move(to: CGPoint(x: 0, y: 0))
+        path.addLine(to: CGPoint(x: centerX - curveWidth / 2, y: 0))
+        path.addCurve(
+            to: CGPoint(x: centerX, y: curveDepth),
+            control1: CGPoint(x: centerX - curveWidth / 4, y: 0),
+            control2: CGPoint(x: centerX - curveWidth / 4, y: curveDepth)
+        )
+        path.addCurve(
+            to: CGPoint(x: centerX + curveWidth / 2, y: 0),
+            control1: CGPoint(x: centerX + curveWidth / 4, y: curveDepth),
+            control2: CGPoint(x: centerX + curveWidth / 4, y: 0)
+        )
+        path.addLine(to: CGPoint(x: width, y: 0))
+        path.addLine(to: CGPoint(x: width, y: height))
+        path.addLine(to: CGPoint(x: 0, y: height))
+        path.closeSubpath()
+        return path
     }
 }
 class LocationPermissionManager: NSObject, ObservableObject, CLLocationManagerDelegate {
