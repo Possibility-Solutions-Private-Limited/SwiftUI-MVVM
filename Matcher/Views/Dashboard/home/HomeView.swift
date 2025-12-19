@@ -9,7 +9,11 @@ struct HomeView: View {
     @State private var selectedCategory = ""
     @State private var selectedShift = ""
     @State private var selectedFood = ""
+    @State private var selectedParties = ""
+    @State private var selectedSmoke = ""
     private let initialCards: [Card] = [
+        Card(step: 5),
+        Card(step: 4),
         Card(step: 3),
         Card(step: 2),
         Card(step: 1),
@@ -36,6 +40,8 @@ struct HomeView: View {
                                 selectedCategory: $selectedCategory,
                                 selectedShift: $selectedShift,
                                 selectedFood:$selectedFood,
+                                selectedParties:$selectedParties,
+                                selectedSmoke:$selectedSmoke,
                                 maxHeight: geo.size.height * 0.7
                             ) {
                                 withAnimation(.spring()) {
@@ -97,6 +103,8 @@ struct SwipeCard: View {
     @Binding var selectedCategory: String
     @Binding var selectedShift: String
     @Binding var selectedFood: String
+    @Binding var selectedParties: String
+    @Binding var selectedSmoke: String
     let maxHeight: CGFloat
     let onRemove: () -> Void
     @State private var offset: CGSize = .zero
@@ -137,6 +145,25 @@ struct SwipeCard: View {
                     selectedCategory: $selectedCategory,
                     selectedShift: $selectedShift,
                     selectedFood:$selectedFood,
+                    onNext: swipe,
+                    maxHeight: maxHeight)
+            case 4:
+                StepFiveView(
+                    selectedRole: $selectedRole,
+                    selectedCategory: $selectedCategory,
+                    selectedShift: $selectedShift,
+                    selectedFood:$selectedFood,
+                    selectedParties:$selectedParties,
+                    onNext: swipe,
+                    maxHeight: maxHeight)
+            case 5:
+                StepSixView(
+                    selectedRole: $selectedRole,
+                    selectedCategory: $selectedCategory,
+                    selectedShift: $selectedShift,
+                    selectedFood:$selectedFood,
+                    selectedParties:$selectedParties,
+                    selectedSmoke:$selectedSmoke,
                     onNext: swipe,
                     maxHeight: maxHeight)
             default:
@@ -483,7 +510,7 @@ struct StepFourView: View {
             onNext()
         }) {
             HStack {
-                Text("3/7")
+                Text("4/7")
                     .font(AppFont.manropeMedium(14))
                     .foregroundColor(.yellow)
                 Spacer()
@@ -507,8 +534,183 @@ struct StepFourView: View {
         .padding(.bottom, 8)
     }
 }
-
-
+struct StepFiveView: View {
+    @Binding var selectedRole: String
+    @Binding var selectedCategory: String
+    @Binding var selectedShift: String
+    @Binding var selectedFood: String
+    @Binding var selectedParties: String
+    let onNext: () -> Void
+    let maxHeight: CGFloat
+    private let fields = [
+        "Not into it",
+        "Sometimes",
+        "Weekends",
+        "Love it"
+    ]
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 28) {
+                    Text("Are You Into Parties?")
+                        .font(AppFont.manropeBold(16))
+                        .padding(.top, 50)
+                    FlowLayout(spacing: 10) {
+                        ForEach(fields, id: \.self) { field in
+                            PartyButton(field)
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+            nextButton
+                .padding(.horizontal)
+                .padding(.vertical, 20)
+        }
+        .frame(maxHeight: maxHeight)
+    }
+    private func PartyButton(_ title: String) -> some View {
+        Button {
+            selectedParties = title
+        } label: {
+            Text(title)
+                .font(AppFont.manropeMedium(13))
+                .foregroundColor(AppColors.Black)
+                .padding(.horizontal, 12)
+                .frame(height: 36)
+                .background(
+                    selectedParties == title
+                        ? AppColors.primaryYellow
+                        : AppColors.lightGray
+                )
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(AppColors.ExtralightGray, lineWidth: 1)
+                )
+        }
+    }
+    private var nextButton: some View {
+        Button(action: {
+            print("Selected Role: \(selectedRole)")
+            print("Selected Category: \(selectedCategory)")
+            print("Selected Shift: \(selectedShift)")
+            print("Selected Food: \(selectedFood)")
+            print("Selected Parties: \(selectedParties)")
+            onNext()
+        }) {
+            HStack {
+                Text("5/7")
+                    .font(AppFont.manropeMedium(14))
+                    .foregroundColor(.yellow)
+                Spacer()
+                Text("Next")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selectedParties.isEmpty
+                        ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+            )
+        }
+        .disabled(selectedParties.isEmpty)
+        .padding(.bottom, 8)
+    }
+}
+struct StepSixView: View {
+    @Binding var selectedRole: String
+    @Binding var selectedCategory: String
+    @Binding var selectedShift: String
+    @Binding var selectedFood: String
+    @Binding var selectedParties: String
+    @Binding var selectedSmoke: String
+    let onNext: () -> Void
+    let maxHeight: CGFloat
+    var body: some View {
+        VStack(spacing: 24) {
+            Text("Your Food Preference ?")
+                .font(AppFont.manropeBold(18))
+                .foregroundColor(AppColors.Black)
+                .padding(.top, 40)
+            HStack(spacing: 16) {
+                foodCard(title: "Yes", icon: "yes")
+                foodCard(title: "No", icon: "no")
+            }
+            Spacer()
+            nextButton
+        }
+        .padding(20)
+        .frame(minHeight: maxHeight)
+        .background(
+            RoundedRectangle(cornerRadius: 28)
+                .fill(Color.white)
+        )
+    }
+    func foodCard(title: String, icon: String) -> some View {
+        Button {
+            selectedSmoke = title
+        } label: {
+            VStack(spacing: 14) {
+                Image(icon)
+                    .font(.system(size: 34, weight: .regular))
+                    .foregroundColor(AppColors.Black)
+                Text(title)
+                    .font(AppFont.manropeSemiBold(16))
+                    .foregroundColor(AppColors.Black)
+            }
+            .frame(maxWidth: .infinity, minHeight: 140)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(
+                        selectedSmoke == title
+                        ? AppColors.primaryYellow
+                        : AppColors.lightGray
+                    )
+            )
+        }
+    }
+    var nextButton: some View {
+        Button(action: {
+            print("Selected Role: \(selectedRole)")
+            print("Selected Category: \(selectedCategory)")
+            print("Selected Shift: \(selectedShift)")
+            print("Selected Food: \(selectedFood)")
+            print("Selected Parties: \(selectedParties)")
+            print("Selected Smoke: \(selectedSmoke)")
+            onNext()
+        }) {
+            HStack {
+                Text("6/7")
+                    .font(AppFont.manropeMedium(14))
+                    .foregroundColor(.yellow)
+                Spacer()
+                Text("Next")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selectedSmoke.isEmpty
+                        ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+            )
+        }
+        .disabled(selectedSmoke.isEmpty)
+        .padding(.bottom, 8)
+    }
+}
 
 
 
