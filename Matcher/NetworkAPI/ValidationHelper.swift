@@ -45,25 +45,45 @@ final class ValidationHelper: ObservableObject {
     }
 }
 struct AppFont {
+    // MARK: - Extra Light
+    static func manropeExtraLight(_ size: CGFloat) -> Font {
+        .custom("Manrope-ExtraLight", size: size)
+    }
+    // MARK: - Light
+    static func manropeLight(_ size: CGFloat) -> Font {
+        .custom("Manrope-Light", size: size)
+    }
+    // MARK: - Regular
     static func manrope(_ size: CGFloat) -> Font {
         .custom("Manrope-Regular", size: size)
     }
+    // MARK: - Medium
     static func manropeMedium(_ size: CGFloat) -> Font {
         .custom("Manrope-Medium", size: size)
     }
+    // MARK: - SemiBold
     static func manropeSemiBold(_ size: CGFloat) -> Font {
         .custom("Manrope-SemiBold", size: size)
     }
+    // MARK: - Bold
     static func manropeBold(_ size: CGFloat) -> Font {
         .custom("Manrope-Bold", size: size)
     }
+    // MARK: - ExtraBold
+    static func manropeExtraBold(_ size: CGFloat) -> Font {
+        .custom("Manrope-ExtraBold", size: size)
+    }
 }
+
 struct AppColors {
     static let primaryYellow = Color.yellow.opacity(0.9)
     static let borderGray = Color.gray.opacity(0.3)
     static let backgroundWhite = Color.white
-    static let textBlack = Color.black
-    static let textGray = Color.gray
+    static let Black = Color.black
+    static let Gray = Color.gray
+    static let lightGray = Color(hex: "#F4F4E8")
+    static let ExtralightGray = Color(hex: "#CDCDCD")
+
 }
 struct ValidationMessages {
     static let emailEmpty = "Please enter your email address."
@@ -98,4 +118,53 @@ extension Color {
         self.init(red: r, green: g, blue: b)
     }
 }
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 12
+    func sizeThatFits(
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var rowHeight: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
 
+            if x + size.width > maxWidth {
+                x = 0
+                y += rowHeight + spacing
+                rowHeight = 0
+            }
+
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+        return CGSize(width: maxWidth, height: y + rowHeight)
+    }
+    func placeSubviews(
+        in bounds: CGRect,
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) {
+        var x = bounds.minX
+        var y = bounds.minY
+        var rowHeight: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x + size.width > bounds.maxX {
+                x = bounds.minX
+                y += rowHeight + spacing
+                rowHeight = 0
+            }
+            view.place(
+                at: CGPoint(x: x, y: y),
+                proposal: ProposedViewSize(size)
+            )
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+    }
+}

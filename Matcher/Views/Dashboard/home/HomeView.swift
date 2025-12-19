@@ -1,23 +1,20 @@
 import SwiftUI
-
-// MARK: - Card Model
 struct Card: Identifiable {
     let id = UUID()
     let step: Int
 }
-
-// MARK: - Home View
 struct HomeView: View {
     @State private var cards: [Card] = []
-    @State private var selectedOption = ""
-    @State private var selectedDrink = ""
-    
+    @State private var selectedRole = ""
+    @State private var selectedCategory = ""
+    @State private var selectedShift = ""
+    @State private var selectedFood = ""
     private let initialCards: [Card] = [
-        Card(step: 2), // StepThree
-        Card(step: 1), // StepTwo
-        Card(step: 0)  // StepOne
+        Card(step: 3),
+        Card(step: 2),
+        Card(step: 1),
+        Card(step: 0)
     ]
-    
     var body: some View {
         GeometryReader { geo in
             ZStack {
@@ -27,30 +24,29 @@ struct HomeView: View {
                     endPoint: .bottom
                 )
                 .ignoresSafeArea()
-                
-                VStack(spacing: 22) {
+                VStack(spacing: 10) {
                     header
                     title
-                    
                     ZStack {
                         ForEach(cards) { card in
                             let index = cards.firstIndex { $0.id == card.id } ?? 0
                             SwipeCard(
                                 step: card.step,
-                                selectedOption: $selectedOption,
-                                selectedDrink: $selectedDrink,
-                                maxHeight: geo.size.height * 0.90
+                                selectedRole:$selectedRole,
+                                selectedCategory: $selectedCategory,
+                                selectedShift: $selectedShift,
+                                selectedFood:$selectedFood,
+                                maxHeight: geo.size.height * 0.7
                             ) {
-                                withAnimation(.spring(response: 0.4, dampingFraction: 0.9)) {
+                                withAnimation(.spring()) {
                                     cards.removeAll { $0.id == card.id }
                                 }
                             }
-                            .stacked(at: index, in: cards.count)
+                            .offset(y: CGFloat(index) * 7)
                         }
                     }
                     .padding(.horizontal)
-                    
-                    Spacer(minLength: 30)
+                    Spacer(minLength: 5)
                 }
             }
         }
@@ -61,112 +57,117 @@ struct HomeView: View {
         }
     }
 }
-
-// MARK: - Header & Title
-private var header: some View {
-    HStack {
-        Image(systemName: "person.crop.circle.fill")
-            .resizable()
-            .frame(width: 44, height: 44)
-            .foregroundColor(.black)
-
-        Spacer()
-        HStack(spacing: 6) {
-            Image(systemName: "location.fill")
-                .foregroundColor(.yellow)
-            Text("Galway, Ireland")
-                .font(.headline)
+extension HomeView {
+    var header: some View {
+        HStack {
+            Image("profile")
+                .resizable()
+                .scaledToFill()
+                .frame(width: 50, height: 50)
+                .clipShape(Circle())
+            Spacer()
+            HStack(spacing: 5) {
+                Image("location")
+                Text("Galway, Ireland")
+                    .font(AppFont.manropeSemiBold(16))
+            }
+            Spacer()
+            Image("bell")
         }
-        Spacer()
-        Image(systemName: "bell.fill")
-            .frame(width: 40, height: 40)
-            .background(Color.white)
-            .clipShape(Circle())
-            .shadow(color: .black.opacity(0.08), radius: 6, y: 4)
+        .padding(.horizontal)
     }
-    .padding(.horizontal)
-}
-
-private var title: some View {
-    VStack(spacing: 6) {
-        Text("Let’s match your lifestyle with the right people")
-            .font(.title3.weight(.bold))
-            .multilineTextAlignment(.center)
-
-        Text("Share your lifestyle so others can instantly get your vibe.")
-            .font(.subheadline)
-            .foregroundColor(.gray)
-            .multilineTextAlignment(.center)
+    var title: some View {
+        VStack(spacing: 5) {
+            Text("Let’s match your lifestyle with the right people")
+                .font(AppFont.manropeBold(17))
+                .multilineTextAlignment(.center)
+            Text("Share your lifestyle so others can instantly get your vibe.")
+                .multilineTextAlignment(.center)
+                .font(AppFont.manrope(14))
+                .foregroundColor(.gray)
+        }
+        .padding(.horizontal)
+        .padding(.leading,2)
+        .padding(.trailing,2)
     }
-    .padding(.horizontal)
 }
-
-// MARK: - SwipeCard
 struct SwipeCard: View {
     let step: Int
-    @Binding var selectedOption: String
-    @Binding var selectedDrink: String
+    @Binding var selectedRole: String
+    @Binding var selectedCategory: String
+    @Binding var selectedShift: String
+    @Binding var selectedFood: String
     let maxHeight: CGFloat
     let onRemove: () -> Void
-
     @State private var offset: CGSize = .zero
-    @State private var rotationAngle: Double = 0
-    @State private var isSwiping = false
-    @State private var selectedRole = "Working"
-
-    private func swipe(_ right: Bool) {
-        guard !isSwiping else { return }
-        isSwiping = true
-
-        withAnimation(.interpolatingSpring(stiffness: 50, damping: 12)) {
-            offset = CGSize(width: right ? 600 : -600, height: 800)
-            rotationAngle = right ? 90 : -90
+    @State private var rotation: Double = 0
+    private func swipe() {
+        withAnimation(.spring()) {
+            offset = CGSize(width: 600, height: 600)
+            rotation = 30
         }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
             onRemove()
         }
     }
-
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack {
-                if step == 0 {
-                    StepOneView(selectedRole: $selectedRole, onNext: { swipe(true) }, maxHeight: maxHeight)
-                } else if step == 1 {
-                    StepTwoView(selectedOption: $selectedOption, onNext: { swipe(true) }, maxHeight: maxHeight)
-                } else if step == 2 {
-                    StepThreeView(selectedDrink: $selectedDrink, onNext: { swipe(true) }, maxHeight: maxHeight)
-                }
+        VStack {
+            switch step {
+            case 0:
+                StepOneView(
+                    selectedRole: $selectedRole,
+                    onNext: swipe,
+                    maxHeight: maxHeight)
+            case 1:
+                StepTwoView(
+                    selectedRole: $selectedRole,
+                    selectedCategory: $selectedCategory,
+                    onNext: swipe,
+                    maxHeight: maxHeight)
+            case 2:
+                StepThreeView(
+                    selectedRole: $selectedRole,
+                    selectedCategory: $selectedCategory,
+                    selectedShift: $selectedShift,
+                    onNext: swipe,
+                    maxHeight: maxHeight)
+            case 3:
+                StepFourView(
+                    selectedRole: $selectedRole,
+                    selectedCategory: $selectedCategory,
+                    selectedShift: $selectedShift,
+                    selectedFood:$selectedFood,
+                    onNext: swipe,
+                    maxHeight: maxHeight)
+            default:
+                StepOneView(
+                    selectedRole: $selectedRole,
+                    onNext: swipe,
+                    maxHeight: maxHeight)
             }
-            .frame(maxWidth: .infinity)
         }
-        .frame(maxHeight: maxHeight)
+        .frame(maxWidth: .infinity, maxHeight: maxHeight)
         .background(Color.white)
         .cornerRadius(30)
-        .shadow(color: .black.opacity(0.12), radius: 18, y: 12)
-        .offset(x: offset.width, y: offset.height)
-        .rotationEffect(.degrees(rotationAngle))
+        .shadow(radius: 12)
+        .offset(offset)
+        .rotationEffect(.degrees(rotation))
         .gesture(
             DragGesture()
                 .onChanged {
-                    guard !isSwiping else { return }
                     offset = $0.translation
-                    rotationAngle = Double($0.translation.width / 25)
+                    rotation = Double($0.translation.width / 20)
                 }
                 .onEnded {
-                    guard !isSwiping else { return }
-                    if $0.translation.width > 120 {
-                        swipe(true)
-                    } else if $0.translation.width < -120 {
-                        swipe(false)
+                    if abs($0.translation.width) > 120 {
+                        swipe()
                     } else {
-                        withAnimation(.spring()) {
-                            offset = .zero
-                            rotationAngle = 0
-                        }
+                     withAnimation(.spring()) {
+                        offset = .zero
+                        rotation = 0
                     }
                 }
+            }
         )
     }
 }
@@ -175,57 +176,91 @@ struct StepOneView: View {
     let onNext: () -> Void
     let maxHeight: CGFloat
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 28) {
-                Text("What best describes you?")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundColor(.black)
-                HStack(spacing: 16) {
-                    roleCard(title: "Student", icon: "book", isSelected: selectedRole == "Student") { selectedRole = "Student" }
-                    roleCard(title: "Working", icon: "briefcase", isSelected: selectedRole == "Working") { selectedRole = "Working" }
-                }
-                Spacer(minLength: 0)
-                Button(action: onNext) {
-                    Text("Next")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(Color.black)
-                        .cornerRadius(16)
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 20)
-                }
+        VStack(spacing: 24) {
+            Text("What best describes you?")
+                .font(AppFont.manropeBold(18))
+                .foregroundColor(AppColors.Black)
+                .padding(.top, 40)
+            HStack(spacing: 16) {
+                roleCard(
+                    title: "Student",
+                    icon: "book"
+                )
+                roleCard(
+                    title: "Working",
+                    icon: "work"
+                )
             }
-            .frame(minHeight: maxHeight - 180)
-            .padding(.horizontal, 20)
-            .padding(.top, 20)
+            Spacer()
+            nextButton
+        }
+        .padding(20)
+        .frame(minHeight: maxHeight)
+        .background(
+            RoundedRectangle(cornerRadius: 28)
+                .fill(Color.white)
+        )
+    }
+    func roleCard(title: String, icon: String) -> some View {
+        Button {
+            selectedRole = title
+        } label: {
+            VStack(spacing: 14) {
+                Image(icon)
+                    .font(.system(size: 34, weight: .regular))
+                    .foregroundColor(AppColors.Black)
+
+                Text(title)
+                    .font(AppFont.manropeSemiBold(16))
+                    .foregroundColor(AppColors.Black)
+            }
+            .frame(maxWidth: .infinity, minHeight: 140)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(
+                        selectedRole == title
+                        ? AppColors.primaryYellow
+                        : AppColors.lightGray
+                    )
+            )
         }
     }
-    private func roleCard(title: String, icon: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: 14) {
-                Image(systemName: icon)
-                    .font(.system(size: 34))
-                    .foregroundColor(.black)
-                Text(title)
-                    .font(.system(size: 17, weight: .medium))
-                    .foregroundColor(.black)
+    var nextButton: some View {
+        Button(action: {
+            print("Selected Role: \(selectedRole)")
+            onNext()
+        }) {
+            HStack {
+                Text("1/7")
+                    .font(AppFont.manropeMedium(14))
+                    .foregroundColor(.yellow)
+                Spacer()
+                Text("Next")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                Spacer()
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 120)
-            .background(isSelected ? Color.yellow : Color.orange.opacity(0.2))
-            .cornerRadius(20)
-            .overlay(RoundedRectangle(cornerRadius: 20)
-                        .stroke(isSelected ? Color.clear : Color.gray.opacity(0.4), lineWidth: 1))
+            .padding(.horizontal)
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selectedRole.isEmpty
+                        ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+            )
         }
+        .disabled(selectedRole.isEmpty)
+        .padding(.bottom, 8)
     }
 }
 struct StepTwoView: View {
-    @Binding var selectedOption: String
+    @Binding var selectedRole: String
+    @Binding var selectedCategory: String
     let onNext: () -> Void
     let maxHeight: CGFloat
-    private let fields: [String] = [
+    private let fields = [
         "Arts, Media & Creative",
         "Retail & E-Commerce",
         "Science & Research",
@@ -234,139 +269,252 @@ struct StepTwoView: View {
         "Education & Training",
         "Hospitality, Travel & Tourism"
     ]
-    private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
-    ]
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 24) {
-                Text("What’s Your Professional Field?")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.black)
-                LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(fields, id: \.self) { field in
-                        Option(title: field)
-                    }
-                }
-                Spacer(minLength: 0)
-                Button(action: onNext) {
-                    HStack {
-                        Text("2/7")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.yellow)
-                        Spacer()
-                        Text("Next")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 20)
-                    .frame(height: 56)
-                    .background(Color.black)
-                    .cornerRadius(18)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
-                }
-            }
-            .frame(minHeight: maxHeight - 180)
-            .padding(.horizontal, 20)
-            .padding(.top, 20)
-        }
-    }
-    private func Option(title: String) -> some View {
-        Button {
-            selectedOption = title
-        } label: {
-            Text(title)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.black)
-                .frame(maxWidth: .infinity, minHeight: 44)
-                .padding(.horizontal, 12)
-                .background(selectedOption == title ? Color.yellow : Color.orange.opacity(0.2))
-                .cornerRadius(10)
-                .overlay(RoundedRectangle(cornerRadius: 10)
-                            .stroke(selectedOption == title ? Color.clear : Color.gray.opacity(0.4), lineWidth: 1))
-        }
-        .gridCellColumns(title.count > 35 ? 2 : 1)
-    }
-}
-// MARK: - StepThreeView
-struct StepThreeView: View {
-    @Binding var selectedDrink: String
-    let onNext: () -> Void
-    let maxHeight: CGFloat
-    
-    private let drinks: [String] = ["Coffee", "Tea", "Juice", "Water", "Smoothie"]
-    
-    private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
-    ]
-    
-    var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 24) {
-                Text("What’s your favorite drink?")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.black)
-                
-                LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(drinks, id: \.self) { drink in
-                        Button(action: {
-                            selectedDrink = drink
-                        }) {
-                            Text(drink)
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity, minHeight: 44)
-                                .padding(.horizontal, 12)
-                                .background(selectedDrink == drink ? Color.yellow : Color.orange.opacity(0.2))
-                                .cornerRadius(10)
-                                .overlay(RoundedRectangle(cornerRadius: 10)
-                                            .stroke(selectedDrink == drink ? Color.clear : Color.gray.opacity(0.4), lineWidth: 1))
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 28) {
+                    Text("What’s Your Professional Field?")
+                        .font(AppFont.manropeBold(16))
+                        .padding(.top, 50)
+                    FlowLayout(spacing: 10) {
+                        ForEach(fields, id: \.self) { field in
+                            CategoryButton(field)
                         }
                     }
                 }
-                
-                Spacer(minLength: 0)
-                
-                Button(action: onNext) {
-                    HStack {
-                        Text("3/7")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.yellow)
-                        Spacer()
-                        Text("Next")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 20)
-                    .frame(height: 56)
-                    .background(selectedDrink.isEmpty ? Color.gray : Color.black)
-                    .cornerRadius(18)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
-                }
-                .disabled(selectedDrink.isEmpty)
+                .padding(.horizontal)
             }
-            .frame(minHeight: maxHeight - 180)
-            .padding(.horizontal, 20)
-            .padding(.top, 20)
+            nextButton
+                .padding(.horizontal)
+                .padding(.vertical, 20)
         }
+        .frame(maxHeight: maxHeight)
+    }
+    private func CategoryButton(_ title: String) -> some View {
+        Button {
+            selectedCategory = title
+        } label: {
+            Text(title)
+                .font(AppFont.manropeMedium(13))
+                .foregroundColor(AppColors.Black)
+                .padding(.horizontal, 12)
+                .frame(height: 36)
+                .background(
+                    selectedCategory == title
+                        ? AppColors.primaryYellow
+                        : AppColors.lightGray
+                )
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(AppColors.ExtralightGray, lineWidth: 1)
+                )
+        }
+    }
+    private var nextButton: some View {
+        Button(action: {
+            print("Selected Role: \(selectedRole)")
+            print("Selected Category: \(selectedCategory)")
+            onNext()
+        }) {
+            HStack {
+                Text("2/7")
+                    .font(AppFont.manropeMedium(14))
+                    .foregroundColor(.yellow)
+                Spacer()
+                Text("Next")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selectedCategory.isEmpty
+                        ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+            )
+        }
+        .disabled(selectedCategory.isEmpty)
+        .padding(.bottom, 8)
+    }
+}
+struct StepThreeView: View {
+    @Binding var selectedRole: String
+    @Binding var selectedCategory: String
+    @Binding var selectedShift: String
+    let onNext: () -> Void
+    let maxHeight: CGFloat
+    var body: some View {
+        VStack(spacing: 24) {
+            Text("What’s your work shift?")
+                .font(AppFont.manropeBold(18))
+                .foregroundColor(AppColors.Black)
+                .padding(.top, 40)
+            HStack(spacing: 16) {
+                shiftCard(title: "Day", icon: "day")
+                shiftCard(title: "Night", icon: "night")
+            }
+            Spacer()
+            nextButton
+        }
+        .padding(20)
+        .frame(minHeight: maxHeight)
+        .background(
+            RoundedRectangle(cornerRadius: 28)
+                .fill(Color.white)
+        )
+    }
+    func shiftCard(title: String, icon: String) -> some View {
+        Button {
+            selectedShift = title
+        } label: {
+            VStack(spacing: 14) {
+                Image(icon)
+                    .font(.system(size: 34, weight: .regular))
+                    .foregroundColor(AppColors.Black)
+                Text(title)
+                    .font(AppFont.manropeSemiBold(16))
+                    .foregroundColor(AppColors.Black)
+            }
+            .frame(maxWidth: .infinity, minHeight: 140)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(
+                        selectedShift == title
+                        ? AppColors.primaryYellow
+                        : AppColors.lightGray
+                    )
+            )
+        }
+    }
+    var nextButton: some View {
+        Button(action: {
+            print("Selected Role: \(selectedRole)")
+            print("Selected Category: \(selectedCategory)")
+            print("Selected Shift: \(selectedShift)")
+            onNext()
+        }) {
+            HStack {
+                Text("3/7")
+                    .font(AppFont.manropeMedium(14))
+                    .foregroundColor(.yellow)
+                Spacer()
+                Text("Next")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selectedShift.isEmpty
+                        ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+            )
+        }
+        .disabled(selectedShift.isEmpty)
+        .padding(.bottom, 8)
     }
 }
 
-// MARK: - Extensions
-extension View {
-    func stacked(at index: Int, in total: Int) -> some View {
-        let position = CGFloat(total - index - 1)
-        return self
-            .scaleEffect(CGFloat(1) - position * CGFloat(0.04))
-            .offset(y: position * CGFloat(12))
-            .opacity(Double(CGFloat(1) - position * CGFloat(0.15)))
+struct StepFourView: View {
+    @Binding var selectedRole: String
+    @Binding var selectedCategory: String
+    @Binding var selectedShift: String
+    @Binding var selectedFood: String
+    let onNext: () -> Void
+    let maxHeight: CGFloat
+    var body: some View {
+        VStack(spacing: 24) {
+            Text("Your Food Preference ?")
+                .font(AppFont.manropeBold(18))
+                .foregroundColor(AppColors.Black)
+                .padding(.top, 40)
+            HStack(spacing: 16) {
+                foodCard(title: "Veg", icon: "veg")
+                foodCard(title: "Non-Veg", icon: "nonveg")
+            }
+            Spacer()
+            nextButton
+        }
+        .padding(20)
+        .frame(minHeight: maxHeight)
+        .background(
+            RoundedRectangle(cornerRadius: 28)
+                .fill(Color.white)
+        )
+    }
+    func foodCard(title: String, icon: String) -> some View {
+        Button {
+            selectedFood = title
+        } label: {
+            VStack(spacing: 14) {
+                Image(icon)
+                    .font(.system(size: 34, weight: .regular))
+                    .foregroundColor(AppColors.Black)
+                Text(title)
+                    .font(AppFont.manropeSemiBold(16))
+                    .foregroundColor(AppColors.Black)
+            }
+            .frame(maxWidth: .infinity, minHeight: 140)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(
+                        selectedFood == title
+                        ? AppColors.primaryYellow
+                        : AppColors.lightGray
+                    )
+            )
+        }
+    }
+    var nextButton: some View {
+        Button(action: {
+            print("Selected Role: \(selectedRole)")
+            print("Selected Category: \(selectedCategory)")
+            print("Selected Shift: \(selectedShift)")
+            print("Selected Food: \(selectedFood)")
+            onNext()
+        }) {
+            HStack {
+                Text("3/7")
+                    .font(AppFont.manropeMedium(14))
+                    .foregroundColor(.yellow)
+                Spacer()
+                Text("Next")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selectedFood.isEmpty
+                        ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+            )
+        }
+        .disabled(selectedFood.isEmpty)
+        .padding(.bottom, 8)
     }
 }
+
+
+
+
+
+
+
+
+
 
 

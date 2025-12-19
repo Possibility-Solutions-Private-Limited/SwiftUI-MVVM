@@ -34,6 +34,13 @@
 		5D5194D02EEBF3EC009B56F0 /* StripeConnect in Frameworks */ = {isa = PBXBuildFile; productRef = 5D5194CF2EEBF3EC009B56F0 /* StripeConnect */; };
 		5D67B7532EEFC330008E794D /* ValidationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D67B7522EEFC32A008E794D /* ValidationHelper.swift */; };
 		5D67B7552EEFC70A008E794D /* YourselfView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D67B7542EEFC704008E794D /* YourselfView.swift */; };
+		5D7427072EF51AF700E60417 /* Manrope-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5D7427002EF51AF700E60417 /* Manrope-Bold.otf */; };
+		5D7427082EF51AF700E60417 /* Manrope-SemiBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5D7427062EF51AF700E60417 /* Manrope-SemiBold.otf */; };
+		5D7427092EF51AF700E60417 /* Manrope-ExtraBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5D7427012EF51AF700E60417 /* Manrope-ExtraBold.otf */; };
+		5D74270A2EF51AF700E60417 /* Manrope-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5D7427052EF51AF700E60417 /* Manrope-Regular.otf */; };
+		5D74270B2EF51AF700E60417 /* Manrope-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5D7427042EF51AF700E60417 /* Manrope-Medium.otf */; };
+		5D74270C2EF51AF700E60417 /* Manrope-ExtraLight.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5D7427022EF51AF700E60417 /* Manrope-ExtraLight.otf */; };
+		5D74270D2EF51AF700E60417 /* Manrope-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5D7427032EF51AF700E60417 /* Manrope-Light.otf */; };
 		5D89DF472ED82D7A00291332 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D89DF462ED82D7500291332 /* EditProfileView.swift */; };
 		5D9AB2682DB8ED8C00E3480F /* AttendanceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9AB2672DB8ED8C00E3480F /* AttendanceApp.swift */; };
 		5D9AB26C2DB8ED8D00E3480F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5D9AB26B2DB8ED8D00E3480F /* Assets.xcassets */; };
@@ -85,6 +92,13 @@
 		5D5056602EF3D38D0013453F /* LikeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LikeView.swift; sourceTree = "<group>"; };
 		5D67B7522EEFC32A008E794D /* ValidationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationHelper.swift; sourceTree = "<group>"; };
 		5D67B7542EEFC704008E794D /* YourselfView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YourselfView.swift; sourceTree = "<group>"; };
+		5D7427002EF51AF700E60417 /* Manrope-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope-Bold.otf"; sourceTree = "<group>"; };
+		5D7427012EF51AF700E60417 /* Manrope-ExtraBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope-ExtraBold.otf"; sourceTree = "<group>"; };
+		5D7427022EF51AF700E60417 /* Manrope-ExtraLight.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope-ExtraLight.otf"; sourceTree = "<group>"; };
+		5D7427032EF51AF700E60417 /* Manrope-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope-Light.otf"; sourceTree = "<group>"; };
+		5D7427042EF51AF700E60417 /* Manrope-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope-Medium.otf"; sourceTree = "<group>"; };
+		5D7427052EF51AF700E60417 /* Manrope-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope-Regular.otf"; sourceTree = "<group>"; };
+		5D7427062EF51AF700E60417 /* Manrope-SemiBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope-SemiBold.otf"; sourceTree = "<group>"; };
 		5D89DF462ED82D7500291332 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
 		5D9AB2642DB8ED8C00E3480F /* Matcher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Matcher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5D9AB2672DB8ED8C00E3480F /* AttendanceApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttendanceApp.swift; sourceTree = "<group>"; };
@@ -227,6 +241,20 @@
 			path = Like;
 			sourceTree = "<group>";
 		};
+		5D7426FF2EF51AE500E60417 /* Fount */ = {
+			isa = PBXGroup;
+			children = (
+				5D7427002EF51AF700E60417 /* Manrope-Bold.otf */,
+				5D7427012EF51AF700E60417 /* Manrope-ExtraBold.otf */,
+				5D7427022EF51AF700E60417 /* Manrope-ExtraLight.otf */,
+				5D7427032EF51AF700E60417 /* Manrope-Light.otf */,
+				5D7427042EF51AF700E60417 /* Manrope-Medium.otf */,
+				5D7427052EF51AF700E60417 /* Manrope-Regular.otf */,
+				5D7427062EF51AF700E60417 /* Manrope-SemiBold.otf */,
+			);
+			path = Fount;
+			sourceTree = "<group>";
+		};
 		5D9AB25B2DB8ED8B00E3480F = {
 			isa = PBXGroup;
 			children = (
@@ -246,6 +274,7 @@
 		5D9AB2662DB8ED8C00E3480F /* Matcher */ = {
 			isa = PBXGroup;
 			children = (
+				5D7426FF2EF51AE500E60417 /* Fount */,
 				5DD4E4E92DBB98DA008F48B4 /* Info.plist */,
 				5DBF0E982DBB8B590028D953 /* Matcher.entitlements */,
 				5DBF0E962DBB8B010028D953 /* GoogleService-Info.plist */,
@@ -376,6 +405,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5D7427072EF51AF700E60417 /* Manrope-Bold.otf in Resources */,
+				5D7427082EF51AF700E60417 /* Manrope-SemiBold.otf in Resources */,
+				5D7427092EF51AF700E60417 /* Manrope-ExtraBold.otf in Resources */,
+				5D74270A2EF51AF700E60417 /* Manrope-Regular.otf in Resources */,
+				5D74270B2EF51AF700E60417 /* Manrope-Medium.otf in Resources */,
+				5D74270C2EF51AF700E60417 /* Manrope-ExtraLight.otf in Resources */,
+				5D74270D2EF51AF700E60417 /* Manrope-Light.otf in Resources */,
 				5D9AB26C2DB8ED8D00E3480F /* Assets.xcassets in Resources */,
 				5DBF0E972DBB8B010028D953 /* GoogleService-Info.plist in Resources */,
 			);

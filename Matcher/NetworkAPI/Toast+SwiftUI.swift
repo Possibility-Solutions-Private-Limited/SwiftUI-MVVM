@@ -38,22 +38,40 @@ struct ToastView: UIViewRepresentable {
         }
     }
 }
-
+// MARK: - Extensions
+extension View {
+    func stacked(at index: Int, in total: Int) -> some View {
+        let position = CGFloat(total - index - 1)
+        return self
+            .scaleEffect(CGFloat(1) - position * CGFloat(0.04))
+            .offset(y: position * CGFloat(12))
+            .opacity(Double(CGFloat(1) - position * CGFloat(0.15)))
+    }
+}
 // MARK: - Font Helper
 extension UIFont {
-    static func manrope(_ size: CGFloat, weight: UIFont.Weight = .regular) -> UIFont {
+    static func manrope(_ size: CGFloat,weight: UIFont.Weight = .regular) -> UIFont {
         let fontName: String
         switch weight {
+        case .ultraLight:
+            fontName = "Manrope-ExtraLight"
+        case .thin:
+            fontName = "Manrope-Light"
+        case .light:
+            fontName = "Manrope-Light"
         case .medium:
             fontName = "Manrope-Medium"
         case .semibold:
             fontName = "Manrope-SemiBold"
         case .bold:
             fontName = "Manrope-Bold"
+        case .heavy, .black:
+            fontName = "Manrope-ExtraBold"
         default:
             fontName = "Manrope-Regular"
         }
-        return UIFont(name: fontName, size: size) ?? UIFont.systemFont(ofSize: size, weight: weight)
+        return UIFont(name: fontName, size: size)
+            ?? UIFont.systemFont(ofSize: size, weight: weight)
     }
 }
 // MARK: - PhoneTextField

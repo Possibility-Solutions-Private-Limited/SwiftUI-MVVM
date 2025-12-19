@@ -205,7 +205,7 @@ struct LoginView: View {
                                     .font(.system(size: 14, weight: .bold))
                             }
                         }
-                        Text("Remember me").foregroundColor(AppColors.textGray).font(AppFont.manrope(14))
+                        Text("Remember me").foregroundColor(AppColors.Gray).font(AppFont.manrope(14))
                     }
                 }
                 Spacer()
@@ -214,7 +214,7 @@ struct LoginView: View {
                 } label: {
                     Text("Forgot Password?")
                         .font(AppFont.manrope(14))
-                        .foregroundColor(AppColors.textGray)
+                        .foregroundColor(AppColors.Gray)
                 }
             }
             Button(action: logIn) {

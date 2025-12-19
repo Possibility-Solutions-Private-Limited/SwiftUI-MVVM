@@ -23,6 +23,16 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Manrope-ExtraLight.otf</string>
+		<string>Manrope-Light.otf</string>
+		<string>Manrope-Regular.otf</string>
+		<string>Manrope-Medium.otf</string>
+		<string>Manrope-SemiBold.otf</string>
+		<string>Manrope-Bold.otf</string>
+		<string>Manrope-ExtraBold.otf</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
