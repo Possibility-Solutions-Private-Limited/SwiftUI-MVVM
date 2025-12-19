@@ -207,7 +207,12 @@ struct SwipeCard: View {
         .frame(maxWidth: .infinity, maxHeight: maxHeight)
         .background(Color.white)
         .cornerRadius(30)
-        .shadow(radius: 12)
+        .shadow(
+            color: Color.black.opacity(0.08),
+            radius: 8,
+            x: 0,
+            y: 2
+        )
         .offset(offset)
         .rotationEffect(.degrees(rotation))
         .gesture(
