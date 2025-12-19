@@ -168,3 +168,60 @@ struct FlowLayout: Layout {
         }
     }
 }
+struct MultilineTextView: UIViewRepresentable {
+    @Binding var text: String
+    @Binding var isFocused: Bool
+    func makeUIView(context: Context) -> UITextView {
+        let textView = UITextView()
+        textView.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        textView.textColor = .black
+        textView.backgroundColor = .clear
+        textView.isScrollEnabled = true
+        textView.alwaysBounceVertical = true
+        textView.textContainerInset = UIEdgeInsets(
+            top: 12, left: 12, bottom: 20, right: 12
+        )
+        textView.textContainer.lineFragmentPadding = 0
+        textView.returnKeyType = .done
+        textView.inputAccessoryView = nil
+        textView.delegate = context.coordinator
+        return textView
+    }
+    func updateUIView(_ uiView: UITextView, context: Context) {
+        if uiView.text != text {
+            uiView.text = text
+        }
+        DispatchQueue.main.async {
+            if isFocused && !uiView.isFirstResponder {
+                uiView.becomeFirstResponder()
+            }
+        }
+    }
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    class Coordinator: NSObject, UITextViewDelegate {
+        let parent: MultilineTextView
+        init(_ parent: MultilineTextView) {
+            self.parent = parent
+        }
+        func textViewDidBeginEditing(_ textView: UITextView) {
+            textView.setContentOffset(.zero, animated: false)
+        }
+        func textViewDidChange(_ textView: UITextView) {
+            DispatchQueue.main.async {
+                self.parent.text = textView.text
+            }
+        }
+        func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+            if text == "\n" {
+                textView.resignFirstResponder()
+                DispatchQueue.main.async {
+                    self.parent.isFocused = false
+                }
+                return false
+            }
+            return true
+        }
+    }
+}

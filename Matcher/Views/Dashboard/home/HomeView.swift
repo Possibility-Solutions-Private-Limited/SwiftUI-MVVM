@@ -11,7 +11,11 @@ struct HomeView: View {
     @State private var selectedFood = ""
     @State private var selectedParties = ""
     @State private var selectedSmoke = ""
+    @State private var selectedDrink = ""
+    @State private var selectedAbout = ""
     private let initialCards: [Card] = [
+        Card(step: 7),
+        Card(step: 6),
         Card(step: 5),
         Card(step: 4),
         Card(step: 3),
@@ -42,6 +46,8 @@ struct HomeView: View {
                                 selectedFood:$selectedFood,
                                 selectedParties:$selectedParties,
                                 selectedSmoke:$selectedSmoke,
+                                selectedDrink:$selectedDrink,
+                                selectedAbout:$selectedAbout,
                                 maxHeight: geo.size.height * 0.7
                             ) {
                                 withAnimation(.spring()) {
@@ -105,6 +111,8 @@ struct SwipeCard: View {
     @Binding var selectedFood: String
     @Binding var selectedParties: String
     @Binding var selectedSmoke: String
+    @Binding var selectedDrink: String
+    @Binding var selectedAbout: String
     let maxHeight: CGFloat
     let onRemove: () -> Void
     @State private var offset: CGSize = .zero
@@ -164,6 +172,29 @@ struct SwipeCard: View {
                     selectedFood:$selectedFood,
                     selectedParties:$selectedParties,
                     selectedSmoke:$selectedSmoke,
+                    onNext: swipe,
+                    maxHeight: maxHeight)
+            case 6:
+                StepSevenView(
+                    selectedRole: $selectedRole,
+                    selectedCategory: $selectedCategory,
+                    selectedShift: $selectedShift,
+                    selectedFood:$selectedFood,
+                    selectedParties:$selectedParties,
+                    selectedSmoke:$selectedSmoke,
+                    selectedDrink:$selectedDrink,
+                    onNext: swipe,
+                    maxHeight: maxHeight)
+            case 7:
+                StepEightView(
+                    selectedRole: $selectedRole,
+                    selectedCategory: $selectedCategory,
+                    selectedShift: $selectedShift,
+                    selectedFood:$selectedFood,
+                    selectedParties:$selectedParties,
+                    selectedSmoke:$selectedSmoke,
+                    selectedDrink:$selectedDrink,
+                    selectedAbout:$selectedAbout,
                     onNext: swipe,
                     maxHeight: maxHeight)
             default:
@@ -635,7 +666,7 @@ struct StepSixView: View {
     let maxHeight: CGFloat
     var body: some View {
         VStack(spacing: 24) {
-            Text("Your Food Preference ?")
+            Text("Do You Smoke?")
                 .font(AppFont.manropeBold(18))
                 .foregroundColor(AppColors.Black)
                 .padding(.top, 40)
@@ -711,12 +742,182 @@ struct StepSixView: View {
         .padding(.bottom, 8)
     }
 }
-
-
-
-
-
-
-
-
+struct StepSevenView: View {
+    @Binding var selectedRole: String
+    @Binding var selectedCategory: String
+    @Binding var selectedShift: String
+    @Binding var selectedFood: String
+    @Binding var selectedParties: String
+    @Binding var selectedSmoke: String
+    @Binding var selectedDrink: String
+    let onNext: () -> Void
+    let maxHeight: CGFloat
+    var body: some View {
+        VStack(spacing: 24) {
+            Text("Do You Drink?")
+                .font(AppFont.manropeBold(18))
+                .foregroundColor(AppColors.Black)
+                .padding(.top, 40)
+            HStack(spacing: 16) {
+                drinkCard(title: "Yes", icon: "drinkyes")
+                drinkCard(title: "No", icon: "drinkno")
+            }
+            Spacer()
+            nextButton
+        }
+        .padding(20)
+        .frame(minHeight: maxHeight)
+        .background(
+            RoundedRectangle(cornerRadius: 28)
+                .fill(Color.white)
+        )
+    }
+    func drinkCard(title: String, icon: String) -> some View {
+        Button {
+            selectedDrink = title
+        } label: {
+            VStack(spacing: 14) {
+                Image(icon)
+                    .font(.system(size: 34, weight: .regular))
+                    .foregroundColor(AppColors.Black)
+                Text(title)
+                    .font(AppFont.manropeSemiBold(16))
+                    .foregroundColor(AppColors.Black)
+            }
+            .frame(maxWidth: .infinity, minHeight: 140)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(
+                        selectedDrink == title
+                        ? AppColors.primaryYellow
+                        : AppColors.lightGray
+                    )
+            )
+        }
+    }
+    var nextButton: some View {
+        Button(action: {
+            print("Selected Role: \(selectedRole)")
+            print("Selected Category: \(selectedCategory)")
+            print("Selected Shift: \(selectedShift)")
+            print("Selected Food: \(selectedFood)")
+            print("Selected Parties: \(selectedParties)")
+            print("Selected Smoke: \(selectedSmoke)")
+            print("Selected Drink: \(selectedDrink)")
+            onNext()
+        }) {
+            HStack {
+                Text("7/7")
+                    .font(AppFont.manropeMedium(14))
+                    .foregroundColor(.yellow)
+                Spacer()
+                Text("Next")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selectedDrink.isEmpty
+                        ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+            )
+        }
+        .disabled(selectedDrink.isEmpty)
+        .padding(.bottom, 8)
+    }
+}
+struct StepEightView: View {
+    @Binding var selectedRole: String
+    @Binding var selectedCategory: String
+    @Binding var selectedShift: String
+    @Binding var selectedFood: String
+    @Binding var selectedParties: String
+    @Binding var selectedSmoke: String
+    @Binding var selectedDrink: String
+    @Binding var selectedAbout: String
+    let onNext: () -> Void
+    let maxHeight: CGFloat
+    @State private var isFocused: Bool = false
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                Text("Share a Little About Yourself?")
+                    .font(AppFont.manropeBold(18))
+                    .foregroundColor(AppColors.Black)
+                    .padding(.top, 32)
+                ZStack(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.black, lineWidth: 1)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.white)
+                        )
+                        .frame(height: 160)
+                    if selectedAbout.isEmpty {
+                        Text("type here...")
+                            .font(AppFont.manropeMedium(14))
+                            .foregroundColor(.gray)
+                            .padding(.top, 14)
+                            .padding(.leading, 14)
+                    }
+                    MultilineTextView(text: $selectedAbout, isFocused: $isFocused)
+                        .frame(height: 160)
+                }
+                Spacer(minLength: 10)
+                nextButton
+            }
+            .padding(20)
+            .frame(minHeight: maxHeight)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 28)
+                .fill(Color.white)
+        )
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .onTapGesture {
+            isFocused = false
+        }
+    }
+    private var nextButton: some View {
+        Button(action: {
+            print("Selected Role: \(selectedRole)")
+            print("Selected Category: \(selectedCategory)")
+            print("Selected Shift: \(selectedShift)")
+            print("Selected Food: \(selectedFood)")
+            print("Selected Parties: \(selectedParties)")
+            print("Selected Smoke: \(selectedSmoke)")
+            print("Selected Drink: \(selectedDrink)")
+            print("Selected About: \(selectedAbout)")
+            onNext()
+        }) {
+            HStack {
+                Text("7/7")
+                    .font(AppFont.manropeMedium(14))
+                    .foregroundColor(.yellow)
+                Spacer()
+                Text("Next")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selectedAbout.isEmpty
+                        ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+            )
+        }
+        .disabled(selectedAbout.isEmpty)
+        .padding(.bottom, 8)
+    }
+}
 

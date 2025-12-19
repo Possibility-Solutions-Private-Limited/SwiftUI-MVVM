@@ -54,6 +54,7 @@ struct MainView: View {
                 ProfileView().tag(3)
             }
             CustomTabBar(selectedIndex: $selectedIndex)
+                .background(Color.clear) 
                 .padding(.horizontal, 10)
                 .padding(.bottom, 10)
                
