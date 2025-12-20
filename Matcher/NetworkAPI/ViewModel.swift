@@ -196,6 +196,30 @@ class ChangeForgotModel: ObservableObject {
         }
     }
 }
+class StepTwoModel: ObservableObject {
+    func StepTwoAPI(param: [String: Any], completion: @escaping (UserModel?) -> Void) {
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.StepTwo,
+            method: "POST",
+            parameters: param,
+            completion: { (result: Result<UserModel, Error>) in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let response):
+                    print("STEP-TWO Success: \(response)")
+                    if response.success {
+                        completion(response)
+                    } else {
+                        completion(response)
+                    }
+                    case .failure(_):
+                        completion(nil)
+                    }
+                }
+            }
+        )
+    }
+}
 class ChatsModel: ObservableObject {
     @Published var chats: [Chat] = []
     @Published var users: [Users] = []

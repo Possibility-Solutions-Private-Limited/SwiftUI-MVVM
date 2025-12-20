@@ -1,4 +1,5 @@
 import SwiftUI
+import MapKit
 struct Card: Identifiable {
     let id = UUID()
     let step: Int
@@ -13,6 +14,9 @@ struct HomeView: View {
     @State private var selectedSmoke = ""
     @State private var selectedDrink = ""
     @State private var selectedAbout = ""
+    @State private var roomOption = ""
+    @State private var genderOption = ""
+    @State private var Space = ""
     private let initialCards: [Card] = [
         Card(step: 7),
         Card(step: 6),
@@ -23,6 +27,11 @@ struct HomeView: View {
         Card(step: 1),
         Card(step: 0)
     ]
+    @State private var totalSteps: Int = 8
+    @State private var showFinalStep = 0
+    private var currentStep: Int {
+        max(1, totalSteps - cards.count + 1)
+    }
     var body: some View {
         GeometryReader { geo in
             ZStack {
@@ -33,14 +42,23 @@ struct HomeView: View {
                 )
                 .ignoresSafeArea()
                 VStack(spacing: 10) {
-                    header
-                    title
-                    ZStack {
-                        ForEach(cards) { card in
-                            let index = cards.firstIndex { $0.id == card.id } ?? 0
-                            SwipeCard(
-                                step: card.step,
-                                selectedRole:$selectedRole,
+                    if showFinalStep == 1 {
+                        NewStepView(
+                            showFinalStep:$showFinalStep,
+                            selectedRole: $selectedRole,
+                            selectedCategory: $selectedCategory,
+                            selectedShift: $selectedShift,
+                            selectedFood:$selectedFood,
+                            selectedParties:$selectedParties,
+                            selectedSmoke:$selectedSmoke,
+                            selectedDrink:$selectedDrink,
+                            selectedAbout:$selectedAbout,
+                            roomOption: $roomOption,
+                            onNext: next)
+                    }else if showFinalStep == 2 {
+                        GenderStepView(
+                                showFinalStep:$showFinalStep,
+                                selectedRole: $selectedRole,
                                 selectedCategory: $selectedCategory,
                                 selectedShift: $selectedShift,
                                 selectedFood:$selectedFood,
@@ -48,28 +66,82 @@ struct HomeView: View {
                                 selectedSmoke:$selectedSmoke,
                                 selectedDrink:$selectedDrink,
                                 selectedAbout:$selectedAbout,
-                                maxHeight: geo.size.height * 0.7
-                            ) {
-                                withAnimation(.spring()) {
-                                    cards.removeAll { $0.id == card.id }
+                                roomOption: $roomOption,
+                                genderOption: $genderOption,
+                                onNext: next)
+                    }else if showFinalStep == 3 {
+                        SpaceView(
+                                showFinalStep:$showFinalStep,
+                                selectedRole: $selectedRole,
+                                selectedCategory: $selectedCategory,
+                                selectedShift: $selectedShift,
+                                selectedFood:$selectedFood,
+                                selectedParties:$selectedParties,
+                                selectedSmoke:$selectedSmoke,
+                                selectedDrink:$selectedDrink,
+                                selectedAbout:$selectedAbout,
+                                roomOption: $roomOption,
+                                genderOption: $genderOption,
+                                onNext: next)
+                    } else {
+                        header
+                        title
+                        ZStack {
+                            ForEach(cards) { card in
+                                let index = cards.firstIndex { $0.id == card.id } ?? 0
+                                SwipeCard(
+                                    step: card.step,
+                                    currentStep: currentStep,
+                                    totalSteps: totalSteps,
+                                    selectedRole: $selectedRole,
+                                    selectedCategory: $selectedCategory,
+                                    selectedShift: $selectedShift,
+                                    selectedFood: $selectedFood,
+                                    selectedParties: $selectedParties,
+                                    selectedSmoke: $selectedSmoke,
+                                    selectedDrink: $selectedDrink,
+                                    selectedAbout: $selectedAbout,
+                                    maxHeight: geo.size.height * 0.7
+                                ) {
+                                    withAnimation(.spring()) {
+                                        cards.removeAll { $0.id == card.id }
+                                        if cards.isEmpty {
+                                            showFinalStep = 1
+                                        }
+                                    }
                                 }
+                                .offset(y: CGFloat(index) * 7)
                             }
-                            .offset(y: CGFloat(index) * 7)
                         }
+                        .padding(.horizontal)
+                        Spacer(minLength: 5)
                     }
-                    .padding(.horizontal)
-                    Spacer(minLength: 5)
                 }
             }
         }
         .onAppear {
-            if cards.isEmpty {
-                cards = initialCards
-            }
+            cards = initialCards
+        }
+        .onChange(of: selectedRole) {
+            rebuildCards()
         }
     }
-}
-extension HomeView {
+    private func next() {
+    }
+    private func rebuildCards() {
+        if selectedRole == "Student" {
+            let filtered = initialCards.filter { $0.step != 1 }
+            cards = filtered
+            totalSteps = filtered.count
+        } else {
+            cards = initialCards
+            totalSteps = initialCards.count
+        }
+    }
+    private func displayStep(for step: Int) -> Int {
+        let visibleSteps = cards.map(\.step).sorted()
+        return (visibleSteps.firstIndex(of: step) ?? 0) + 1
+    }
     var header: some View {
         HStack {
             Image("profile")
@@ -102,140 +174,164 @@ extension HomeView {
         .padding(.leading,2)
         .padding(.trailing,2)
     }
-}
-struct SwipeCard: View {
-    let step: Int
-    @Binding var selectedRole: String
-    @Binding var selectedCategory: String
-    @Binding var selectedShift: String
-    @Binding var selectedFood: String
-    @Binding var selectedParties: String
-    @Binding var selectedSmoke: String
-    @Binding var selectedDrink: String
-    @Binding var selectedAbout: String
-    let maxHeight: CGFloat
-    let onRemove: () -> Void
-    @State private var offset: CGSize = .zero
-    @State private var rotation: Double = 0
-    private func swipe() {
-        withAnimation(.spring()) {
-            offset = CGSize(width: 600, height: 600)
-            rotation = 30
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            onRemove()
-        }
-    }
-    var body: some View {
-        VStack {
-            switch step {
-            case 0:
-                StepOneView(
-                    selectedRole: $selectedRole,
-                    onNext: swipe,
-                    maxHeight: maxHeight)
-            case 1:
-                StepTwoView(
-                    selectedRole: $selectedRole,
-                    selectedCategory: $selectedCategory,
-                    onNext: swipe,
-                    maxHeight: maxHeight)
-            case 2:
-                StepThreeView(
-                    selectedRole: $selectedRole,
-                    selectedCategory: $selectedCategory,
-                    selectedShift: $selectedShift,
-                    onNext: swipe,
-                    maxHeight: maxHeight)
-            case 3:
-                StepFourView(
-                    selectedRole: $selectedRole,
-                    selectedCategory: $selectedCategory,
-                    selectedShift: $selectedShift,
-                    selectedFood:$selectedFood,
-                    onNext: swipe,
-                    maxHeight: maxHeight)
-            case 4:
-                StepFiveView(
-                    selectedRole: $selectedRole,
-                    selectedCategory: $selectedCategory,
-                    selectedShift: $selectedShift,
-                    selectedFood:$selectedFood,
-                    selectedParties:$selectedParties,
-                    onNext: swipe,
-                    maxHeight: maxHeight)
-            case 5:
-                StepSixView(
-                    selectedRole: $selectedRole,
-                    selectedCategory: $selectedCategory,
-                    selectedShift: $selectedShift,
-                    selectedFood:$selectedFood,
-                    selectedParties:$selectedParties,
-                    selectedSmoke:$selectedSmoke,
-                    onNext: swipe,
-                    maxHeight: maxHeight)
-            case 6:
-                StepSevenView(
-                    selectedRole: $selectedRole,
-                    selectedCategory: $selectedCategory,
-                    selectedShift: $selectedShift,
-                    selectedFood:$selectedFood,
-                    selectedParties:$selectedParties,
-                    selectedSmoke:$selectedSmoke,
-                    selectedDrink:$selectedDrink,
-                    onNext: swipe,
-                    maxHeight: maxHeight)
-            case 7:
-                StepEightView(
-                    selectedRole: $selectedRole,
-                    selectedCategory: $selectedCategory,
-                    selectedShift: $selectedShift,
-                    selectedFood:$selectedFood,
-                    selectedParties:$selectedParties,
-                    selectedSmoke:$selectedSmoke,
-                    selectedDrink:$selectedDrink,
-                    selectedAbout:$selectedAbout,
-                    onNext: swipe,
-                    maxHeight: maxHeight)
-            default:
-                StepOneView(
-                    selectedRole: $selectedRole,
-                    onNext: swipe,
-                    maxHeight: maxHeight)
+    struct SwipeCard: View {
+        let step: Int
+        let currentStep: Int
+        let totalSteps: Int
+        @Binding var selectedRole: String
+        @Binding var selectedCategory: String
+        @Binding var selectedShift: String
+        @Binding var selectedFood: String
+        @Binding var selectedParties: String
+        @Binding var selectedSmoke: String
+        @Binding var selectedDrink: String
+        @Binding var selectedAbout: String
+        let maxHeight: CGFloat
+        let onRemove: () -> Void
+        @State private var offset: CGSize = .zero
+        @State private var rotation: Double = 0
+        private func swipe() {
+            withAnimation(.spring()) {
+                offset = CGSize(width: 600, height: 600)
+                rotation = 30
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                onRemove()
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: maxHeight)
-        .background(Color.white)
-        .cornerRadius(30)
-        .shadow(
-            color: Color.black.opacity(0.08),
-            radius: 8,
-            x: 0,
-            y: 2
-        )
-        .offset(offset)
-        .rotationEffect(.degrees(rotation))
-        .gesture(
-            DragGesture()
-                .onChanged {
-                    offset = $0.translation
-                    rotation = Double($0.translation.width / 20)
+        var body: some View {
+            VStack {
+                switch step {
+                case 0:
+                    StepOneView(
+                        selectedRole: $selectedRole,
+                        currentStep: currentStep,
+                        totalSteps: totalSteps,
+                        onNext: swipe,
+                        maxHeight: maxHeight)
+                case 1:
+                    if selectedRole != "Student" {
+                        StepTwoView(
+                            selectedRole: $selectedRole,
+                            selectedCategory: $selectedCategory,
+                            currentStep: currentStep,
+                            totalSteps: totalSteps,
+                            onNext: swipe,
+                            maxHeight: maxHeight)
+                    }
+                case 2:
+                    StepThreeView(
+                        selectedRole: $selectedRole,
+                        selectedCategory: $selectedCategory,
+                        selectedShift: $selectedShift,
+                        currentStep: currentStep,
+                        totalSteps: totalSteps,
+                        onNext: swipe,
+                        maxHeight: maxHeight)
+                case 3:
+                    StepFourView(
+                        selectedRole: $selectedRole,
+                        selectedCategory: $selectedCategory,
+                        selectedShift: $selectedShift,
+                        selectedFood:$selectedFood,
+                        currentStep: currentStep,
+                        totalSteps: totalSteps,
+                        onNext: swipe,
+                        maxHeight: maxHeight)
+                case 4:
+                    StepFiveView(
+                        selectedRole: $selectedRole,
+                        selectedCategory: $selectedCategory,
+                        selectedShift: $selectedShift,
+                        selectedFood:$selectedFood,
+                        selectedParties:$selectedParties,
+                        currentStep: currentStep,
+                        totalSteps: totalSteps,
+                        onNext: swipe,
+                        maxHeight: maxHeight)
+                case 5:
+                    StepSixView(
+                        selectedRole: $selectedRole,
+                        selectedCategory: $selectedCategory,
+                        selectedShift: $selectedShift,
+                        selectedFood:$selectedFood,
+                        selectedParties:$selectedParties,
+                        selectedSmoke:$selectedSmoke,
+                        currentStep: currentStep,
+                        totalSteps: totalSteps,
+                        onNext: swipe,
+                        maxHeight: maxHeight)
+                case 6:
+                    StepSevenView(
+                        selectedRole: $selectedRole,
+                        selectedCategory: $selectedCategory,
+                        selectedShift: $selectedShift,
+                        selectedFood:$selectedFood,
+                        selectedParties:$selectedParties,
+                        selectedSmoke:$selectedSmoke,
+                        selectedDrink:$selectedDrink,
+                        currentStep: currentStep,
+                        totalSteps: totalSteps,
+                        onNext: swipe,
+                        maxHeight: maxHeight)
+                case 7:
+                    StepEightView(
+                        selectedRole: $selectedRole,
+                        selectedCategory: $selectedCategory,
+                        selectedShift: $selectedShift,
+                        selectedFood:$selectedFood,
+                        selectedParties:$selectedParties,
+                        selectedSmoke:$selectedSmoke,
+                        selectedDrink:$selectedDrink,
+                        selectedAbout:$selectedAbout,
+                        currentStep: currentStep,
+                        totalSteps: totalSteps,
+                        onNext: swipe,
+                        maxHeight: maxHeight)
+                default:
+                    StepOneView(
+                        selectedRole: $selectedRole,
+                        currentStep: currentStep,
+                        totalSteps: totalSteps,
+                        onNext: swipe,
+                        maxHeight: maxHeight)
                 }
-                .onEnded {
-                    if abs($0.translation.width) > 120 {
-                        swipe()
-                    } else {
-                     withAnimation(.spring()) {
-                        offset = .zero
-                        rotation = 0
+            }
+            .frame(maxWidth: .infinity, maxHeight: maxHeight)
+            .background(Color.white)
+            .cornerRadius(30)
+            .shadow(
+                color: Color.black.opacity(0.08),
+                radius: 8,
+                x: 0,
+                y: 2
+            )
+            .offset(offset)
+            .rotationEffect(.degrees(rotation))
+            .gesture(
+                DragGesture()
+                    .onChanged {
+                        offset = $0.translation
+                        rotation = Double($0.translation.width / 20)
+                    }
+                    .onEnded {
+                        if abs($0.translation.width) > 120 {
+                            swipe()
+                        } else {
+                         withAnimation(.spring()) {
+                            offset = .zero
+                            rotation = 0
+                        }
                     }
                 }
-            }
-        )
+            )
+        }
     }
 }
 struct StepOneView: View {
     @Binding var selectedRole: String
+    let currentStep: Int
+    let totalSteps: Int
     let onNext: () -> Void
     let maxHeight: CGFloat
     var body: some View {
@@ -294,7 +390,7 @@ struct StepOneView: View {
             onNext()
         }) {
             HStack {
-                Text("1/7")
+                Text("\(currentStep)/\(totalSteps)")
                     .font(AppFont.manropeMedium(14))
                     .foregroundColor(.yellow)
                 Spacer()
@@ -321,6 +417,8 @@ struct StepOneView: View {
 struct StepTwoView: View {
     @Binding var selectedRole: String
     @Binding var selectedCategory: String
+    let currentStep: Int
+    let totalSteps: Int
     let onNext: () -> Void
     let maxHeight: CGFloat
     private let fields = [
@@ -381,7 +479,7 @@ struct StepTwoView: View {
             onNext()
         }) {
             HStack {
-                Text("2/7")
+                Text("\(currentStep)/\(totalSteps)")
                     .font(AppFont.manropeMedium(14))
                     .foregroundColor(.yellow)
                 Spacer()
@@ -409,6 +507,8 @@ struct StepThreeView: View {
     @Binding var selectedRole: String
     @Binding var selectedCategory: String
     @Binding var selectedShift: String
+    let currentStep: Int
+    let totalSteps: Int
     let onNext: () -> Void
     let maxHeight: CGFloat
     var body: some View {
@@ -462,7 +562,7 @@ struct StepThreeView: View {
             onNext()
         }) {
             HStack {
-                Text("3/7")
+                Text("\(currentStep)/\(totalSteps)")
                     .font(AppFont.manropeMedium(14))
                     .foregroundColor(.yellow)
                 Spacer()
@@ -486,12 +586,13 @@ struct StepThreeView: View {
         .padding(.bottom, 8)
     }
 }
-
 struct StepFourView: View {
     @Binding var selectedRole: String
     @Binding var selectedCategory: String
     @Binding var selectedShift: String
     @Binding var selectedFood: String
+    let currentStep: Int
+    let totalSteps: Int
     let onNext: () -> Void
     let maxHeight: CGFloat
     var body: some View {
@@ -546,7 +647,7 @@ struct StepFourView: View {
             onNext()
         }) {
             HStack {
-                Text("4/7")
+                Text("\(currentStep)/\(totalSteps)")
                     .font(AppFont.manropeMedium(14))
                     .foregroundColor(.yellow)
                 Spacer()
@@ -576,6 +677,8 @@ struct StepFiveView: View {
     @Binding var selectedShift: String
     @Binding var selectedFood: String
     @Binding var selectedParties: String
+    let currentStep: Int
+    let totalSteps: Int
     let onNext: () -> Void
     let maxHeight: CGFloat
     private let fields = [
@@ -636,7 +739,7 @@ struct StepFiveView: View {
             onNext()
         }) {
             HStack {
-                Text("5/7")
+                Text("\(currentStep)/\(totalSteps)")
                     .font(AppFont.manropeMedium(14))
                     .foregroundColor(.yellow)
                 Spacer()
@@ -667,6 +770,8 @@ struct StepSixView: View {
     @Binding var selectedFood: String
     @Binding var selectedParties: String
     @Binding var selectedSmoke: String
+    let currentStep: Int
+    let totalSteps: Int
     let onNext: () -> Void
     let maxHeight: CGFloat
     var body: some View {
@@ -723,7 +828,7 @@ struct StepSixView: View {
             onNext()
         }) {
             HStack {
-                Text("6/7")
+                Text("\(currentStep)/\(totalSteps)")
                     .font(AppFont.manropeMedium(14))
                     .foregroundColor(.yellow)
                 Spacer()
@@ -755,6 +860,8 @@ struct StepSevenView: View {
     @Binding var selectedParties: String
     @Binding var selectedSmoke: String
     @Binding var selectedDrink: String
+    let currentStep: Int
+    let totalSteps: Int
     let onNext: () -> Void
     let maxHeight: CGFloat
     var body: some View {
@@ -812,7 +919,7 @@ struct StepSevenView: View {
             onNext()
         }) {
             HStack {
-                Text("7/7")
+                Text("\(currentStep)/\(totalSteps)")
                     .font(AppFont.manropeMedium(14))
                     .foregroundColor(.yellow)
                 Spacer()
@@ -845,6 +952,8 @@ struct StepEightView: View {
     @Binding var selectedSmoke: String
     @Binding var selectedDrink: String
     @Binding var selectedAbout: String
+    let currentStep: Int
+    let totalSteps: Int
     let onNext: () -> Void
     let maxHeight: CGFloat
     @State private var isFocused: Bool = false
@@ -901,7 +1010,7 @@ struct StepEightView: View {
             onNext()
         }) {
             HStack {
-                Text("7/7")
+                Text("\(currentStep)/\(totalSteps)")
                     .font(AppFont.manropeMedium(14))
                     .foregroundColor(.yellow)
                 Spacer()
@@ -925,4 +1034,514 @@ struct StepEightView: View {
         .padding(.bottom, 8)
     }
 }
+struct NewStepView: View {
+    @Binding var showFinalStep: Int
+    @Binding var selectedRole: String
+    @Binding var selectedCategory: String
+    @Binding var selectedShift: String
+    @Binding var selectedFood: String
+    @Binding var selectedParties: String
+    @Binding var selectedSmoke: String
+    @Binding var selectedDrink: String
+    @Binding var selectedAbout: String
+    @Binding var roomOption: String
+    let onNext: () -> Void
+    var body: some View {
+        VStack {
+            header
+            Spacer().frame(height: 40)
+            title
+            Spacer().frame(height: 30)
+            VStack(spacing: 16) {
+                OptionButton(title: "Yes, I have a room to share", isSelected: roomOption == "Yes") {
+                    roomOption = "Yes"
+                }
+                OptionButton(title: "No, I’m looking for a room", isSelected: roomOption == "No") {
+                    roomOption = "No"
+                }
+            }
+            .padding(.horizontal, 20)
+             Spacer()
+             nextButton
+            .padding(.horizontal, 10)
+            .padding(.bottom, 200)
+        }
+        .edgesIgnoringSafeArea(.bottom)
+        .onAppear {
+            
+        }
+    }
+    private var nextButton: some View {
+        HStack(spacing: 12) {
+            Button(action: {
+                showFinalStep -= 1
+            }) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(AppColors.primaryYellow)
+                            .frame(width: 56, height: 56)
+                        Image("dobleBack")
+                    }
+            }
+            Button(action: {
+                print("Selected Role: \(selectedRole)")
+                print("Selected Category: \(selectedCategory)")
+                print("Selected Shift: \(selectedShift)")
+                print("Selected Food: \(selectedFood)")
+                print("Selected Parties: \(selectedParties)")
+                print("Selected Smoke: \(selectedSmoke)")
+                print("Selected Drink: \(selectedDrink)")
+                print("Selected About: \(selectedAbout)")
+                print("Selected room Option: \(roomOption)")
+                showFinalStep = 2
+            }) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            roomOption.isEmpty
+                            ? Color.black.opacity(0.3)
+                            : Color.black
+                        )
+                        .frame(height: 56)
+                    Text("Next")
+                        .font(AppFont.manropeMedium(16))
+                        .foregroundColor(.white)
+                }
+            }.disabled(roomOption.isEmpty)
 
+        }
+        .padding(.horizontal, 10)
+        .padding(.bottom, 30)
+    }
+    var header: some View {
+        HStack {
+            Image("profile")
+                .resizable()
+                .scaledToFill()
+                .frame(width: 50, height: 50)
+                .clipShape(Circle())
+            Spacer()
+            HStack(spacing: 5) {
+                Image("location")
+                Text("Galway, Ireland")
+                    .font(AppFont.manropeSemiBold(16))
+            }
+            Spacer()
+            Image("bell")
+        }
+        .padding(.horizontal)
+    }
+    var title: some View {
+        VStack(spacing: 5) {
+            Text("Do you have a room right now?")
+                .font(AppFont.manropeBold(17))
+                .multilineTextAlignment(.center)
+            Text("This helps us match you with people who fit your living vibe — whether you’re offering a room or looking")
+                .multilineTextAlignment(.center)
+                .font(AppFont.manrope(14))
+                .foregroundColor(.gray)
+        }
+        .padding(.horizontal)
+        .padding(.leading,2)
+        .padding(.trailing,2)
+    }
+    struct OptionButton: View {
+        let title: String
+        let isSelected: Bool
+        let action: () -> Void
+        var body: some View {
+            Button(action: action) {
+                HStack(spacing: 14) {
+                    Image(isSelected ? "select" : "unselect")
+                        .resizable()
+                        .frame(width: 22, height: 22)
+                    Text(title)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.black)
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 18)
+                .frame(maxWidth: .infinity)
+                .background(isSelected ? Color.yellow : Color.white)
+                .cornerRadius(14)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color.black, lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+struct GenderStepView: View {
+    @Binding var showFinalStep: Int
+    @Binding var selectedRole: String
+    @Binding var selectedCategory: String
+    @Binding var selectedShift: String
+    @Binding var selectedFood: String
+    @Binding var selectedParties: String
+    @Binding var selectedSmoke: String
+    @Binding var selectedDrink: String
+    @Binding var selectedAbout: String
+    @Binding var roomOption: String
+    @Binding var genderOption: String
+    let onNext: () -> Void
+    private let options = ["Male", "Female", "Non-binary", "Open to all"]
+    var body: some View {
+        VStack {
+            header
+            Spacer().frame(height: 40)
+            title
+            Spacer().frame(height: 30)
+            optionsSection
+            Spacer()
+             nextButton
+            .padding(.horizontal, 10)
+            .padding(.bottom, 100)
+        }
+        .edgesIgnoringSafeArea(.bottom)
+        .onAppear {
+            
+        }
+    }
+    private var nextButton: some View {
+        HStack(spacing: 12) {
+            Button(action: {
+                showFinalStep -= 1
+            }) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(AppColors.primaryYellow)
+                            .frame(width: 56, height: 56)
+                        Image("dobleBack")
+                    }
+            }
+            Button(action: {
+                print("Selected Role: \(selectedRole)")
+                print("Selected Category: \(selectedCategory)")
+                print("Selected Shift: \(selectedShift)")
+                print("Selected Food: \(selectedFood)")
+                print("Selected Parties: \(selectedParties)")
+                print("Selected Smoke: \(selectedSmoke)")
+                print("Selected Drink: \(selectedDrink)")
+                print("Selected About: \(selectedAbout)")
+                print("Selected room Option: \(roomOption)")
+                print("Selected gender Option: \(genderOption)")
+                showFinalStep = 3
+            }) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            genderOption.isEmpty
+                            ? Color.black.opacity(0.3)
+                            : Color.black
+                        )
+                        .frame(height: 56)
+                    Text("Next")
+                        .font(AppFont.manropeMedium(16))
+                        .foregroundColor(.white)
+                }
+            }
+            .disabled(genderOption.isEmpty)
+        }
+        .padding(.horizontal, 10)
+        .padding(.bottom, 30)
+    }
+    var header: some View {
+        HStack {
+            Image("profile")
+                .resizable()
+                .scaledToFill()
+                .frame(width: 50, height: 50)
+                .clipShape(Circle())
+            Spacer()
+            HStack(spacing: 5) {
+                Image("location")
+                Text("Galway, Ireland")
+                    .font(AppFont.manropeSemiBold(16))
+            }
+            Spacer()
+            Image("bell")
+        }
+        .padding(.horizontal)
+    }
+    var title: some View {
+        VStack(spacing: 5) {
+            Text("Who Would You Like to Live With?")
+                .font(AppFont.manropeBold(17))
+                .multilineTextAlignment(.center)
+            Text("Pick the gender you prefer to meet. You can update this anytime.")
+                .multilineTextAlignment(.center)
+                .font(AppFont.manrope(14))
+                .foregroundColor(.gray)
+        }
+        .padding(.horizontal)
+        .padding(.leading,2)
+        .padding(.trailing,2)
+    }
+    var optionsSection: some View {
+        VStack(spacing: 16) {
+            ForEach(options, id: \.self) { option in
+                GenderOptionCard(
+                    title: option,
+                    isSelected: genderOption == option
+                ) {
+                    genderOption = option
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+    }
+    struct GenderOptionCard: View {
+        let title: String
+        let isSelected: Bool
+        let action: () -> Void
+        var body: some View {
+            Button(action: action) {
+                HStack(spacing: 14) {
+                    Image(isSelected ? "select" : "unselect")
+                        .resizable()
+                        .frame(width: 22, height: 22)
+                    Text(title)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.black)
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 18)
+                .frame(maxWidth: .infinity)
+                .background(isSelected ? Color.yellow : Color.white)
+                .cornerRadius(14)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color.black, lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+struct SpaceView: View {
+    @Binding var showFinalStep: Int
+    @Binding var selectedRole: String
+    @Binding var selectedCategory: String
+    @Binding var selectedShift: String
+    @Binding var selectedFood: String
+    @Binding var selectedParties: String
+    @Binding var selectedSmoke: String
+    @Binding var selectedDrink: String
+    @Binding var selectedAbout: String
+    @Binding var roomOption: String
+    @Binding var genderOption: String
+    let onNext: () -> Void
+    
+    @State private var selectedSpaceType = "Single Room"
+    @State private var roommates = 2
+    @State private var rent = "5000"
+    @State private var furnishing = "Fully Furnished"
+    @State private var selectedAmenities: Set<String> = ["Wi-fi"]
+    @State private var selectedGender = "Male"
+    @State private var region = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 40.6782, longitude: -73.9442),
+        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+    )
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 20) {
+                    
+                    // User Info
+                    HStack {
+                        Image("user_photo")
+                            .resizable()
+                            .frame(width: 40, height: 40)
+                            .clipShape(Circle())
+                        Text("Yes")
+                            .fontWeight(.medium)
+                        Spacer()
+                        Image(systemName: "bell.fill")
+                            .padding(8)
+                            .background(Color.white.opacity(0.8))
+                            .clipShape(Circle())
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 16)
+                    
+                    // Location
+                    HStack {
+                        Image(systemName: "mappin.and.ellipse")
+                            .foregroundColor(.yellow)
+                        Text("Galway , Ireland")
+                            .font(.subheadline)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                    
+                    // Title
+                    VStack(spacing: 4) {
+                        Text("Add Space Details")
+                            .font(.title2).bold()
+                        Text("These details help others understand your space and vibe before connecting.")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Photos
+                    VStack(alignment: .leading) {
+                        Text("Add At Least 5 Clear Photos Of Your Space.")
+                            .font(.subheadline)
+                            .padding(.horizontal)
+                        HStack(spacing: 10) {
+                            ForEach(0..<5) { index in
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(style: StrokeStyle(lineWidth: 1, dash: [5]))
+                                        .frame(width: index == 0 ? 140 : 60, height: index == 0 ? 140 : 60)
+                                    Circle()
+                                        .fill(Color.yellow)
+                                        .frame(width: 30, height: 30)
+                                        .overlay(Image(systemName: "plus").foregroundColor(.black))
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    
+                    // Space Type
+                    ToggleSelectionView(options: ["Single Room","1 BHK","2 BHK","3 BHK"], selectedOption: $selectedSpaceType)
+                        .padding(.horizontal)
+                    
+                    // Roommates
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("How Many Roommates Do You Want?")
+                        HStack(spacing: 8) {
+                            ForEach(1...6, id: \.self) { num in
+                                Text("\(num)")
+                                    .frame(width: 44, height: 44)
+                                    .background(roommates == num ? Color.yellow : Color.black)
+                                    .foregroundColor(roommates == num ? .black : .white)
+                                    .cornerRadius(8)
+                                    .onTapGesture { roommates = num }
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    
+                    // Rent
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Rent Split (Per Person)")
+                        TextField("5000", text: $rent)
+                            .keyboardType(.numberPad)
+                            .padding()
+                            .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray))
+                    }
+                    .padding(.horizontal)
+                    
+                    // Furnishing
+                    ToggleSelectionView(options: ["Fully Furnished","Semi Furnished","Unfurnished"], selectedOption: $furnishing)
+                        .padding(.horizontal)
+                    
+                    // Amenities
+                    AmenitiesGrid(selectedAmenities: $selectedAmenities)
+                        .padding(.horizontal)
+                    
+                    // Gender Preference
+                    ToggleSelectionView(options: ["Male","Female","Non-binary","Open to all"], selectedOption: $selectedGender)
+                        .padding(.horizontal)
+                    
+                    // Map
+                    Map(coordinateRegion: $region)
+                        .frame(height: 200)
+                        .cornerRadius(12)
+                        .overlay(
+                            Button(action: { print("Choose on map") }) {
+                                Text("Choose on Map →")
+                                    .font(.subheadline)
+                                    .padding()
+                                    .background(Color.yellow)
+                                    .cornerRadius(8)
+                            }
+                            .padding(),
+                            alignment: .bottom
+                        )
+                        .padding(.horizontal)
+                        .padding(.bottom, 20)
+                }
+            }
+            
+            // Bottom Buttons
+            HStack(spacing: 16) {
+                Button(action: { }) {
+                    Image(systemName: "chevron.left")
+                        .frame(width: 56, height: 56)
+                        .background(Color.yellow)
+                        .cornerRadius(16)
+                }
+                Button(action: { onNext() }) {
+                    Text("Next")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, maxHeight: 56)
+                        .background(Color.black)
+                        .cornerRadius(18)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 16)
+        }
+        .background(Color.yellow.opacity(0.1).ignoresSafeArea())
+    }
+}
+
+// MARK: - Components
+
+struct ToggleSelectionView: View {
+    let options: [String]
+    @Binding var selectedOption: String
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(options, id: \.self) { option in
+                Text(option)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(selectedOption == option ? Color.yellow : Color.black)
+                    .foregroundColor(selectedOption == option ? .black : .white)
+                    .onTapGesture { selectedOption = option }
+            }
+        }
+        .cornerRadius(8)
+    }
+}
+
+struct AmenitiesGrid: View {
+    @Binding var selectedAmenities: Set<String>
+    let amenities = ["Ac","Wi-fi","Parking","Kitchen","Washing Machine","Water 24x7","Balcony","Pet Friendly"]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Amenities")
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 10) {
+                ForEach(amenities, id: \.self) { amenity in
+                    Text(amenity)
+                        .font(.subheadline)
+                        .padding(8)
+                        .background(selectedAmenities.contains(amenity) ? Color.yellow : Color.clear)
+                        .foregroundColor(.black)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black))
+                        .onTapGesture {
+                            if selectedAmenities.contains(amenity) {
+                                selectedAmenities.remove(amenity)
+                            } else {
+                                selectedAmenities.insert(amenity)
+                            }
+                        }
+                }
+            }
+        }
+    }
+}
