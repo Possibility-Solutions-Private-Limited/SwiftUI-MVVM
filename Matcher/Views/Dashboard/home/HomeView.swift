@@ -1322,6 +1322,7 @@ struct GenderStepView: View {
         }
     }
 }
+
 struct SpaceView: View {
     @Binding var showFinalStep: Int
     @Binding var selectedRole: String
@@ -1335,213 +1336,263 @@ struct SpaceView: View {
     @Binding var roomOption: String
     @Binding var genderOption: String
     let onNext: () -> Void
-    
     @State private var selectedSpaceType = "Single Room"
-    @State private var roommates = 2
+    @State private var selectedRoommates = 2
     @State private var rent = "5000"
-    @State private var furnishing = "Fully Furnished"
-    @State private var selectedAmenities: Set<String> = ["Wi-fi"]
+    @State private var selectedFurnishing = "Fully Furnished"
     @State private var selectedGender = "Male"
-    @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 40.6782, longitude: -73.9442),
-        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+    @State private var selectedAmenities: Set<String> = ["Wi-Fi"]
+    @State private var cameraPosition: MapCameraPosition = .region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 40.6782, longitude: -73.9442),
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        )
     )
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(spacing: 20) {
-                    
-                    // User Info
-                    HStack {
-                        Image("user_photo")
-                            .resizable()
-                            .frame(width: 40, height: 40)
-                            .clipShape(Circle())
-                        Text("Yes")
-                            .fontWeight(.medium)
-                        Spacer()
-                        Image(systemName: "bell.fill")
-                            .padding(8)
-                            .background(Color.white.opacity(0.8))
-                            .clipShape(Circle())
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 16)
-                    
-                    // Location
-                    HStack {
-                        Image(systemName: "mappin.and.ellipse")
-                            .foregroundColor(.yellow)
-                        Text("Galway , Ireland")
-                            .font(.subheadline)
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    
-                    // Title
-                    VStack(spacing: 4) {
-                        Text("Add Space Details")
-                            .font(.title2).bold()
-                        Text("These details help others understand your space and vibe before connecting.")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
-                    
-                    // Photos
-                    VStack(alignment: .leading) {
-                        Text("Add At Least 5 Clear Photos Of Your Space.")
-                            .font(.subheadline)
-                            .padding(.horizontal)
-                        HStack(spacing: 10) {
-                            ForEach(0..<5) { index in
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(style: StrokeStyle(lineWidth: 1, dash: [5]))
-                                        .frame(width: index == 0 ? 140 : 60, height: index == 0 ? 140 : 60)
-                                    Circle()
-                                        .fill(Color.yellow)
-                                        .frame(width: 30, height: 30)
-                                        .overlay(Image(systemName: "plus").foregroundColor(.black))
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                    
-                    // Space Type
-                    ToggleSelectionView(options: ["Single Room","1 BHK","2 BHK","3 BHK"], selectedOption: $selectedSpaceType)
-                        .padding(.horizontal)
-                    
-                    // Roommates
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("How Many Roommates Do You Want?")
-                        HStack(spacing: 8) {
-                            ForEach(1...6, id: \.self) { num in
-                                Text("\(num)")
-                                    .frame(width: 44, height: 44)
-                                    .background(roommates == num ? Color.yellow : Color.black)
-                                    .foregroundColor(roommates == num ? .black : .white)
-                                    .cornerRadius(8)
-                                    .onTapGesture { roommates = num }
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    // Rent
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Rent Split (Per Person)")
-                        TextField("5000", text: $rent)
-                            .keyboardType(.numberPad)
-                            .padding()
-                            .background(RoundedRectangle(cornerRadius: 8).stroke(Color.gray))
-                    }
-                    .padding(.horizontal)
-                    
-                    // Furnishing
-                    ToggleSelectionView(options: ["Fully Furnished","Semi Furnished","Unfurnished"], selectedOption: $furnishing)
-                        .padding(.horizontal)
-                    
-                    // Amenities
-                    AmenitiesGrid(selectedAmenities: $selectedAmenities)
-                        .padding(.horizontal)
-                    
-                    // Gender Preference
-                    ToggleSelectionView(options: ["Male","Female","Non-binary","Open to all"], selectedOption: $selectedGender)
-                        .padding(.horizontal)
-                    
-                    // Map
-                    Map(coordinateRegion: $region)
-                        .frame(height: 200)
-                        .cornerRadius(12)
-                        .overlay(
-                            Button(action: { print("Choose on map") }) {
-                                Text("Choose on Map →")
-                                    .font(.subheadline)
-                                    .padding()
-                                    .background(Color.yellow)
-                                    .cornerRadius(8)
-                            }
-                            .padding(),
-                            alignment: .bottom
-                        )
-                        .padding(.horizontal)
-                        .padding(.bottom, 20)
-                }
-            }
-            
-            // Bottom Buttons
-            HStack(spacing: 16) {
-                Button(action: { }) {
-                    Image(systemName: "chevron.left")
-                        .frame(width: 56, height: 56)
-                        .background(Color.yellow)
-                        .cornerRadius(16)
-                }
-                Button(action: { onNext() }) {
-                    Text("Next")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity, maxHeight: 56)
-                        .background(Color.black)
-                        .cornerRadius(18)
-                }
-            }
-            .padding(.horizontal)
-            .padding(.bottom, 16)
-        }
-        .background(Color.yellow.opacity(0.1).ignoresSafeArea())
+    private let yellow = Color(hex: "#FFD84D")
+    private let bg = Color(hex: "#FFF7CC")
+    struct Amenity: Identifiable {
+        let id = UUID()
+        let title: String
+        let image: String
     }
-}
-
-// MARK: - Components
-
-struct ToggleSelectionView: View {
-    let options: [String]
-    @Binding var selectedOption: String
-    
     var body: some View {
+        VStack(spacing: 20) {
+            header
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 20) {
+                    title
+                    photosSection
+                    sectionTitle("Space Type")
+                    segmented(
+                        options: ["Single Room", "1 BHK", "2 BHK", "3 BHK"],
+                        selected: $selectedSpaceType
+                    )
+                    sectionTitle("How Many Roommates Do You Want?")
+                    roommatesSection
+                    sectionTitle("Rent Split (Per Person)")
+                    rentField
+                    sectionTitle("Furnishing")
+                    segmented(
+                        options: ["Fully Furnished", "Semi Furnished", "Unfurnished"],
+                        selected: $selectedFurnishing
+                    )
+                    sectionTitle("Amenities")
+                    amenitiesGrid
+                    sectionTitle("Who Would You Like To Live With?")
+                    segmented(
+                        options: ["Male", "Female", "Non-binary", "Open to all"],
+                        selected: $selectedGender
+                    )
+                    mapSection
+                    nextButton
+                }
+                .padding(.bottom,40)
+                .padding(.horizontal)
+            }
+        }
+    }
+    private var photosSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Add At Least 5 Clear Photos Of Your Space.")
+                .font(.system(size: 14, weight: .medium))
+            HStack(spacing: 12) {
+                dashedPhoto(size: 150)
+                VStack(spacing: 12) {
+                    HStack(spacing: 12) {
+                        dashedPhoto(size: 70)
+                        dashedPhoto(size: 70)
+                    }
+                    HStack(spacing: 12) {
+                        dashedPhoto(size: 70)
+                        dashedPhoto(size: 70)
+                    }
+                }
+            }
+        }
+    }
+    private var roommatesSection: some View {
+        HStack(spacing: 10) {
+            ForEach(1...6, id: \.self) { num in
+                Text("\(num)")
+                    .frame(width: 46, height: 46)
+                    .background(selectedRoommates == num ? yellow : .black)
+                    .foregroundColor(selectedRoommates == num ? .black : .white)
+                    .cornerRadius(10)
+                    .onTapGesture { selectedRoommates = num }
+            }
+        }
+    }
+    private var rentField: some View {
+        TextField("5000", text: $rent)
+            .keyboardType(.numberPad)
+            .padding()
+            .background(Color.white)
+            .cornerRadius(12)
+    }
+    private var mapSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Location : Brooklyn, New York, NY 11226")
+                .font(.system(size: 14, weight: .medium))
+            Map(position: $cameraPosition)
+                .frame(height: 220)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .overlay(
+                    Button {
+                    } label: {
+                        HStack {
+                            Text("Choose on Map")
+                            Image(systemName: "arrow.right")
+                        }
+                        .font(.system(size: 14, weight: .medium))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(yellow)
+                        .cornerRadius(10)
+                    }
+                    .padding(),
+                    alignment: .bottom
+                )
+        }
+    }
+    private var nextButton: some View {
+        HStack(spacing: 12) {
+            Button {
+                showFinalStep -= 1
+            } label: {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(AppColors.primaryYellow)
+                    .frame(width: 56, height: 56)
+                    .overlay(Image("dobleBack"))
+            }
+            Button {
+                debugPrintData()
+                showFinalStep = 3
+                onNext()
+            } label: {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(genderOption.isEmpty ? Color.black.opacity(0.3) : .black)
+                    .frame(height: 56)
+                    .overlay(
+                        Text("Next")
+                            .font(AppFont.manropeMedium(16))
+                            .foregroundColor(.white)
+                    )
+            }
+            .disabled(genderOption.isEmpty)
+        }
+    }
+    private var header: some View {
+        HStack {
+            Image("profile")
+                .resizable()
+                .scaledToFill()
+                .frame(width: 50, height: 50)
+                .clipShape(Circle())
+            Spacer()
+            HStack(spacing: 5) {
+                Image("location")
+                Text("Galway, Ireland")
+                    .font(AppFont.manropeSemiBold(16))
+            }
+            Spacer()
+            Image("bell")
+        }
+        .padding(.horizontal)
+    }
+    private var title: some View {
+        VStack(spacing: 6) {
+            Text("Add Space Details")
+                .font(AppFont.manropeBold(17))
+                .multilineTextAlignment(.center)
+            Text("These details help others understand your space and vibe before connecting.")
+                .font(AppFont.manrope(14))
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+        }
+        .padding(.horizontal)
+    }
+    func sectionTitle(_ title: String) -> some View {
+        Text(title)
+            .font(.system(size: 15, weight: .semibold))
+    }
+    func dashedPhoto(size: CGFloat) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(style: StrokeStyle(lineWidth: 1, dash: [6]))
+                .frame(width: size, height: size)
+            Circle()
+                .fill(yellow)
+                .frame(width: 34, height: 34)
+                .overlay(
+                    Image(systemName: "plus")
+                        .font(.system(size: 18, weight: .bold))
+                )
+        }
+    }
+    func segmented(options: [String], selected: Binding<String>) -> some View {
         HStack(spacing: 0) {
             ForEach(options, id: \.self) { option in
                 Text(option)
+                    .font(.system(size: 14, weight: .medium))
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(selectedOption == option ? Color.yellow : Color.black)
-                    .foregroundColor(selectedOption == option ? .black : .white)
-                    .onTapGesture { selectedOption = option }
+                    .padding(.vertical, 12)
+                    .background(selected.wrappedValue == option ? yellow : .black)
+                    .foregroundColor(selected.wrappedValue == option ? .black : .white)
+                    .onTapGesture { selected.wrappedValue = option }
             }
         }
-        .cornerRadius(8)
+        .cornerRadius(12)
     }
-}
+    var amenitiesGrid: some View {
+        let amenities: [Amenity] = [
+            Amenity(title: "AC", image: "ac"),
+            Amenity(title: "Wi-Fi", image: "wifi"),
+            Amenity(title: "Parking", image: "parking"),
+            Amenity(title: "Kitchen", image: "kitchen"),
+            Amenity(title: "Washing", image: "washing"),
+            Amenity(title: "24x7 Water", image: "water"),
+            Amenity(title: "Balcony", image: "balcony"),
+            Amenity(title: "Pet Friendly", image: "pet")
+        ]
+        return LazyVGrid(columns: [GridItem(.adaptive(minimum: 110))], spacing: 14) {
+            ForEach(amenities) { item in
+                VStack(spacing: 8) {
+                    Image(item.image)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 28, height: 28)
 
-struct AmenitiesGrid: View {
-    @Binding var selectedAmenities: Set<String>
-    let amenities = ["Ac","Wi-fi","Parking","Kitchen","Washing Machine","Water 24x7","Balcony","Pet Friendly"]
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Amenities")
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 10) {
-                ForEach(amenities, id: \.self) { amenity in
-                    Text(amenity)
-                        .font(.subheadline)
-                        .padding(8)
-                        .background(selectedAmenities.contains(amenity) ? Color.yellow : Color.clear)
-                        .foregroundColor(.black)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black))
-                        .onTapGesture {
-                            if selectedAmenities.contains(amenity) {
-                                selectedAmenities.remove(amenity)
-                            } else {
-                                selectedAmenities.insert(amenity)
-                            }
-                        }
+                    Text(item.title)
+                        .font(.system(size: 13, weight: .medium))
+                }
+                .frame(height: 80)
+                .frame(maxWidth: .infinity)
+                .background(selectedAmenities.contains(item.title) ? yellow : .clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.black, lineWidth: 1)
+                )
+                .cornerRadius(12)
+                .onTapGesture {
+                    if selectedAmenities.contains(item.title) {
+                        selectedAmenities.remove(item.title)
+                    } else {
+                        selectedAmenities.insert(item.title)
+                    }
                 }
             }
         }
+    }
+    private func debugPrintData() {
+        print("Selected Role:", selectedRole)
+        print("Selected Category:", selectedCategory)
+        print("Selected Shift:", selectedShift)
+        print("Selected Food:", selectedFood)
+        print("Selected Parties:", selectedParties)
+        print("Selected Smoke:", selectedSmoke)
+        print("Selected Drink:", selectedDrink)
+        print("Selected About:", selectedAbout)
+        print("Selected Room Option:", roomOption)
+        print("Selected Gender Option:", genderOption)
     }
 }
