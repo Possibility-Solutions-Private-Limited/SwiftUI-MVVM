@@ -1074,16 +1074,6 @@ struct NewStepView: View {
     private var nextButton: some View {
         HStack(spacing: 12) {
             Button(action: {
-                showFinalStep -= 1
-            }) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(AppColors.primaryYellow)
-                            .frame(width: 56, height: 56)
-                        Image("dobleBack")
-                    }
-            }
-            Button(action: {
                 print("Selected Role: \(selectedRole)")
                 print("Selected Category: \(selectedCategory)")
                 print("Selected Shift: \(selectedShift)")
@@ -1336,9 +1326,8 @@ struct SpaceView: View {
     @Binding var roomOption: String
     @Binding var genderOption: String
     let onNext: () -> Void
-
     @State private var selectedSpaceType = "Single Room"
-    @State private var selectedRoommates = 2
+    @State private var selectedRoommates = 1
     @State private var rent = "5000"
     @State private var selectedFurnishing = "Fully Furnished"
     @State private var selectedGender = "Male"
@@ -1349,20 +1338,18 @@ struct SpaceView: View {
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         )
     )
-
     struct Amenity: Identifiable {
         let id = UUID()
         let title: String
         let image: String
     }
-
     var body: some View {
         VStack(spacing: 20) {
             header
             ScrollView(showsIndicators: false) {
+                title
                 VStack(alignment: .leading, spacing: 20) {
-                    title
-                    photosSection
+                    photosSection.padding(.top,10)
                     sectionTitle("Space Type")
                     segmented(
                         options: ["Single Room", "1 BHK", "2 BHK", "3 BHK"],
@@ -1392,9 +1379,8 @@ struct SpaceView: View {
             }
         }
     }
-
     private var photosSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 5) {
             Text("Add At Least 5 Clear Photos Of Your Space.")
                 .font(AppFont.manropeMedium(14))
             HStack(spacing: 12) {
@@ -1412,7 +1398,6 @@ struct SpaceView: View {
             }
         }
     }
-
     private var roommatesSection: some View {
         HStack(spacing: 10) {
             ForEach(1...6, id: \.self) { num in
@@ -1426,7 +1411,6 @@ struct SpaceView: View {
             }
         }
     }
-
     private var rentField: some View {
         TextField("5000", text: $rent)
             .keyboardType(.numberPad)
@@ -1434,33 +1418,36 @@ struct SpaceView: View {
             .background(AppColors.backgroundWhite)
             .cornerRadius(12)
     }
-
     private var mapSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Location : Brooklyn, New York, NY 11226")
                 .font(AppFont.manropeMedium(14))
             Map(position: $cameraPosition)
-                .frame(height: 220)
+                .frame(height: 150)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .overlay(
                     Button {
                     } label: {
                         HStack {
                             Text("Choose on Map")
+                                .foregroundColor(.black)
                                 .font(AppFont.manropeMedium(14))
-                            Image(systemName: "arrow.right")
+                            Image("arrow")
                         }
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, 15)
                         .padding(.vertical, 10)
                         .background(AppColors.primaryYellow)
-                        .cornerRadius(10)
+                        .cornerRadius(5)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5)
+                            .stroke(Color.black, lineWidth: 1)
+                        )
                     }
                     .padding(),
                     alignment: .bottom
                 )
         }
     }
-
     private var nextButton: some View {
         HStack(spacing: 12) {
             Button {
@@ -1488,7 +1475,6 @@ struct SpaceView: View {
             .disabled(genderOption.isEmpty)
         }
     }
-
     private var header: some View {
         HStack {
             Image("profile")
@@ -1507,9 +1493,8 @@ struct SpaceView: View {
         }
         .padding(.horizontal)
     }
-
     private var title: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 5) {
             Text("Add Space Details")
                 .font(AppFont.manropeBold(17))
                 .multilineTextAlignment(.center)
@@ -1518,13 +1503,14 @@ struct SpaceView: View {
                 .foregroundColor(AppColors.Gray)
                 .multilineTextAlignment(.center)
         }
+        .padding(.horizontal)
+        .padding(.leading,2)
+        .padding(.trailing,2)
     }
-
     func sectionTitle(_ title: String) -> some View {
         Text(title)
             .font(AppFont.manropeSemiBold(15))
     }
-
     func dashedPhoto(size: CGFloat) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 14)
@@ -1539,7 +1525,6 @@ struct SpaceView: View {
                 )
         }
     }
-
     func segmented(options: [String], selected: Binding<String>) -> some View {
         HStack(spacing: 0) {
             ForEach(options.indices, id: \.self) { index in
@@ -1576,10 +1561,8 @@ struct SpaceView: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
-
     struct StepAmenitiesView: View {
         @Binding var selectedAmenities: Set<String>
-
         private let amenities: [Amenity] = [
             Amenity(title: "AC", image: "ac"),
             Amenity(title: "Wi-Fi", image: "wifi"),
@@ -1590,7 +1573,6 @@ struct SpaceView: View {
             Amenity(title: "Balcony", image: "balcony"),
             Amenity(title: "Pet Friendly", image: "pet")
         ]
-
         var body: some View {
             ScrollView {
                 FlowLayout(spacing: 10) {
@@ -1601,7 +1583,6 @@ struct SpaceView: View {
                 .padding(.top, 5)
             }
         }
-
         private func AmenityButton(_ item: Amenity) -> some View {
             Button {
                 if selectedAmenities.contains(item.title) {
@@ -1624,31 +1605,32 @@ struct SpaceView: View {
                 .background(
                     selectedAmenities.contains(item.title)
                     ? AppColors.primaryYellow
-                    : AppColors.backgroundWhite
+                    : AppColors.backgroundClear
                 )
-                .cornerRadius(16)
+                .cornerRadius(5)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: 5)
                         .stroke(Color.black.opacity(0.3), lineWidth: 1)
                 )
             }
         }
     }
-
-
-
-
-
     private func debugPrintData() {
-        print("Selected Role:", selectedRole)
-        print("Selected Category:", selectedCategory)
-        print("Selected Shift:", selectedShift)
-        print("Selected Food:", selectedFood)
-        print("Selected Parties:", selectedParties)
-        print("Selected Smoke:", selectedSmoke)
-        print("Selected Drink:", selectedDrink)
-        print("Selected About:", selectedAbout)
-        print("Selected Room Option:", roomOption)
-        print("Selected Gender Option:", genderOption)
+            print("Selected Role:", selectedRole)
+            print("Selected Category:", selectedCategory)
+            print("Selected Shift:", selectedShift)
+            print("Selected Food:", selectedFood)
+            print("Selected Parties:", selectedParties)
+            print("Selected Smoke:", selectedSmoke)
+            print("Selected Drink:", selectedDrink)
+            print("Selected About:", selectedAbout)
+            print("Selected Room Option:", roomOption)
+            print("Selected Gender Option:", genderOption)
+            print("Selected Space Type:", selectedSpaceType)
+            print("Selected Roommates:", selectedRoommates)
+            print("Rent:", rent)
+            print("Selected Furnishing:", selectedFurnishing)
+            print("Selected Gender:", selectedGender)
+            print("Selected Amenities:", selectedAmenities)
     }
 }

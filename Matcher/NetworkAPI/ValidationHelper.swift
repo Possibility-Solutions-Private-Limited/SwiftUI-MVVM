@@ -79,6 +79,7 @@ struct AppColors {
     static let primaryYellow = Color.yellow.opacity(0.9)
     static let borderGray = Color.gray.opacity(0.3)
     static let backgroundWhite = Color.white
+    static let backgroundClear = Color.clear
     static let Black = Color.black
     static let Gray = Color.gray
     static let lightGray = Color(hex: "#F4F4E8")
