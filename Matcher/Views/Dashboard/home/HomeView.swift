@@ -1336,25 +1336,26 @@ struct SpaceView: View {
     @Binding var roomOption: String
     @Binding var genderOption: String
     let onNext: () -> Void
+
     @State private var selectedSpaceType = "Single Room"
     @State private var selectedRoommates = 2
     @State private var rent = "5000"
     @State private var selectedFurnishing = "Fully Furnished"
     @State private var selectedGender = "Male"
-    @State private var selectedAmenities: Set<String> = ["Wi-Fi"]
+    @State private var selectedAmenities: Set<String> = []
     @State private var cameraPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 40.6782, longitude: -73.9442),
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         )
     )
-    private let yellow = Color(hex: "#FFD84D")
-    private let bg = Color(hex: "#FFF7CC")
+
     struct Amenity: Identifiable {
         let id = UUID()
         let title: String
         let image: String
     }
+
     var body: some View {
         VStack(spacing: 20) {
             header
@@ -1377,7 +1378,7 @@ struct SpaceView: View {
                         selected: $selectedFurnishing
                     )
                     sectionTitle("Amenities")
-                    amenitiesGrid
+                    StepAmenitiesView(selectedAmenities: $selectedAmenities)
                     sectionTitle("Who Would You Like To Live With?")
                     segmented(
                         options: ["Male", "Female", "Non-binary", "Open to all"],
@@ -1386,53 +1387,58 @@ struct SpaceView: View {
                     mapSection
                     nextButton
                 }
-                .padding(.bottom,40)
-                .padding(.horizontal)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 40)
             }
         }
     }
+
     private var photosSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Add At Least 5 Clear Photos Of Your Space.")
-                .font(.system(size: 14, weight: .medium))
+                .font(AppFont.manropeMedium(14))
             HStack(spacing: 12) {
-                dashedPhoto(size: 150)
+                dashedPhoto(size: 165)
                 VStack(spacing: 12) {
                     HStack(spacing: 12) {
-                        dashedPhoto(size: 70)
-                        dashedPhoto(size: 70)
+                        dashedPhoto(size: 80)
+                        dashedPhoto(size: 80)
                     }
                     HStack(spacing: 12) {
-                        dashedPhoto(size: 70)
-                        dashedPhoto(size: 70)
+                        dashedPhoto(size: 80)
+                        dashedPhoto(size: 80)
                     }
                 }
             }
         }
     }
+
     private var roommatesSection: some View {
         HStack(spacing: 10) {
             ForEach(1...6, id: \.self) { num in
                 Text("\(num)")
-                    .frame(width: 46, height: 46)
-                    .background(selectedRoommates == num ? yellow : .black)
-                    .foregroundColor(selectedRoommates == num ? .black : .white)
+                    .font(AppFont.manropeMedium(16))
+                    .frame(minWidth: 50, minHeight: 50)
+                    .background(selectedRoommates == num ? AppColors.primaryYellow : AppColors.Black)
+                    .foregroundColor(selectedRoommates == num ? AppColors.Black : AppColors.backgroundWhite)
                     .cornerRadius(10)
                     .onTapGesture { selectedRoommates = num }
             }
         }
     }
+
     private var rentField: some View {
         TextField("5000", text: $rent)
             .keyboardType(.numberPad)
             .padding()
-            .background(Color.white)
+            .background(AppColors.backgroundWhite)
             .cornerRadius(12)
     }
+
     private var mapSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Location : Brooklyn, New York, NY 11226")
-                .font(.system(size: 14, weight: .medium))
+                .font(AppFont.manropeMedium(14))
             Map(position: $cameraPosition)
                 .frame(height: 220)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
@@ -1441,12 +1447,12 @@ struct SpaceView: View {
                     } label: {
                         HStack {
                             Text("Choose on Map")
+                                .font(AppFont.manropeMedium(14))
                             Image(systemName: "arrow.right")
                         }
-                        .font(.system(size: 14, weight: .medium))
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .background(yellow)
+                        .background(AppColors.primaryYellow)
                         .cornerRadius(10)
                     }
                     .padding(),
@@ -1454,6 +1460,7 @@ struct SpaceView: View {
                 )
         }
     }
+
     private var nextButton: some View {
         HStack(spacing: 12) {
             Button {
@@ -1470,17 +1477,18 @@ struct SpaceView: View {
                 onNext()
             } label: {
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(genderOption.isEmpty ? Color.black.opacity(0.3) : .black)
+                    .fill(genderOption.isEmpty ? AppColors.Black.opacity(0.3) : AppColors.Black)
                     .frame(height: 56)
                     .overlay(
                         Text("Next")
                             .font(AppFont.manropeMedium(16))
-                            .foregroundColor(.white)
+                            .foregroundColor(AppColors.backgroundWhite)
                     )
             }
             .disabled(genderOption.isEmpty)
         }
     }
+
     private var header: some View {
         HStack {
             Image("profile")
@@ -1499,6 +1507,7 @@ struct SpaceView: View {
         }
         .padding(.horizontal)
     }
+
     private var title: some View {
         VStack(spacing: 6) {
             Text("Add Space Details")
@@ -1506,22 +1515,23 @@ struct SpaceView: View {
                 .multilineTextAlignment(.center)
             Text("These details help others understand your space and vibe before connecting.")
                 .font(AppFont.manrope(14))
-                .foregroundColor(.gray)
+                .foregroundColor(AppColors.Gray)
                 .multilineTextAlignment(.center)
         }
-        .padding(.horizontal)
     }
+
     func sectionTitle(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: 15, weight: .semibold))
+            .font(AppFont.manropeSemiBold(15))
     }
+
     func dashedPhoto(size: CGFloat) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 14)
                 .stroke(style: StrokeStyle(lineWidth: 1, dash: [6]))
                 .frame(width: size, height: size)
             Circle()
-                .fill(yellow)
+                .fill(AppColors.primaryYellow)
                 .frame(width: 34, height: 34)
                 .overlay(
                     Image(systemName: "plus")
@@ -1529,60 +1539,106 @@ struct SpaceView: View {
                 )
         }
     }
+
     func segmented(options: [String], selected: Binding<String>) -> some View {
         HStack(spacing: 0) {
-            ForEach(options, id: \.self) { option in
+            ForEach(options.indices, id: \.self) { index in
+                let option = options[index]
+                let isSelected = selected.wrappedValue == option
                 Text(option)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(AppFont.manropeMedium(14))
+                    .foregroundColor(isSelected ? AppColors.Black : AppColors.backgroundWhite)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(selected.wrappedValue == option ? yellow : .black)
-                    .foregroundColor(selected.wrappedValue == option ? .black : .white)
-                    .onTapGesture { selected.wrappedValue = option }
+                    .frame(height: 48)
+                    .background(isSelected ? AppColors.primaryYellow : AppColors.Black)
+                    .overlay(
+                        Group {
+                            if index != options.count - 1 {
+                                Rectangle()
+                                    .fill(AppColors.backgroundWhite)
+                                    .frame(width: 1.5)
+                                    .frame(maxHeight: .infinity)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                            }
+                        }
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            selected.wrappedValue = option
+                        }
+                    }
             }
         }
-        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(AppColors.Black, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
-    var amenitiesGrid: some View {
-        let amenities: [Amenity] = [
+
+    struct StepAmenitiesView: View {
+        @Binding var selectedAmenities: Set<String>
+
+        private let amenities: [Amenity] = [
             Amenity(title: "AC", image: "ac"),
             Amenity(title: "Wi-Fi", image: "wifi"),
             Amenity(title: "Parking", image: "parking"),
             Amenity(title: "Kitchen", image: "kitchen"),
-            Amenity(title: "Washing", image: "washing"),
-            Amenity(title: "24x7 Water", image: "water"),
+            Amenity(title: "Washing Machine", image: "washing"),
+            Amenity(title: "Water 24x7", image: "water"),
             Amenity(title: "Balcony", image: "balcony"),
             Amenity(title: "Pet Friendly", image: "pet")
         ]
-        return LazyVGrid(columns: [GridItem(.adaptive(minimum: 110))], spacing: 14) {
-            ForEach(amenities) { item in
-                VStack(spacing: 8) {
+
+        var body: some View {
+            ScrollView {
+                FlowLayout(spacing: 10) {
+                    ForEach(amenities) { item in
+                        AmenityButton(item)
+                    }
+                }
+                .padding(.top, 5)
+            }
+        }
+
+        private func AmenityButton(_ item: Amenity) -> some View {
+            Button {
+                if selectedAmenities.contains(item.title) {
+                    selectedAmenities.remove(item.title)
+                } else {
+                    selectedAmenities.insert(item.title)
+                }
+            } label: {
+                HStack(spacing: 10) {
                     Image(item.image)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 28, height: 28)
-
+                        .frame(width: 18, height: 18)
                     Text(item.title)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(AppFont.manropeMedium(13))
+                        .foregroundColor(.black)
                 }
-                .frame(height: 80)
-                .frame(maxWidth: .infinity)
-                .background(selectedAmenities.contains(item.title) ? yellow : .clear)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.black, lineWidth: 1)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(
+                    selectedAmenities.contains(item.title)
+                    ? AppColors.primaryYellow
+                    : AppColors.backgroundWhite
                 )
-                .cornerRadius(12)
-                .onTapGesture {
-                    if selectedAmenities.contains(item.title) {
-                        selectedAmenities.remove(item.title)
-                    } else {
-                        selectedAmenities.insert(item.title)
-                    }
-                }
+                .cornerRadius(16)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.black.opacity(0.3), lineWidth: 1)
+                )
             }
         }
     }
+
+
+
+
+
     private func debugPrintData() {
         print("Selected Role:", selectedRole)
         print("Selected Category:", selectedCategory)
