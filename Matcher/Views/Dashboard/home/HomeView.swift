@@ -1312,7 +1312,6 @@ struct GenderStepView: View {
         }
     }
 }
-
 struct SpaceView: View {
     @Binding var showFinalStep: Int
     @Binding var selectedRole: String
@@ -1332,12 +1331,15 @@ struct SpaceView: View {
     @State private var selectedFurnishing = "Fully Furnished"
     @State private var selectedGender = "Male"
     @State private var selectedAmenities: Set<String> = []
-    @State private var cameraPosition: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 40.6782, longitude: -73.9442),
-            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-        )
+    @StateObject private var locationManager = LocationPermissionManager()
+    @State private var cameraRegion = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 40.6782, longitude: -73.9442),
+        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
     )
+    @State private var mapPosition: MapCameraPosition = .automatic
+    private var savedAddress: String {
+        KeychainHelper.shared.get(forKey: "saved_address") ?? "Fetching location..."
+    }
     struct Amenity: Identifiable {
         let id = UUID()
         let title: String
@@ -1349,28 +1351,19 @@ struct SpaceView: View {
             ScrollView(showsIndicators: false) {
                 title
                 VStack(alignment: .leading, spacing: 20) {
-                    photosSection.padding(.top,10)
+                    photosSection.padding(.top, 10)
                     sectionTitle("Space Type")
-                    segmented(
-                        options: ["Single Room", "1 BHK", "2 BHK", "3 BHK"],
-                        selected: $selectedSpaceType
-                    )
+                    segmented(options: ["Single Room", "1 BHK", "2 BHK", "3 BHK"], selected: $selectedSpaceType)
                     sectionTitle("How Many Roommates Do You Want?")
                     roommatesSection
                     sectionTitle("Rent Split (Per Person)")
                     rentField
                     sectionTitle("Furnishing")
-                    segmented(
-                        options: ["Fully Furnished", "Semi Furnished", "Unfurnished"],
-                        selected: $selectedFurnishing
-                    )
+                    segmented(options: ["Fully Furnished", "Semi Furnished", "Unfurnished"], selected: $selectedFurnishing)
                     sectionTitle("Amenities")
                     StepAmenitiesView(selectedAmenities: $selectedAmenities)
                     sectionTitle("Who Would You Like To Live With?")
-                    segmented(
-                        options: ["Male", "Female", "Non-binary", "Open to all"],
-                        selected: $selectedGender
-                    )
+                    segmented(options: ["Male", "Female", "Non-binary", "Open to all"], selected: $selectedGender)
                     mapSection
                     nextButton
                 }
@@ -1378,6 +1371,22 @@ struct SpaceView: View {
                 .padding(.bottom, 40)
             }
         }
+        .onChange(of: locationManager.latitude) { _, _ in
+            updateCamera()
+        }
+    }
+    private func updateCamera() {
+        let lat = locationManager.latitude
+        let lon = locationManager.longitude
+
+        guard lat != 0, lon != 0 else { return }
+
+        mapPosition = .region(
+            MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: lat, longitude: lon),
+                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+            )
+        )
     }
     private var photosSection: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -1420,32 +1429,38 @@ struct SpaceView: View {
     }
     private var mapSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Location : Brooklyn, New York, NY 11226")
+            Text("Location: \(savedAddress)")
                 .font(AppFont.manropeMedium(14))
-            Map(position: $cameraPosition)
-                .frame(height: 150)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-                .overlay(
-                    Button {
-                    } label: {
-                        HStack {
-                            Text("Choose on Map")
-                                .foregroundColor(.black)
-                                .font(AppFont.manropeMedium(14))
-                            Image("arrow")
-                        }
-                        .padding(.horizontal, 15)
-                        .padding(.vertical, 10)
-                        .background(AppColors.primaryYellow)
-                        .cornerRadius(5)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 5)
-                            .stroke(Color.black, lineWidth: 1)
-                        )
+            Map(position: $mapPosition) {
+                UserAnnotation()
+            }
+            .frame(height: 150)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.black, lineWidth: 1)
+            )
+            .overlay(
+                Button {
+                } label: {
+                    HStack {
+                        Text("Choose on Map")
+                            .foregroundColor(.black)
+                            .font(AppFont.manropeMedium(14))
+                        Image("arrow")
                     }
-                    .padding(),
-                    alignment: .bottom
-                )
+                    .padding(.horizontal, 15)
+                    .padding(.vertical, 10)
+                    .background(AppColors.primaryYellow)
+                    .cornerRadius(6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.black, lineWidth: 1)
+                    )
+                }
+                .padding(),
+                alignment: .bottom
+            )
         }
     }
     private var nextButton: some View {
@@ -1504,8 +1519,8 @@ struct SpaceView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(.horizontal)
-        .padding(.leading,2)
-        .padding(.trailing,2)
+        .padding(.leading, 2)
+        .padding(.trailing, 2)
     }
     func sectionTitle(_ title: String) -> some View {
         Text(title)
@@ -1602,11 +1617,7 @@ struct SpaceView: View {
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 5)
-                .background(
-                    selectedAmenities.contains(item.title)
-                    ? AppColors.primaryYellow
-                    : AppColors.backgroundClear
-                )
+                .background(selectedAmenities.contains(item.title) ? AppColors.primaryYellow : AppColors.backgroundClear)
                 .cornerRadius(5)
                 .overlay(
                     RoundedRectangle(cornerRadius: 5)
@@ -1616,21 +1627,21 @@ struct SpaceView: View {
         }
     }
     private func debugPrintData() {
-            print("Selected Role:", selectedRole)
-            print("Selected Category:", selectedCategory)
-            print("Selected Shift:", selectedShift)
-            print("Selected Food:", selectedFood)
-            print("Selected Parties:", selectedParties)
-            print("Selected Smoke:", selectedSmoke)
-            print("Selected Drink:", selectedDrink)
-            print("Selected About:", selectedAbout)
-            print("Selected Room Option:", roomOption)
-            print("Selected Gender Option:", genderOption)
-            print("Selected Space Type:", selectedSpaceType)
-            print("Selected Roommates:", selectedRoommates)
-            print("Rent:", rent)
-            print("Selected Furnishing:", selectedFurnishing)
-            print("Selected Gender:", selectedGender)
-            print("Selected Amenities:", selectedAmenities)
+        print("Selected Role:", selectedRole)
+        print("Selected Category:", selectedCategory)
+        print("Selected Shift:", selectedShift)
+        print("Selected Food:", selectedFood)
+        print("Selected Parties:", selectedParties)
+        print("Selected Smoke:", selectedSmoke)
+        print("Selected Drink:", selectedDrink)
+        print("Selected About:", selectedAbout)
+        print("Selected Room Option:", roomOption)
+        print("Selected Gender Option:", genderOption)
+        print("Selected Space Type:", selectedSpaceType)
+        print("Selected Roommates:", selectedRoommates)
+        print("Rent:", rent)
+        print("Selected Furnishing:", selectedFurnishing)
+        print("Selected Gender:", selectedGender)
+        print("Selected Amenities:", selectedAmenities)
     }
 }

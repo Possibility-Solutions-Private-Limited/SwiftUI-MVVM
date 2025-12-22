@@ -155,10 +155,17 @@ struct FloatingTabBarShape: Shape {
     }
 }
 class LocationPermissionManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+
     private let manager = CLLocationManager()
+    private let geocoder = CLGeocoder()
+    private var locationCaptured = false
     @Published var latitude: Double = 0.0
     @Published var longitude: Double = 0.0
-    private var locationCaptured = false
+    @Published var address: String = ""
+    @Published var city: String = ""
+    @Published var state: String = ""
+    @Published var country: String = ""
+    @Published var postalCode: String = ""
     override init() {
         super.init()
         manager.delegate = self
@@ -168,20 +175,42 @@ class LocationPermissionManager: NSObject, ObservableObject, CLLocationManagerDe
     }
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.last else { return }
-        if loc.horizontalAccuracy < 0 || loc.horizontalAccuracy > 100 {
-            return
-        }
-        if locationCaptured { return }
+        guard loc.horizontalAccuracy > 0 && loc.horizontalAccuracy <= 100 else { return }
+        guard !locationCaptured else { return }
         locationCaptured = true
         latitude = loc.coordinate.latitude
         longitude = loc.coordinate.longitude
-        let shortLat = Double(String(format: "%.6f", latitude))!
-        let shortLong = Double(String(format: "%.6f", longitude))!
-        print("📍 Final Accurate LAT: \(shortLat)")
-        print("📍 Final Accurate LONG: \(shortLong)")
-        KeychainHelper.shared.save("\(shortLat)", forKey: "saved_latitude")
-        KeychainHelper.shared.save("\(shortLong)", forKey: "saved_longitude")
+        let shortLat = String(format: "%.6f", latitude)
+        let shortLong = String(format: "%.6f", longitude)
+        KeychainHelper.shared.save(shortLat, forKey: "saved_latitude")
+        KeychainHelper.shared.save(shortLong, forKey: "saved_longitude")
+        reverseGeocode(location: loc)
         manager.stopUpdatingLocation()
+    }
+
+    private func reverseGeocode(location: CLLocation) {
+        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+            guard let place = placemarks?.first, error == nil else { return }
+            DispatchQueue.main.async {
+                self.city = place.locality ?? ""
+                self.state = place.administrativeArea ?? ""
+                self.country = place.country ?? ""
+                self.postalCode = place.postalCode ?? ""
+                self.address = [
+                    place.name,
+                    self.city,
+                    self.state,
+                    self.country
+                ]
+                .compactMap { $0 }
+                .joined(separator: ", ")
+                KeychainHelper.shared.save(self.address, forKey: "saved_address")
+                KeychainHelper.shared.save(self.city, forKey: "saved_city")
+                KeychainHelper.shared.save(self.state, forKey: "saved_state")
+                KeychainHelper.shared.save(self.country, forKey: "saved_country")
+                KeychainHelper.shared.save(self.postalCode, forKey: "saved_postal_code")
+            }
+        }
     }
 }
 final class AppleSignInDelegate: NSObject, ASAuthorizationControllerDelegate {
