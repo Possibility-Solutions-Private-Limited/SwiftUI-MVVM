@@ -196,6 +196,55 @@ class ChangeForgotModel: ObservableObject {
         }
     }
 }
+final class UserSelections: ObservableObject {
+    @Published var selectedRole = ""
+    @Published var selectedCategory: Int?
+    @Published var selectedShift = ""
+    @Published var selectedFood = ""
+    @Published var selectedParties: Int?
+    @Published var selectedSmoke = ""
+    @Published var selectedDrink = ""
+    @Published var selectedAbout = ""
+    @Published var roomOption = ""
+    @Published var genderOption = ""
+}
+class BasicModel: ObservableObject {
+    @Published var roomTypes: [OptionItem] = []
+    @Published var amenities: [OptionItem] = []
+    @Published var furnishTypes: [OptionItem] = []
+    @Published var genders: [OptionItem] = []
+    @Published var professionalFields: [OptionItem] = []
+    @Published var partyPreferences: [OptionItem] = []
+    @Published var errorMessage: String = ""
+    @Published var isLoading: Bool = false
+    func fetchBasicData() {
+        isLoading = true
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.BasicData,
+            method: "GET",
+            parameters: nil
+        ) { (result: Result<BasicDataModel, Error>) in
+            DispatchQueue.main.async {
+                self.isLoading = false
+                switch result {
+                case .success(let response):
+                    let data = response.data
+                    self.roomTypes.append(contentsOf: data.room.roomType)
+                    self.amenities.append(contentsOf: data.room.amenities)
+                    self.furnishTypes.append(contentsOf: data.room.furnishType)
+                    self.genders.append(contentsOf: data.gender)
+                    self.professionalFields.append(contentsOf: data.professionalField)
+                    self.partyPreferences.append(contentsOf: data.intoParty)
+                    print("✅ Basic Data Loaded Successfully")
+
+                case .failure(let error):
+                    self.errorMessage = error.localizedDescription
+                    print("❌ Error fetching basic data:", error.localizedDescription)
+                }
+            }
+        }
+    }
+}
 class StepTwoModel: ObservableObject {
     func StepTwoAPI(param: [String: Any], completion: @escaping (UserModel?) -> Void) {
         NetworkManager.shared.makeRequest(

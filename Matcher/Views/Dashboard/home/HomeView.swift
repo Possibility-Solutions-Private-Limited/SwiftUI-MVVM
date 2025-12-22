@@ -7,17 +7,10 @@ struct Card: Identifiable {
 }
 struct HomeView: View {
     @State private var cards: [Card] = []
-    @State private var selectedRole = ""
-    @State private var selectedCategory = ""
-    @State private var selectedShift = ""
-    @State private var selectedFood = ""
-    @State private var selectedParties = ""
-    @State private var selectedSmoke = ""
-    @State private var selectedDrink = ""
-    @State private var selectedAbout = ""
-    @State private var roomOption = ""
-    @State private var genderOption = ""
-    @State private var Space = ""
+    @State private var totalSteps: Int = 8
+    @State private var showFinalStep = 0
+    @StateObject private var viewModel = BasicModel()
+    @StateObject private var selections = UserSelections()
     private let initialCards: [Card] = [
         Card(step: 7),
         Card(step: 6),
@@ -28,11 +21,6 @@ struct HomeView: View {
         Card(step: 1),
         Card(step: 0)
     ]
-    @State private var totalSteps: Int = 8
-    @State private var showFinalStep = 0
-    private var currentStep: Int {
-        max(1, totalSteps - cards.count + 1)
-    }
     var body: some View {
         GeometryReader { geo in
             ZStack {
@@ -42,38 +30,28 @@ struct HomeView: View {
                     endPoint: .bottom
                 )
                 .ignoresSafeArea()
-                VStack(spacing: 10) {
+                VStack {
                     if showFinalStep == 1 {
                         NewStepView(
-                            showFinalStep:$showFinalStep,
-                            selectedRole: $selectedRole,
-                            selectedCategory: $selectedCategory,
-                            selectedShift: $selectedShift,
-                            selectedFood:$selectedFood,
-                            selectedParties:$selectedParties,
-                            selectedSmoke:$selectedSmoke,
-                            selectedDrink:$selectedDrink,
-                            selectedAbout:$selectedAbout,
-                            roomOption: $roomOption,
-                            onNext: next)
-                    }else if showFinalStep == 2 {
+                            showFinalStep: $showFinalStep,
+                            viewModel: viewModel,
+                            selections: selections,
+                            onNext: next
+                        )
+                    } else if showFinalStep == 2 {
                         GenderStepView(
-                                showFinalStep:$showFinalStep,
-                                selectedRole: $selectedRole,
-                                selectedCategory: $selectedCategory,
-                                selectedShift: $selectedShift,
-                                selectedFood:$selectedFood,
-                                selectedParties:$selectedParties,
-                                selectedSmoke:$selectedSmoke,
-                                selectedDrink:$selectedDrink,
-                                selectedAbout:$selectedAbout,
-                                roomOption: $roomOption,
-                                genderOption: $genderOption,
-                                onNext: next)
-                    }else if showFinalStep == 3 {
+                            showFinalStep: $showFinalStep,
+                            viewModel: viewModel,
+                            selections: selections,
+                            onNext: next
+                        )
+                    } else if showFinalStep == 3 {
                         SpaceView(
-                                showFinalStep:$showFinalStep,
-                                onNext: next)
+                            showFinalStep: $showFinalStep,
+                            viewModel: viewModel,
+                            selections: selections,
+                            onNext: next
+                        )
                     } else {
                         header
                         title
@@ -81,17 +59,11 @@ struct HomeView: View {
                             ForEach(cards) { card in
                                 let index = cards.firstIndex { $0.id == card.id } ?? 0
                                 SwipeCard(
+                                    viewModel: viewModel,
+                                    selections: selections,
                                     step: card.step,
-                                    currentStep: currentStep,
+                                    currentStep: displayStep(for: card.step),
                                     totalSteps: totalSteps,
-                                    selectedRole: $selectedRole,
-                                    selectedCategory: $selectedCategory,
-                                    selectedShift: $selectedShift,
-                                    selectedFood: $selectedFood,
-                                    selectedParties: $selectedParties,
-                                    selectedSmoke: $selectedSmoke,
-                                    selectedDrink: $selectedDrink,
-                                    selectedAbout: $selectedAbout,
                                     maxHeight: geo.size.height * 0.7
                                 ) {
                                     withAnimation(.spring()) {
@@ -112,15 +84,15 @@ struct HomeView: View {
         }
         .onAppear {
             cards = initialCards
+            viewModel.fetchBasicData()
         }
-        .onChange(of: selectedRole) {
+        .onChange(of: selections.selectedRole) {
             rebuildCards()
         }
     }
-    private func next() {
-    }
+    private func next() {}
     private func rebuildCards() {
-        if selectedRole == "Student" {
+        if selections.selectedRole == "Student" {
             let filtered = initialCards.filter { $0.step != 1 }
             cards = filtered
             totalSteps = filtered.count
@@ -166,17 +138,11 @@ struct HomeView: View {
         .padding(.trailing,2)
     }
     struct SwipeCard: View {
+        @ObservedObject var viewModel: BasicModel
+        @ObservedObject var selections: UserSelections
         let step: Int
         let currentStep: Int
         let totalSteps: Int
-        @Binding var selectedRole: String
-        @Binding var selectedCategory: String
-        @Binding var selectedShift: String
-        @Binding var selectedFood: String
-        @Binding var selectedParties: String
-        @Binding var selectedSmoke: String
-        @Binding var selectedDrink: String
-        @Binding var selectedAbout: String
         let maxHeight: CGFloat
         let onRemove: () -> Void
         @State private var offset: CGSize = .zero
@@ -198,16 +164,17 @@ struct HomeView: View {
                 switch step {
                 case 0:
                     StepOneView(
-                        selectedRole: $selectedRole,
+                        viewModel: viewModel,
+                        selections: selections,
                         currentStep: currentStep,
                         totalSteps: totalSteps,
                         onNext: swipe,
                         maxHeight: maxHeight)
                 case 1:
-                    if selectedRole != "Student" {
+                    if selections.selectedRole != "Student" {
                         StepTwoView(
-                            selectedRole: $selectedRole,
-                            selectedCategory: $selectedCategory,
+                            viewModel: viewModel,
+                            selections: selections,
                             currentStep: currentStep,
                             totalSteps: totalSteps,
                             onNext: swipe,
@@ -215,76 +182,56 @@ struct HomeView: View {
                     }
                 case 2:
                     StepThreeView(
-                        selectedRole: $selectedRole,
-                        selectedCategory: $selectedCategory,
-                        selectedShift: $selectedShift,
+                        viewModel: viewModel,
+                        selections: selections,
                         currentStep: currentStep,
                         totalSteps: totalSteps,
                         onNext: swipe,
                         maxHeight: maxHeight)
                 case 3:
                     StepFourView(
-                        selectedRole: $selectedRole,
-                        selectedCategory: $selectedCategory,
-                        selectedShift: $selectedShift,
-                        selectedFood:$selectedFood,
+                        viewModel: viewModel,
+                        selections: selections,
                         currentStep: currentStep,
                         totalSteps: totalSteps,
                         onNext: swipe,
                         maxHeight: maxHeight)
                 case 4:
                     StepFiveView(
-                        selectedRole: $selectedRole,
-                        selectedCategory: $selectedCategory,
-                        selectedShift: $selectedShift,
-                        selectedFood:$selectedFood,
-                        selectedParties:$selectedParties,
+                        viewModel: viewModel,
+                        selections: selections,
                         currentStep: currentStep,
                         totalSteps: totalSteps,
                         onNext: swipe,
                         maxHeight: maxHeight)
                 case 5:
                     StepSixView(
-                        selectedRole: $selectedRole,
-                        selectedCategory: $selectedCategory,
-                        selectedShift: $selectedShift,
-                        selectedFood:$selectedFood,
-                        selectedParties:$selectedParties,
-                        selectedSmoke:$selectedSmoke,
+                        viewModel: viewModel,
+                        selections: selections,
                         currentStep: currentStep,
                         totalSteps: totalSteps,
                         onNext: swipe,
                         maxHeight: maxHeight)
                 case 6:
                     StepSevenView(
-                        selectedRole: $selectedRole,
-                        selectedCategory: $selectedCategory,
-                        selectedShift: $selectedShift,
-                        selectedFood:$selectedFood,
-                        selectedParties:$selectedParties,
-                        selectedSmoke:$selectedSmoke,
-                        selectedDrink:$selectedDrink,
+                        viewModel: viewModel,
+                        selections: selections,
                         currentStep: currentStep,
                         totalSteps: totalSteps,
                         onNext: swipe,
                         maxHeight: maxHeight)
                 case 7:
                     StepEightView(
-                        selectedRole: $selectedRole,
-                        selectedCategory: $selectedCategory,
-                        selectedShift: $selectedShift,
-                        selectedFood:$selectedFood,
-                        selectedParties:$selectedParties,
-                        selectedSmoke:$selectedSmoke,
-                        selectedDrink:$selectedDrink,
-                        selectedAbout:$selectedAbout,
+                        viewModel: viewModel,
+                        selections: selections,
                         currentStep: currentStep,
                         totalSteps: totalSteps,
                         onNext: swipe,
                         maxHeight: maxHeight)
                 default:
                     StepOneView(
-                        selectedRole: $selectedRole,
+                        viewModel: viewModel,
+                        selections: selections,
                         currentStep: currentStep,
                         totalSteps: totalSteps,
                         onNext: swipe,
@@ -323,7 +270,8 @@ struct HomeView: View {
     }
 }
 struct StepOneView: View {
-    @Binding var selectedRole: String
+    @ObservedObject var viewModel: BasicModel
+    @ObservedObject var selections: UserSelections
     let currentStep: Int
     let totalSteps: Int
     let onNext: () -> Void
@@ -356,7 +304,7 @@ struct StepOneView: View {
     }
     func roleCard(title: String, icon: String) -> some View {
         Button {
-            selectedRole = title
+            selections.selectedRole = title
         } label: {
             VStack(spacing: 14) {
                 Image(icon)
@@ -371,7 +319,7 @@ struct StepOneView: View {
             .background(
                 RoundedRectangle(cornerRadius: 20)
                     .fill(
-                        selectedRole == title
+                        selections.selectedRole == title
                         ? AppColors.primaryYellow
                         : AppColors.lightGray
                     )
@@ -380,7 +328,7 @@ struct StepOneView: View {
     }
     var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selectedRole)")
+            print("Selected Role: \(selections.selectedRole)")
             onNext()
         }) {
             HStack {
@@ -398,32 +346,26 @@ struct StepOneView: View {
             .background(
                 RoundedRectangle(cornerRadius: 18)
                     .fill(
-                        selectedRole.isEmpty
+                        selections.selectedRole.isEmpty
                         ? Color.black.opacity(0.3)
                         : Color.black
                     )
             )
         }
-        .disabled(selectedRole.isEmpty)
+        .disabled(selections.selectedRole.isEmpty)
         .padding(.bottom, 8)
     }
 }
 struct StepTwoView: View {
-    @Binding var selectedRole: String
-    @Binding var selectedCategory: String
+    @ObservedObject var viewModel: BasicModel
+    @ObservedObject var selections: UserSelections
     let currentStep: Int
     let totalSteps: Int
     let onNext: () -> Void
     let maxHeight: CGFloat
-    private let fields = [
-        "Arts, Media & Creative",
-        "Retail & E-Commerce",
-        "Science & Research",
-        "Finance & Accounting",
-        "Marketing, Sales & Business Development",
-        "Education & Training",
-        "Hospitality, Travel & Tourism"
-    ]
+    private var fields: [OptionItem] {
+        viewModel.professionalFields
+    }
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
@@ -431,8 +373,9 @@ struct StepTwoView: View {
                     Text("What’s Your Professional Field?")
                         .font(AppFont.manropeBold(16))
                         .padding(.top, 50)
+
                     FlowLayout(spacing: 10) {
-                        ForEach(fields, id: \.self) { field in
+                        ForEach(fields) { field in
                             CategoryButton(field)
                         }
                     }
@@ -445,17 +388,18 @@ struct StepTwoView: View {
         }
         .frame(maxHeight: maxHeight)
     }
-    private func CategoryButton(_ title: String) -> some View {
+
+    private func CategoryButton(_ field: OptionItem) -> some View {
         Button {
-            selectedCategory = title
+            selections.selectedCategory = field.id
         } label: {
-            Text(title)
+            Text(field.title)
                 .font(AppFont.manropeMedium(13))
                 .foregroundColor(AppColors.Black)
                 .padding(.horizontal, 12)
                 .frame(height: 36)
                 .background(
-                    selectedCategory == title
+                    selections.selectedCategory == field.id
                         ? AppColors.primaryYellow
                         : AppColors.lightGray
                 )
@@ -468,8 +412,8 @@ struct StepTwoView: View {
     }
     private var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selectedRole)")
-            print("Selected Category: \(selectedCategory)")
+            print("Selected Role: \(selections.selectedRole)")
+            print("Selected Category:",selections.selectedCategory ?? 0)
             onNext()
         }) {
             HStack {
@@ -487,20 +431,18 @@ struct StepTwoView: View {
             .background(
                 RoundedRectangle(cornerRadius: 18)
                     .fill(
-                        selectedCategory.isEmpty
-                        ? Color.black.opacity(0.3)
+                        selections.selectedCategory == nil ? Color.black.opacity(0.3)
                         : Color.black
                     )
             )
         }
-        .disabled(selectedCategory.isEmpty)
+        .disabled(selections.selectedCategory == nil)
         .padding(.bottom, 8)
     }
 }
 struct StepThreeView: View {
-    @Binding var selectedRole: String
-    @Binding var selectedCategory: String
-    @Binding var selectedShift: String
+    @ObservedObject var viewModel: BasicModel
+    @ObservedObject var selections: UserSelections
     let currentStep: Int
     let totalSteps: Int
     let onNext: () -> Void
@@ -527,7 +469,7 @@ struct StepThreeView: View {
     }
     func shiftCard(title: String, icon: String) -> some View {
         Button {
-            selectedShift = title
+            selections.selectedShift = title
         } label: {
             VStack(spacing: 14) {
                 Image(icon)
@@ -541,7 +483,7 @@ struct StepThreeView: View {
             .background(
                 RoundedRectangle(cornerRadius: 20)
                     .fill(
-                        selectedShift == title
+                        selections.selectedShift == title
                         ? AppColors.primaryYellow
                         : AppColors.lightGray
                     )
@@ -550,9 +492,9 @@ struct StepThreeView: View {
     }
     var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selectedRole)")
-            print("Selected Category: \(selectedCategory)")
-            print("Selected Shift: \(selectedShift)")
+            print("Selected Role: \(selections.selectedRole)")
+            print("Selected Category:",selections.selectedCategory ?? 0)
+            print("Selected Shift: \(selections.selectedShift)")
             onNext()
         }) {
             HStack {
@@ -570,21 +512,19 @@ struct StepThreeView: View {
             .background(
                 RoundedRectangle(cornerRadius: 18)
                     .fill(
-                        selectedShift.isEmpty
+                        selections.selectedShift.isEmpty
                         ? Color.black.opacity(0.3)
                         : Color.black
                     )
             )
         }
-        .disabled(selectedShift.isEmpty)
+        .disabled(selections.selectedShift.isEmpty)
         .padding(.bottom, 8)
     }
 }
 struct StepFourView: View {
-    @Binding var selectedRole: String
-    @Binding var selectedCategory: String
-    @Binding var selectedShift: String
-    @Binding var selectedFood: String
+    @ObservedObject var viewModel: BasicModel
+    @ObservedObject var selections: UserSelections
     let currentStep: Int
     let totalSteps: Int
     let onNext: () -> Void
@@ -611,7 +551,7 @@ struct StepFourView: View {
     }
     func foodCard(title: String, icon: String) -> some View {
         Button {
-            selectedFood = title
+            selections.selectedFood = title
         } label: {
             VStack(spacing: 14) {
                 Image(icon)
@@ -625,7 +565,7 @@ struct StepFourView: View {
             .background(
                 RoundedRectangle(cornerRadius: 20)
                     .fill(
-                        selectedFood == title
+                        selections.selectedFood == title
                         ? AppColors.primaryYellow
                         : AppColors.lightGray
                     )
@@ -634,10 +574,10 @@ struct StepFourView: View {
     }
     var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selectedRole)")
-            print("Selected Category: \(selectedCategory)")
-            print("Selected Shift: \(selectedShift)")
-            print("Selected Food: \(selectedFood)")
+            print("Selected Role: \(selections.selectedRole)")
+            print("Selected Category:",selections.selectedCategory ?? 0)
+            print("Selected Shift: \(selections.selectedShift)")
+            print("Selected Food: \(selections.selectedFood)")
             onNext()
         }) {
             HStack {
@@ -655,32 +595,26 @@ struct StepFourView: View {
             .background(
                 RoundedRectangle(cornerRadius: 18)
                     .fill(
-                        selectedFood.isEmpty
+                        selections.selectedFood.isEmpty
                         ? Color.black.opacity(0.3)
                         : Color.black
                     )
             )
         }
-        .disabled(selectedFood.isEmpty)
+        .disabled(selections.selectedFood.isEmpty)
         .padding(.bottom, 8)
     }
 }
 struct StepFiveView: View {
-    @Binding var selectedRole: String
-    @Binding var selectedCategory: String
-    @Binding var selectedShift: String
-    @Binding var selectedFood: String
-    @Binding var selectedParties: String
+    @ObservedObject var viewModel: BasicModel
+    @ObservedObject var selections: UserSelections
     let currentStep: Int
     let totalSteps: Int
     let onNext: () -> Void
     let maxHeight: CGFloat
-    private let fields = [
-        "Not into it",
-        "Sometimes",
-        "Weekends",
-        "Love it"
-    ]
+    private var fields: [OptionItem] {
+        viewModel.partyPreferences
+    }
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
@@ -689,7 +623,7 @@ struct StepFiveView: View {
                         .font(AppFont.manropeBold(16))
                         .padding(.top, 50)
                     FlowLayout(spacing: 10) {
-                        ForEach(fields, id: \.self) { field in
+                        ForEach(fields) { field in
                             PartyButton(field)
                         }
                     }
@@ -702,17 +636,17 @@ struct StepFiveView: View {
         }
         .frame(maxHeight: maxHeight)
     }
-    private func PartyButton(_ title: String) -> some View {
+    private func PartyButton(_ field: OptionItem) -> some View {
         Button {
-            selectedParties = title
+            selections.selectedParties = field.id
         } label: {
-            Text(title)
+            Text(field.title)
                 .font(AppFont.manropeMedium(13))
                 .foregroundColor(AppColors.Black)
                 .padding(.horizontal, 12)
                 .frame(height: 36)
                 .background(
-                    selectedParties == title
+                    selections.selectedParties == field.id
                         ? AppColors.primaryYellow
                         : AppColors.lightGray
                 )
@@ -725,11 +659,7 @@ struct StepFiveView: View {
     }
     private var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selectedRole)")
-            print("Selected Category: \(selectedCategory)")
-            print("Selected Shift: \(selectedShift)")
-            print("Selected Food: \(selectedFood)")
-            print("Selected Parties: \(selectedParties)")
+            print(selections.selectedParties ?? 0)
             onNext()
         }) {
             HStack {
@@ -747,23 +677,18 @@ struct StepFiveView: View {
             .background(
                 RoundedRectangle(cornerRadius: 18)
                     .fill(
-                        selectedParties.isEmpty
-                        ? Color.black.opacity(0.3)
+                        selections.selectedParties == nil ? Color.black.opacity(0.3)
                         : Color.black
                     )
             )
         }
-        .disabled(selectedParties.isEmpty)
+        .disabled(selections.selectedParties == nil)
         .padding(.bottom, 8)
     }
 }
 struct StepSixView: View {
-    @Binding var selectedRole: String
-    @Binding var selectedCategory: String
-    @Binding var selectedShift: String
-    @Binding var selectedFood: String
-    @Binding var selectedParties: String
-    @Binding var selectedSmoke: String
+    @ObservedObject var viewModel: BasicModel
+    @ObservedObject var selections: UserSelections
     let currentStep: Int
     let totalSteps: Int
     let onNext: () -> Void
@@ -790,7 +715,7 @@ struct StepSixView: View {
     }
     func foodCard(title: String, icon: String) -> some View {
         Button {
-            selectedSmoke = title
+            selections.selectedSmoke = title
         } label: {
             VStack(spacing: 14) {
                 Image(icon)
@@ -804,7 +729,7 @@ struct StepSixView: View {
             .background(
                 RoundedRectangle(cornerRadius: 20)
                     .fill(
-                        selectedSmoke == title
+                        selections.selectedSmoke == title
                         ? AppColors.primaryYellow
                         : AppColors.lightGray
                     )
@@ -813,12 +738,12 @@ struct StepSixView: View {
     }
     var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selectedRole)")
-            print("Selected Category: \(selectedCategory)")
-            print("Selected Shift: \(selectedShift)")
-            print("Selected Food: \(selectedFood)")
-            print("Selected Parties: \(selectedParties)")
-            print("Selected Smoke: \(selectedSmoke)")
+            print("Selected Role: \(selections.selectedRole)")
+            print("Selected Category:",selections.selectedCategory ?? 0)
+            print("Selected Shift: \(selections.selectedShift)")
+            print("Selected Food: \(selections.selectedFood)")
+            print("Selected Parties:",selections.selectedParties ?? 0)
+            print("Selected Smoke: \(selections.selectedSmoke)")
             onNext()
         }) {
             HStack {
@@ -836,24 +761,19 @@ struct StepSixView: View {
             .background(
                 RoundedRectangle(cornerRadius: 18)
                     .fill(
-                        selectedSmoke.isEmpty
+                        selections.selectedSmoke.isEmpty
                         ? Color.black.opacity(0.3)
                         : Color.black
                     )
             )
         }
-        .disabled(selectedSmoke.isEmpty)
+        .disabled(selections.selectedSmoke.isEmpty)
         .padding(.bottom, 8)
     }
 }
 struct StepSevenView: View {
-    @Binding var selectedRole: String
-    @Binding var selectedCategory: String
-    @Binding var selectedShift: String
-    @Binding var selectedFood: String
-    @Binding var selectedParties: String
-    @Binding var selectedSmoke: String
-    @Binding var selectedDrink: String
+    @ObservedObject var viewModel: BasicModel
+    @ObservedObject var selections: UserSelections
     let currentStep: Int
     let totalSteps: Int
     let onNext: () -> Void
@@ -880,7 +800,7 @@ struct StepSevenView: View {
     }
     func drinkCard(title: String, icon: String) -> some View {
         Button {
-            selectedDrink = title
+            selections.selectedDrink = title
         } label: {
             VStack(spacing: 14) {
                 Image(icon)
@@ -894,7 +814,7 @@ struct StepSevenView: View {
             .background(
                 RoundedRectangle(cornerRadius: 20)
                     .fill(
-                        selectedDrink == title
+                        selections.selectedDrink == title
                         ? AppColors.primaryYellow
                         : AppColors.lightGray
                     )
@@ -903,13 +823,13 @@ struct StepSevenView: View {
     }
     var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selectedRole)")
-            print("Selected Category: \(selectedCategory)")
-            print("Selected Shift: \(selectedShift)")
-            print("Selected Food: \(selectedFood)")
-            print("Selected Parties: \(selectedParties)")
-            print("Selected Smoke: \(selectedSmoke)")
-            print("Selected Drink: \(selectedDrink)")
+            print("Selected Role: \(selections.selectedRole)")
+            print("Selected Category:",selections.selectedCategory ?? 0)
+            print("Selected Shift: \(selections.selectedShift)")
+            print("Selected Food: \(selections.selectedFood)")
+            print("Selected Parties:",selections.selectedParties ?? 0)
+            print("Selected Smoke: \(selections.selectedSmoke)")
+            print("Selected Drink: \(selections.selectedDrink)")
             onNext()
         }) {
             HStack {
@@ -927,25 +847,19 @@ struct StepSevenView: View {
             .background(
                 RoundedRectangle(cornerRadius: 18)
                     .fill(
-                        selectedDrink.isEmpty
+                        selections.selectedDrink.isEmpty
                         ? Color.black.opacity(0.3)
                         : Color.black
                     )
             )
         }
-        .disabled(selectedDrink.isEmpty)
+        .disabled(selections.selectedDrink.isEmpty)
         .padding(.bottom, 8)
     }
 }
 struct StepEightView: View {
-    @Binding var selectedRole: String
-    @Binding var selectedCategory: String
-    @Binding var selectedShift: String
-    @Binding var selectedFood: String
-    @Binding var selectedParties: String
-    @Binding var selectedSmoke: String
-    @Binding var selectedDrink: String
-    @Binding var selectedAbout: String
+    @ObservedObject var viewModel: BasicModel
+    @ObservedObject var selections: UserSelections
     let currentStep: Int
     let totalSteps: Int
     let onNext: () -> Void
@@ -966,14 +880,14 @@ struct StepEightView: View {
                                 .fill(Color.white)
                         )
                         .frame(height: 160)
-                    if selectedAbout.isEmpty {
+                    if selections.selectedAbout.isEmpty {
                         Text("type here...")
                             .font(AppFont.manropeMedium(14))
                             .foregroundColor(.gray)
                             .padding(.top, 14)
                             .padding(.leading, 14)
                     }
-                    MultilineTextView(text: $selectedAbout, isFocused: $isFocused)
+                    MultilineTextView(text: $selections.selectedAbout, isFocused: $isFocused)
                         .frame(height: 160)
                 }
                 Spacer(minLength: 10)
@@ -993,14 +907,14 @@ struct StepEightView: View {
     }
     private var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selectedRole)")
-            print("Selected Category: \(selectedCategory)")
-            print("Selected Shift: \(selectedShift)")
-            print("Selected Food: \(selectedFood)")
-            print("Selected Parties: \(selectedParties)")
-            print("Selected Smoke: \(selectedSmoke)")
-            print("Selected Drink: \(selectedDrink)")
-            print("Selected About: \(selectedAbout)")
+            print("Selected Role: \(selections.selectedRole)")
+            print("Selected Category:",selections.selectedCategory ?? 0)
+            print("Selected Shift: \(selections.selectedShift)")
+            print("Selected Food: \(selections.selectedFood)")
+            print("Selected Parties:",selections.selectedParties ?? 0)
+            print("Selected Smoke: \(selections.selectedSmoke)")
+            print("Selected Drink: \(selections.selectedDrink)")
+            print("Selected About: \(selections.selectedAbout)")
             onNext()
         }) {
             HStack {
@@ -1018,27 +932,20 @@ struct StepEightView: View {
             .background(
                 RoundedRectangle(cornerRadius: 18)
                     .fill(
-                        selectedAbout.isEmpty
+                        selections.selectedAbout.isEmpty
                         ? Color.black.opacity(0.3)
                         : Color.black
                     )
             )
         }
-        .disabled(selectedAbout.isEmpty)
+        .disabled(selections.selectedAbout.isEmpty)
         .padding(.bottom, 8)
     }
 }
 struct NewStepView: View {
     @Binding var showFinalStep: Int
-    @Binding var selectedRole: String
-    @Binding var selectedCategory: String
-    @Binding var selectedShift: String
-    @Binding var selectedFood: String
-    @Binding var selectedParties: String
-    @Binding var selectedSmoke: String
-    @Binding var selectedDrink: String
-    @Binding var selectedAbout: String
-    @Binding var roomOption: String
+    @ObservedObject var viewModel: BasicModel
+    @ObservedObject var selections: UserSelections
     let onNext: () -> Void
     var body: some View {
         VStack {
@@ -1047,11 +954,11 @@ struct NewStepView: View {
             title
             Spacer().frame(height: 30)
             VStack(spacing: 16) {
-                OptionButton(title: "Yes, I have a room to share", isSelected: roomOption == "Yes") {
-                    roomOption = "Yes"
+                OptionButton(title: "Yes, I have a room to share", isSelected: selections.roomOption == "Yes") {
+                    selections.roomOption = "Yes"
                 }
-                OptionButton(title: "No, I’m looking for a room", isSelected: roomOption == "No") {
-                    roomOption = "No"
+                OptionButton(title: "No, I’m looking for a room", isSelected: selections.roomOption == "No") {
+                    selections.roomOption = "No"
                 }
             }
             .padding(.horizontal, 20)
@@ -1068,21 +975,21 @@ struct NewStepView: View {
     private var nextButton: some View {
         HStack(spacing: 12) {
             Button(action: {
-                print("Selected Role: \(selectedRole)")
-                print("Selected Category: \(selectedCategory)")
-                print("Selected Shift: \(selectedShift)")
-                print("Selected Food: \(selectedFood)")
-                print("Selected Parties: \(selectedParties)")
-                print("Selected Smoke: \(selectedSmoke)")
-                print("Selected Drink: \(selectedDrink)")
-                print("Selected About: \(selectedAbout)")
-                print("Selected room Option: \(roomOption)")
+                print("Selected Role: \(selections.selectedRole)")
+                print("Selected Category:",selections.selectedCategory ?? 0)
+                print("Selected Shift: \(selections.selectedShift)")
+                print("Selected Food: \(selections.selectedFood)")
+                print("Selected Parties:",selections.selectedParties ?? 0)
+                print("Selected Smoke: \(selections.selectedSmoke)")
+                print("Selected Drink: \(selections.selectedDrink)")
+                print("Selected About: \(selections.selectedAbout)")
+                print("Selected room Option: \(selections.roomOption)")
                 showFinalStep = 2
             }) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(
-                            roomOption.isEmpty
+                            selections.roomOption.isEmpty
                             ? Color.black.opacity(0.3)
                             : Color.black
                         )
@@ -1091,7 +998,7 @@ struct NewStepView: View {
                         .font(AppFont.manropeMedium(16))
                         .foregroundColor(.white)
                 }
-            }.disabled(roomOption.isEmpty)
+            }.disabled(selections.roomOption.isEmpty)
 
         }
         .padding(.horizontal, 10)
@@ -1160,16 +1067,8 @@ struct NewStepView: View {
 }
 struct GenderStepView: View {
     @Binding var showFinalStep: Int
-    @Binding var selectedRole: String
-    @Binding var selectedCategory: String
-    @Binding var selectedShift: String
-    @Binding var selectedFood: String
-    @Binding var selectedParties: String
-    @Binding var selectedSmoke: String
-    @Binding var selectedDrink: String
-    @Binding var selectedAbout: String
-    @Binding var roomOption: String
-    @Binding var genderOption: String
+    @ObservedObject var viewModel: BasicModel
+    @ObservedObject var selections: UserSelections
     let onNext: () -> Void
     private let options = ["Male", "Female", "Non-binary", "Open to all"]
     var body: some View {
@@ -1202,22 +1101,22 @@ struct GenderStepView: View {
                     }
             }
             Button(action: {
-                print("Selected Role: \(selectedRole)")
-                print("Selected Category: \(selectedCategory)")
-                print("Selected Shift: \(selectedShift)")
-                print("Selected Food: \(selectedFood)")
-                print("Selected Parties: \(selectedParties)")
-                print("Selected Smoke: \(selectedSmoke)")
-                print("Selected Drink: \(selectedDrink)")
-                print("Selected About: \(selectedAbout)")
-                print("Selected room Option: \(roomOption)")
-                print("Selected gender Option: \(genderOption)")
+                print("Selected Role: \(selections.selectedRole)")
+                print("Selected Category:",selections.selectedCategory ?? 0)
+                print("Selected Shift: \(selections.selectedShift)")
+                print("Selected Food: \(selections.selectedFood)")
+                print("Selected Parties:",selections.selectedParties ?? 0)
+                print("Selected Smoke: \(selections.selectedSmoke)")
+                print("Selected Drink: \(selections.selectedDrink)")
+                print("Selected About: \(selections.selectedAbout)")
+                print("Selected room Option: \(selections.roomOption)")
+                print("Selected gender Option: \(selections.genderOption)")
                 showFinalStep = 3
             }) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(
-                            genderOption.isEmpty
+                            selections.genderOption.isEmpty
                             ? Color.black.opacity(0.3)
                             : Color.black
                         )
@@ -1227,7 +1126,7 @@ struct GenderStepView: View {
                         .foregroundColor(.white)
                 }
             }
-            .disabled(genderOption.isEmpty)
+            .disabled(selections.genderOption.isEmpty)
         }
         .padding(.horizontal, 10)
         .padding(.bottom, 30)
@@ -1269,9 +1168,9 @@ struct GenderStepView: View {
             ForEach(options, id: \.self) { option in
                 GenderOptionCard(
                     title: option,
-                    isSelected: genderOption == option
+                    isSelected: selections.genderOption == option
                 ) {
-                    genderOption = option
+                    selections.genderOption = option
                 }
             }
         }
@@ -1308,6 +1207,8 @@ struct GenderStepView: View {
 }
 struct SpaceView: View {
     @Binding var showFinalStep: Int
+    @ObservedObject var viewModel: BasicModel
+    @ObservedObject var selections: UserSelections
     let onNext: () -> Void
     @State private var mainImage: UIImage?
     @State private var img1: UIImage?
@@ -1319,7 +1220,7 @@ struct SpaceView: View {
     @State private var rent = "5000"
     @State private var selectedFurnishing = "Fully Furnished"
     @State private var selectedGender = "Male"
-    @State private var selectedAmenities: Set<String> = []
+    @State private var selectedAmenities: Set<Int> = []
     @StateObject private var locationManager = LocationPermissionManager()
     @State private var cameraRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 40.6782, longitude: -73.9442),
@@ -1359,7 +1260,10 @@ struct SpaceView: View {
                     sectionTitle("Furnishing")
                     segmented(options: ["Fully Furnished", "Semi Furnished", "Unfurnished"], selected: $selectedFurnishing)
                     sectionTitle("Amenities")
-                    StepAmenitiesView(selectedAmenities: $selectedAmenities)
+                    StepAmenitiesView(
+                        viewModel: viewModel,
+                        selectedAmenities: $selectedAmenities
+                    )
                     sectionTitle("Who Would You Like To Live With?")
                     segmented(options: ["Male", "Female", "Non-binary", "Open to all"], selected: $selectedGender)
                     mapSection
@@ -1634,55 +1538,64 @@ struct SpaceView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     struct StepAmenitiesView: View {
-        @Binding var selectedAmenities: Set<String>
-        private let amenities: [Amenity] = [
-            Amenity(title: "AC", image: "ac"),
-            Amenity(title: "Wi-Fi", image: "wifi"),
-            Amenity(title: "Parking", image: "parking"),
-            Amenity(title: "Kitchen", image: "kitchen"),
-            Amenity(title: "Washing Machine", image: "washing"),
-            Amenity(title: "Water 24x7", image: "water"),
-            Amenity(title: "Balcony", image: "balcony"),
-            Amenity(title: "Pet Friendly", image: "pet")
-        ]
+
+        @ObservedObject var viewModel: BasicModel
+        @Binding var selectedAmenities: Set<Int>
         var body: some View {
             ScrollView {
                 FlowLayout(spacing: 10) {
-                    ForEach(amenities) { item in
-                        AmenityButton(item)
+                    ForEach(viewModel.amenities) { amenity in
+                        AmenityButton(amenity)
                     }
                 }
-                .padding(.top, 5)
+                .padding(.top, 10)
+                .padding(.horizontal)
             }
+            .padding(.top, 5)
         }
-        private func AmenityButton(_ item: Amenity) -> some View {
+
+        // MARK: - Amenity Button
+        private func AmenityButton(_ item: OptionItem) -> some View {
             Button {
-                if selectedAmenities.contains(item.title) {
-                    selectedAmenities.remove(item.title)
-                } else {
-                    selectedAmenities.insert(item.title)
-                }
+                toggleAmenity(item.id)
             } label: {
-                HStack(spacing: 10) {
-                    Image(item.image)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 18, height: 18)
+                HStack(spacing: 8) {
+                    if let icon = item.icon {
+                        Image(icon)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 18, height: 18)
+                    }
+
                     Text(item.title)
                         .font(AppFont.manropeMedium(13))
                         .foregroundColor(.black)
                 }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(selectedAmenities.contains(item.title) ? AppColors.primaryYellow : AppColors.backgroundClear)
-                .cornerRadius(5)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    selectedAmenities.contains(item.id)
+                    ? AppColors.primaryYellow
+                    : AppColors.backgroundClear
+                )
+                .cornerRadius(8)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 5)
+                    RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.black.opacity(0.3), lineWidth: 1)
                 )
             }
         }
+
+        // MARK: - Toggle Logic
+        private func toggleAmenity(_ id: Int) {
+            if selectedAmenities.contains(id) {
+                selectedAmenities.remove(id)
+            } else {
+                selectedAmenities.insert(id)
+            }
+        }
     }
+
     func uploadImages() {
         let allSelected = images.allSatisfy { $0 != nil }
         guard allSelected else {
@@ -1701,18 +1614,18 @@ struct SpaceView: View {
             )
         }
         let params: [String: Any] = [
-            "room_type": selectedSpaceType,
+            "room_type": 1,
             "room_mate_want": selectedRoommates,
             "rent_split": rent,
-            "furnish_type": selectedFurnishing,
-            "amenities[]": selectedAmenities,
+            "furnish_type": 12,
+            "amenities[]": Array(selectedAmenities), // ✅ REQUIRED
             "location": savedAddress,
             "lat": locationManager.latitude,
             "long": locationManager.longitude,
-            "want_to_live_with": ""
+            "want_to_live_with": 1
         ]
         isUploading = true
-        print("🌐 Starting network upload...")
+        print("🌐 Starting network upload...",params)
         ROOM.RoomWithImages(images: multipartImages, params: params) { success, error in
             DispatchQueue.main.async {
                 isUploading = false
