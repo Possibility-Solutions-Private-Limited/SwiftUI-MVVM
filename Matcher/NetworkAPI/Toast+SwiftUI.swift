@@ -259,3 +259,15 @@ struct NoAssistantTextField: UIViewRepresentable {
         }
     }
 }
+extension UIImage {
+    func resized(maxWidth: CGFloat = 1080) -> UIImage {
+        let scale = maxWidth / size.width
+        let newHeight = size.height * scale
+        let newSize = CGSize(width: maxWidth, height: newHeight)
+
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        return renderer.image { _ in
+            self.draw(in: CGRect(origin: .zero, size: newSize))
+        }
+    }
+}

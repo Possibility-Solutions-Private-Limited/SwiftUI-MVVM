@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 import MapKit
 struct Card: Identifiable {
     let id = UUID()
@@ -72,16 +73,6 @@ struct HomeView: View {
                     }else if showFinalStep == 3 {
                         SpaceView(
                                 showFinalStep:$showFinalStep,
-                                selectedRole: $selectedRole,
-                                selectedCategory: $selectedCategory,
-                                selectedShift: $selectedShift,
-                                selectedFood:$selectedFood,
-                                selectedParties:$selectedParties,
-                                selectedSmoke:$selectedSmoke,
-                                selectedDrink:$selectedDrink,
-                                selectedAbout:$selectedAbout,
-                                roomOption: $roomOption,
-                                genderOption: $genderOption,
                                 onNext: next)
                     } else {
                         header
@@ -191,9 +182,12 @@ struct HomeView: View {
         @State private var offset: CGSize = .zero
         @State private var rotation: Double = 0
         private func swipe() {
-            withAnimation(.spring()) {
-                offset = CGSize(width: 600, height: 600)
-                rotation = 30
+            withAnimation(.interpolatingSpring(
+                stiffness: 35,
+                damping: 18
+            )) {
+                offset = CGSize(width: 500, height: 0)
+                rotation = 18
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                 onRemove()
@@ -1314,17 +1308,12 @@ struct GenderStepView: View {
 }
 struct SpaceView: View {
     @Binding var showFinalStep: Int
-    @Binding var selectedRole: String
-    @Binding var selectedCategory: String
-    @Binding var selectedShift: String
-    @Binding var selectedFood: String
-    @Binding var selectedParties: String
-    @Binding var selectedSmoke: String
-    @Binding var selectedDrink: String
-    @Binding var selectedAbout: String
-    @Binding var roomOption: String
-    @Binding var genderOption: String
     let onNext: () -> Void
+    @State private var mainImage: UIImage?
+    @State private var img1: UIImage?
+    @State private var img2: UIImage?
+    @State private var img3: UIImage?
+    @State private var img4: UIImage?
     @State private var selectedSpaceType = "Single Room"
     @State private var selectedRoommates = 1
     @State private var rent = "5000"
@@ -1345,6 +1334,15 @@ struct SpaceView: View {
         let title: String
         let image: String
     }
+    @State private var selectedPhotoBig: PhotosPickerItem?
+    @State private var selectedPhoto1: PhotosPickerItem?
+    @State private var selectedPhoto2: PhotosPickerItem?
+    @State private var selectedPhoto3: PhotosPickerItem?
+    @State private var selectedPhoto4: PhotosPickerItem?
+    @State private var images: [UIImage?] = Array(repeating: nil, count: 5)
+    @StateObject private var validator = ValidationHelper()
+    @StateObject private var ROOM = RoomModel()
+    @State private var isUploading = false
     var body: some View {
         VStack(spacing: 20) {
             header
@@ -1371,6 +1369,7 @@ struct SpaceView: View {
                 .padding(.bottom, 40)
             }
         }
+        .toast(message: validator.validationMessage, isPresented: $validator.showToast)
         .onChange(of: locationManager.latitude) { _, _ in
             updateCamera()
         }
@@ -1378,9 +1377,7 @@ struct SpaceView: View {
     private func updateCamera() {
         let lat = locationManager.latitude
         let lon = locationManager.longitude
-
         guard lat != 0, lon != 0 else { return }
-
         mapPosition = .region(
             MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: lat, longitude: lon),
@@ -1393,16 +1390,80 @@ struct SpaceView: View {
             Text("Add At Least 5 Clear Photos Of Your Space.")
                 .font(AppFont.manropeMedium(14))
             HStack(spacing: 12) {
-                dashedPhoto(size: 165)
+                PhotosPicker(selection: $selectedPhotoBig, matching: .images) {
+                    dashedPhotoBox(size: 165, image: images[0])
+                }
+                .onChange(of: selectedPhotoBig) { _, newValue in
+                    loadImage(newValue, index: 0)
+                }
                 VStack(spacing: 12) {
                     HStack(spacing: 12) {
-                        dashedPhoto(size: 80)
-                        dashedPhoto(size: 80)
+                        PhotosPicker(selection: $selectedPhoto1, matching: .images) {
+                            dashedPhotoBox(size: 80, image: images[1])
+                        }
+                        .onChange(of: selectedPhoto1) { _, newValue in
+                            loadImage(newValue, index: 1)
+                        }
+                        PhotosPicker(selection: $selectedPhoto2, matching: .images) {
+                            dashedPhotoBox(size: 80, image: images[2])
+                        }
+                        .onChange(of: selectedPhoto2) { _, newValue in
+                            loadImage(newValue, index: 2)
+                        }
                     }
                     HStack(spacing: 12) {
-                        dashedPhoto(size: 80)
-                        dashedPhoto(size: 80)
+                        PhotosPicker(selection: $selectedPhoto3, matching: .images) {
+                            dashedPhotoBox(size: 80, image: images[3])
+                        }
+                        .onChange(of: selectedPhoto3) { _, newValue in
+                            loadImage(newValue, index: 3)
+                        }
+                        PhotosPicker(selection: $selectedPhoto4, matching: .images) {
+                            dashedPhotoBox(size: 80, image: images[4])
+                        }
+                        .onChange(of: selectedPhoto4) { _, newValue in
+                            loadImage(newValue, index: 4)
+                        }
                     }
+                }
+            }
+            .padding(.top, 10)
+        }
+    }
+    private func dashedPhotoBox(size: CGFloat, image: UIImage?) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(
+                    Color.gray,
+                    style: StrokeStyle(lineWidth: 1, dash: [6])
+                )
+                .frame(width: size, height: size)
+
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: size, height: size)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            } else {
+                Circle()
+                    .fill(AppColors.primaryYellow)
+                    .frame(width: 34, height: 34)
+                    .overlay(
+                        Image(systemName: "plus")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.black)
+                    )
+            }
+        }
+    }
+    private func loadImage(_ item: PhotosPickerItem?, index: Int) {
+        guard let item else { return }
+        Task {
+            if let data = try? await item.loadTransferable(type: Data.self),
+               let uiImage = UIImage(data: data) {
+                await MainActor.run {
+                    images[index] = uiImage
                 }
             }
         }
@@ -1464,31 +1525,41 @@ struct SpaceView: View {
         }
     }
     private var nextButton: some View {
-        HStack(spacing: 12) {
-            Button {
-                showFinalStep -= 1
-            } label: {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(AppColors.primaryYellow)
-                    .frame(width: 56, height: 56)
-                    .overlay(Image("dobleBack"))
+        let allImagesSelected = images.prefix(5).allSatisfy { $0 != nil }
+        let canProceed = allImagesSelected && !selectedAmenities.isEmpty
+        return HStack(spacing: 12) {
+            Button(action: {
+                if canProceed {
+                    print("Selected Space Type:", selectedSpaceType)
+                    print("Selected Roommates:", selectedRoommates)
+                    print("Rent:", rent)
+                    print("Selected Furnishing:", selectedFurnishing)
+                    print("Selected Gender:", selectedGender)
+                    print("Selected Amenities:", selectedAmenities)
+                    uploadImages()
+                    onNext()
+                } else {
+                    validator.showValidation("⚠️ Please select all 5 images before proceeding.")
+                    validator.showToast = true
+                }
+            }) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            selectedAmenities.isEmpty
+                            ? Color.black.opacity(0.3)
+                            : Color.black
+                        )
+                        .frame(height: 56)
+                    Text("Next")
+                        .font(AppFont.manropeMedium(16))
+                        .foregroundColor(.white)
+                }
             }
-            Button {
-                debugPrintData()
-                showFinalStep = 3
-                onNext()
-            } label: {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(genderOption.isEmpty ? AppColors.Black.opacity(0.3) : AppColors.Black)
-                    .frame(height: 56)
-                    .overlay(
-                        Text("Next")
-                            .font(AppFont.manropeMedium(16))
-                            .foregroundColor(AppColors.backgroundWhite)
-                    )
-            }
-            .disabled(genderOption.isEmpty)
+            .disabled(selectedAmenities.isEmpty)
         }
+        .padding(.horizontal, 10)
+        .padding(.bottom, 30)
     }
     private var header: some View {
         HStack {
@@ -1525,20 +1596,6 @@ struct SpaceView: View {
     func sectionTitle(_ title: String) -> some View {
         Text(title)
             .font(AppFont.manropeSemiBold(15))
-    }
-    func dashedPhoto(size: CGFloat) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(style: StrokeStyle(lineWidth: 1, dash: [6]))
-                .frame(width: size, height: size)
-            Circle()
-                .fill(AppColors.primaryYellow)
-                .frame(width: 34, height: 34)
-                .overlay(
-                    Image(systemName: "plus")
-                        .font(.system(size: 18, weight: .bold))
-                )
-        }
     }
     func segmented(options: [String], selected: Binding<String>) -> some View {
         HStack(spacing: 0) {
@@ -1626,22 +1683,47 @@ struct SpaceView: View {
             }
         }
     }
-    private func debugPrintData() {
-        print("Selected Role:", selectedRole)
-        print("Selected Category:", selectedCategory)
-        print("Selected Shift:", selectedShift)
-        print("Selected Food:", selectedFood)
-        print("Selected Parties:", selectedParties)
-        print("Selected Smoke:", selectedSmoke)
-        print("Selected Drink:", selectedDrink)
-        print("Selected About:", selectedAbout)
-        print("Selected Room Option:", roomOption)
-        print("Selected Gender Option:", genderOption)
-        print("Selected Space Type:", selectedSpaceType)
-        print("Selected Roommates:", selectedRoommates)
-        print("Rent:", rent)
-        print("Selected Furnishing:", selectedFurnishing)
-        print("Selected Gender:", selectedGender)
-        print("Selected Amenities:", selectedAmenities)
+    func uploadImages() {
+        let allSelected = images.allSatisfy { $0 != nil }
+        guard allSelected else {
+            validator.showValidation("⚠️ Please select all 5 images")
+            validator.showToast = true
+            return
+        }
+        let imageData = images.compactMap {
+            $0?.jpegData(compressionQuality: 0.8)
+        }
+        let multipartImages: [MultipartImage] = imageData.enumerated().map { index, data in
+            return MultipartImage(
+                key: "photos[]",
+                filename: "photo_\(index).jpg",
+                data: data
+            )
+        }
+        let params: [String: Any] = [
+            "room_type": selectedSpaceType,
+            "room_mate_want": selectedRoommates,
+            "rent_split": rent,
+            "furnish_type": selectedFurnishing,
+            "amenities[]": selectedAmenities,
+            "location": savedAddress,
+            "lat": locationManager.latitude,
+            "long": locationManager.longitude,
+            "want_to_live_with": ""
+        ]
+        isUploading = true
+        print("🌐 Starting network upload...")
+        ROOM.RoomWithImages(images: multipartImages, params: params) { success, error in
+            DispatchQueue.main.async {
+                isUploading = false
+                if success {
+                    print("✅ Upload successful")
+                } else {
+                    print("❌ Upload failed")
+                    print("🛑 Error:", error ?? "Unknown error")
+                }
+            }
+        }
     }
+
 }

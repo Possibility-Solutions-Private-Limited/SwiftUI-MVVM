@@ -220,6 +220,35 @@ class StepTwoModel: ObservableObject {
         )
     }
 }
+class RoomModel: ObservableObject {
+    func RoomWithImages(
+        images: [MultipartImage],
+        params: [String: Any] = [:],
+        completion: @escaping (Bool, String?) -> Void
+    ) {
+        NetworkManager.shared.uploadMultipart(
+            endpoint: APIConstants.Endpoints.AddRoom,
+            parameters: params,
+            images: images
+        ) { (result: Result<UserModel?, Error>) in
+
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    print("Add-Room Success:", response ?? "")
+                    if ((response?.success) != nil) {
+                        completion(true, response?.message)
+                    } else {
+                        completion(false, response?.message)
+                    }
+                case .failure(let error):
+                    print("Add-Room Error:", error.localizedDescription)
+                    completion(false, error.localizedDescription)
+                }
+            }
+        }
+    }
+}
 class ChatsModel: ObservableObject {
     @Published var chats: [Chat] = []
     @Published var users: [Users] = []
