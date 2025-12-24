@@ -72,29 +72,23 @@ class SocialloginModel: ObservableObject {
     }
 }
 class ProfileModel: ObservableObject {
-    func SignUpWithImages(
-        images: [MultipartImage],
-        params: [String: Any] = [:],
-        completion: @escaping (Bool, String?) -> Void
-    ) {
+    func SignUpWithImages(images: [MultipartImage],params: [String: Any],completion: @escaping (UserModel?) -> Void) {
         NetworkManager.shared.uploadMultipart(
             endpoint: APIConstants.Endpoints.StepOne,
             parameters: params,
             images: images
-        ) { (result: Result<UserModel?, Error>) in
-
+        ) { (result: Result<UserModel, Error>) in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                    print("SIGNUP Success:", response ?? "")
-                    if ((response?.success) != nil) {
-                        completion(true, response?.message)
-                    } else {
-                        completion(false, response?.message)
-                    }
-                case .failure(let error):
-                    print("SIGNUP Error:", error.localizedDescription)
-                    completion(false, error.localizedDescription)
+                print("SIGNUP Success: \(response)")
+                if response.success {
+                    completion(response)
+                } else {
+                    completion(response)
+                }
+                case .failure(_):
+                    completion(nil)
                 }
             }
         }
@@ -273,22 +267,25 @@ class RoomModel: ObservableObject {
     func RoomWithImages(
         images: [MultipartImage],
         params: [String: Any] = [:],
+        amenities: [Int] = [],
         completion: @escaping (Bool, String?) -> Void
     ) {
-        NetworkManager.shared.uploadMultipart(
+        var multipartParams = params
+        multipartParams.removeValue(forKey: "amenities")
+        NetworkManager.shared.uploadMultiparts(
             endpoint: APIConstants.Endpoints.AddRoom,
-            parameters: params,
+            parameters: multipartParams,
+            amenities: amenities,
             images: images
-        ) { (result: Result<UserModel?, Error>) in
-
+        ) { (result: Result<SpaceModel, Error>) in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                    print("Add-Room Success:", response ?? "")
-                    if ((response?.success) != nil) {
-                        completion(true, response?.message)
+                    print("Add-Room Success:", response)
+                    if response.success == true {
+                        completion(true, response.message)
                     } else {
-                        completion(false, response?.message)
+                        completion(false, response.message)
                     }
                 case .failure(let error):
                     print("Add-Room Error:", error.localizedDescription)

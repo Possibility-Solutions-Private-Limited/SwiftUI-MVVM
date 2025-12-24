@@ -14,6 +14,7 @@
 		5D04CB412EEC35D800FB6A21 /* Toast in Frameworks */ = {isa = PBXBuildFile; productRef = 5D04CB402EEC35D800FB6A21 /* Toast */; };
 		5D04CB432EEC38F900FB6A21 /* ProfilePicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D04CB422EEC38F100FB6A21 /* ProfilePicView.swift */; };
 		5D04CB452EEC3C1A00FB6A21 /* VerifyOTPView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D04CB442EEC3C1600FB6A21 /* VerifyOTPView.swift */; };
+		5D08E91E2EFC27CD0052B4B4 /* SpaceModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D08E91D2EFC27C40052B4B4 /* SpaceModel.swift */; };
 		5D0EF5562DB9FF8400CF3F6C /* UserAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D0EF5552DB9FF8400CF3F6C /* UserAuth.swift */; };
 		5D0EF55C2DBA549B00CF3F6C /* ForgotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D0EF55B2DBA549B00CF3F6C /* ForgotView.swift */; };
 		5D0EF55E2DBA63D600CF3F6C /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D0EF55D2DBA63D600CF3F6C /* Constants.swift */; };
@@ -79,6 +80,7 @@
 /* Begin PBXFileReference section */
 		5D04CB422EEC38F100FB6A21 /* ProfilePicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicView.swift; sourceTree = "<group>"; };
 		5D04CB442EEC3C1600FB6A21 /* VerifyOTPView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyOTPView.swift; sourceTree = "<group>"; };
+		5D08E91D2EFC27C40052B4B4 /* SpaceModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceModel.swift; sourceTree = "<group>"; };
 		5D0EF5552DB9FF8400CF3F6C /* UserAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAuth.swift; sourceTree = "<group>"; };
 		5D0EF55B2DBA549B00CF3F6C /* ForgotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotView.swift; sourceTree = "<group>"; };
 		5D0EF55D2DBA63D600CF3F6C /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
@@ -308,6 +310,7 @@
 			children = (
 				5D9AB28B2DB9126000E3480F /* UserModel.swift */,
 				5D14990C2EF969B900C5021A /* BasicDataModel.swift */,
+				5D08E91D2EFC27C40052B4B4 /* SpaceModel.swift */,
 				5D4331712DE48F120016B700 /* MessageModel.swift */,
 				5D43316D2DE43B910016B700 /* ChatModel.swift */,
 			);
@@ -453,6 +456,7 @@
 				5D9AB2682DB8ED8C00E3480F /* AttendanceApp.swift in Sources */,
 				5D5056612EF3D3930013453F /* LikeView.swift in Sources */,
 				5D4331722DE48F120016B700 /* MessageModel.swift in Sources */,
+				5D08E91E2EFC27CD0052B4B4 /* SpaceModel.swift in Sources */,
 				5D67B7552EEFC70A008E794D /* YourselfView.swift in Sources */,
 				5D9AB28C2DB9126000E3480F /* UserModel.swift in Sources */,
 				5D2C95EB2DF6AA750087D69C /* KeyboardResponder.swift in Sources */,

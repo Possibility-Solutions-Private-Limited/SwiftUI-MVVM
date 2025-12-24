@@ -1335,11 +1335,11 @@ struct SpaceView: View {
     @State private var img2: UIImage?
     @State private var img3: UIImage?
     @State private var img4: UIImage?
-    @State private var selectedSpaceType = "Single Room"
+    @State private var selectedSpaceType: OptionItem?
     @State private var selectedRoommates = 1
     @State private var rent = "5000"
-    @State private var selectedFurnishing = "Fully Furnished"
-    @State private var selectedGender = "Male"
+    @State private var selectedFurnishing: OptionItem?
+    @State private var selectedGender: OptionItem?
     @State private var selectedAmenities: Set<Int> = []
     @StateObject private var locationManager = LocationPermissionManager()
     @State private var cameraRegion = MKCoordinateRegion(
@@ -1349,11 +1349,6 @@ struct SpaceView: View {
     @State private var mapPosition: MapCameraPosition = .automatic
     private var savedAddress: String {
         KeychainHelper.shared.get(forKey: "saved_address") ?? "Fetching location..."
-    }
-    struct Amenity: Identifiable {
-        let id = UUID()
-        let title: String
-        let image: String
     }
     @State private var selectedPhotoBig: PhotosPickerItem?
     @State private var selectedPhoto1: PhotosPickerItem?
@@ -1372,26 +1367,31 @@ struct SpaceView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     photosSection.padding(.top, 10)
                     sectionTitle("Space Type")
-                    segmented(options: ["Single Room", "1 BHK", "2 BHK", "3 BHK"], selected: $selectedSpaceType)
+                    SegmentedView(options:  viewModel.roomTypes, selected: $selectedSpaceType)
                     sectionTitle("How Many Roommates Do You Want?")
                     roommatesSection
                     sectionTitle("Rent Split (Per Person)")
                     rentField
                     sectionTitle("Furnishing")
-                    segmented(options: ["Fully Furnished", "Semi Furnished", "Unfurnished"], selected: $selectedFurnishing)
+                    SegmentedView(options:  viewModel.furnishTypes, selected: $selectedFurnishing)
                     sectionTitle("Amenities")
                     StepAmenitiesView(
                         viewModel: viewModel,
                         selectedAmenities: $selectedAmenities
                     )
                     sectionTitle("Who Would You Like To Live With?")
-                    segmented(options: ["Male", "Female", "Non-binary", "Open to all"], selected: $selectedGender)
+                    SegmentedView(options: viewModel.genders, selected: $selectedGender)
                     mapSection
                     nextButton
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 40)
             }
+        }
+        .onAppear {
+            selectedSpaceType = viewModel.roomTypes.first
+            selectedFurnishing = viewModel.furnishTypes.first
+            selectedGender = viewModel.genders.first
         }
         .toast(message: validator.validationMessage, isPresented: $validator.showToast)
         .onChange(of: locationManager.latitude) { _, _ in
@@ -1554,11 +1554,11 @@ struct SpaceView: View {
         return HStack(spacing: 12) {
             Button(action: {
                 if canProceed {
-                    print("Selected Space Type:", selectedSpaceType)
+                    print("Selected Space Type:", selectedSpaceType ?? "")
                     print("Selected Roommates:", selectedRoommates)
                     print("Rent:", rent)
-                    print("Selected Furnishing:", selectedFurnishing)
-                    print("Selected Gender:", selectedGender)
+                    print("Selected Furnishing:", selectedFurnishing ?? "")
+                    print("Selected Gender:", selectedGender ?? "")
                     print("Selected Amenities:", selectedAmenities)
                     uploadImages()
                     onNext()
@@ -1647,41 +1647,55 @@ struct SpaceView: View {
         Text(title)
             .font(AppFont.manropeSemiBold(15))
     }
-    func segmented(options: [String], selected: Binding<String>) -> some View {
-        HStack(spacing: 0) {
-            ForEach(options.indices, id: \.self) { index in
-                let option = options[index]
-                let isSelected = selected.wrappedValue == option
-                Text(option)
-                    .font(AppFont.manropeMedium(14))
-                    .foregroundColor(isSelected ? AppColors.Black : AppColors.backgroundWhite)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                    .background(isSelected ? AppColors.primaryYellow : AppColors.Black)
-                    .overlay(
-                        Group {
-                            if index != options.count - 1 {
-                                Rectangle()
-                                    .fill(AppColors.backgroundWhite)
-                                    .frame(width: 1.5)
-                                    .frame(maxHeight: .infinity)
-                                    .frame(maxWidth: .infinity, alignment: .trailing)
+    struct SegmentedView: View {
+        let options: [OptionItem]
+        @Binding var selected: OptionItem?
+
+        var body: some View {
+            HStack(spacing: 0) {
+                ForEach(options.indices, id: \.self) { index in
+                    let option = options[index]
+                    let isSelected = selected?.id == option.id
+
+                    Text(option.title)
+                        .font(AppFont.manropeMedium(14))
+                        .foregroundColor(
+                            isSelected
+                            ? AppColors.Black
+                            : AppColors.backgroundWhite
+                        )
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(
+                            isSelected
+                            ? AppColors.primaryYellow
+                            : AppColors.Black
+                        )
+                        .overlay(
+                            Group {
+                                if index != options.count - 1 {
+                                    Rectangle()
+                                        .fill(AppColors.backgroundWhite)
+                                        .frame(width: 1.5)
+                                        .frame(maxHeight: .infinity)
+                                        .frame(maxWidth: .infinity, alignment: .trailing)
+                                }
+                            }
+                        )
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.15)) {
+                                selected = option
                             }
                         }
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        withAnimation(.easeInOut(duration: 0.15)) {
-                            selected.wrappedValue = option
-                        }
-                    }
+                }
             }
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(AppColors.Black, lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(AppColors.Black, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     struct StepAmenitiesView: View {
 
@@ -1770,27 +1784,29 @@ struct SpaceView: View {
             )
         }
         let params: [String: Any] = [
-            "room_type": 1,
+            "room_type": selectedSpaceType?.id ?? 0,
             "room_mate_want": selectedRoommates,
             "rent_split": rent,
-            "furnish_type": 12,
-            "amenities[]": Array(selectedAmenities),
+            "furnish_type": selectedFurnishing?.id ?? 0,
+            "amenities": Array(selectedAmenities),
             "location": savedAddress,
             "lat": locationManager.latitude,
             "long": locationManager.longitude,
-            "want_to_live_with": 1
+            "want_to_live_with": selectedGender?.id ?? 0
         ]
-        isUploading = true
-        print("🌐 Starting network upload...",params)
-        ROOM.RoomWithImages(images: multipartImages, params: params) { success, error in
-            DispatchQueue.main.async {
-                isUploading = false
-                if success {
-                    print("✅ Upload successful")
-                } else {
-                    print("❌ Upload failed")
-                    print("🛑 Error:", error ?? "Unknown error")
-                }
+        let amenities = Array(selectedAmenities)
+        NetworkManager.shared.uploadMultiparts(
+            endpoint: APIConstants.Endpoints.AddRoom,
+            parameters: params,
+            amenities: amenities,
+            images: multipartImages,
+        ) { (result: Result<SpaceModel, Error>) in
+            switch result {
+            case .success(let response):
+                print("Success:", response)
+                showFinalStep = 4
+            case .failure(let error):
+                print("Error:", error.localizedDescription)
             }
         }
     }

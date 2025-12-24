@@ -101,6 +101,65 @@ class NetworkManager {
             }
         }.resume()
     }
+    func uploadMultiparts<T: Decodable>(
+        endpoint: String,
+        parameters: [String: Any],
+        amenities: [Int]? = nil, // NEW: amenities array
+        images: [MultipartImage]? = nil,
+        completion: @escaping (Result<T, Error>) -> Void
+    ) {
+        let url = URL(string: baseURL + endpoint)!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        if let token = KeychainHelper.shared.get(forKey: "access_token") {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        let boundary = UUID().uuidString
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        var body = Data()
+        for (key, value) in parameters {
+            body.appendString("--\(boundary)\r\n")
+            body.appendString("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n")
+            body.appendString("\(value)\r\n")
+        }
+        if let amenities = amenities {
+            for id in amenities {
+                body.appendString("--\(boundary)\r\n")
+                body.appendString("Content-Disposition: form-data; name=\"amenities[]\"\r\n\r\n")
+                body.appendString("\(id)\r\n")
+            }
+        }
+        if let images = images {
+            for image in images {
+                if let imageData = image.data {
+                    body.appendString("--\(boundary)\r\n")
+                    body.appendString("Content-Disposition: form-data; name=\"\(image.key)\"; filename=\"\(image.filename)\"\r\n")
+                    body.appendString("Content-Type: image/jpeg\r\n\r\n")
+                    body.append(imageData)
+                    body.appendString("\r\n")
+                }
+            }
+        }
+        body.appendString("--\(boundary)--\r\n")
+        request.httpBody = body
+        URLSession.shared.dataTask(with: request) { data, _, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            guard let data = data else {
+                completion(.failure(NSError(domain: "EMPTY_RESPONSE", code: -1)))
+                return
+            }
+            do {
+                let decoded = try JSONDecoder().decode(T.self, from: data)
+                completion(.success(decoded))
+            } catch {
+                print("❌ Multipart decode error:", String(data: data, encoding: .utf8) ?? "")
+                completion(.failure(error))
+            }
+        }.resume()
+    }
 }
 struct MultipartImage {
     let key: String

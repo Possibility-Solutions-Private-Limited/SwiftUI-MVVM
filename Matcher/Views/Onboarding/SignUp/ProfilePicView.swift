@@ -206,24 +206,35 @@ struct ProfilePicView: View {
             "gender": gender.lowercased(),
             "dob": dob,
         ]
-        PROFILE.SignUpWithImages(images: imgs, params: params) { success, error in
-            isUploading = false
-            if success {
-                let firstName = KeychainHelper.shared.get(forKey: "first_name") ?? ""
-                let emailKey  = KeychainHelper.shared.get(forKey: "email") ?? ""
-                let mobile    = KeychainHelper.shared.get(forKey: "mobile") ?? ""
-                let gender    = KeychainHelper.shared.get(forKey: "gender") ?? ""
-                let image    = KeychainHelper.shared.get(forKey: "image") ?? ""
-                userAuth.firstName = firstName
-                userAuth.email     = emailKey
-                userAuth.mobile    = mobile
-                userAuth.gender    = gender
-                userAuth.image = image
-                userAuth.login(email: emailKey, password: "12345")
-                print("Uploaded successfully!")
-            } else {
-                print(error ?? "Unknown error")
+        PROFILE.SignUpWithImages(images: imgs, params: params) { response in
+            guard let response else {
+                validator.showValidation("Something went wrong")
+                validator.showToast = true
+                isUploading = false
+                return
             }
+            guard response.success == true else {
+                validator.showValidation(response.message ?? "")
+                validator.showToast = true
+                isUploading = false
+                return
+            }
+            let data = response.data
+            isUploading = false
+            KeychainHelper.shared.save(data?.firstName ?? "", forKey: "first_name")
+            KeychainHelper.shared.save(data?.email ?? "", forKey: "email")
+            KeychainHelper.shared.save(data?.mobile ?? "", forKey: "mobile")
+            KeychainHelper.shared.save(data?.gender ?? "", forKey: "gender")
+            if let imageFile = data?.photos?.first?.file, !imageFile.isEmpty {
+                KeychainHelper.shared.save(imageFile, forKey: "image")
+                print("imageFile",imageFile)
+                userAuth.image = imageFile
+            }
+            userAuth.firstName = data?.firstName ?? ""
+            userAuth.email = data?.email ?? ""
+            userAuth.mobile = data?.mobile ?? ""
+            userAuth.gender = data?.gender ?? ""
+            userAuth.login(email: userAuth.email, password: userAuth.mobile)
         }
     }
 }
