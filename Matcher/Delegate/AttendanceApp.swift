@@ -204,6 +204,7 @@ class LocationPermissionManager: NSObject, ObservableObject, CLLocationManagerDe
                 ]
                 .compactMap { $0 }
                 .joined(separator: ", ")
+                KeychainHelper.shared.save(place.name ?? "", forKey: "address")
                 KeychainHelper.shared.save(self.address, forKey: "saved_address")
                 KeychainHelper.shared.save(self.city, forKey: "saved_city")
                 KeychainHelper.shared.save(self.state, forKey: "saved_state")

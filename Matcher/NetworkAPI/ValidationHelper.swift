@@ -226,37 +226,3 @@ struct MultilineTextView: UIViewRepresentable {
         }
     }
 }
-
-
-
-//@StateObject private var STEP = StepTwoModel()
-//@State private var isUploading = false
-//@StateObject private var validator = ValidationHelper()
-//
-//isUploading = true
-//let param: [String: Any] = [
-//    "describe_you_best": selectedRole.lowercased(),
-//    "professional_field": selectedCategory,
-//    "work_shift":selectedShift,
-//    "into_parties":selectedParties,
-//    "smoking":selectedSmoke,
-//    "about_yourself":selectedAbout,
-//    "want_live_with":16,
-//]
-//STEP.StepTwoAPI(param: param) { response in
-//    guard let response else {
-//        validator.showValidation("Something went wrong")
-//        validator.showToast = true
-//        isUploading = false
-//        return
-//    }
-//    guard response.success == true else {
-//        validator.showValidation(response.message ?? "")
-//        validator.showToast = true
-//        isUploading = false
-//        return
-//    }
-//    let data = response.data
-//    print(data ?? "")
-//    isUploading = false
-//}

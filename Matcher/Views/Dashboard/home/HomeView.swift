@@ -6,6 +6,7 @@ struct Card: Identifiable {
     let step: Int
 }
 struct HomeView: View {
+    @EnvironmentObject var userAuth: UserAuth
     @State private var cards: [Card] = []
     @State private var totalSteps: Int = 8
     @State private var showFinalStep = 0
@@ -32,7 +33,7 @@ struct HomeView: View {
                 .ignoresSafeArea()
                 VStack {
                     if showFinalStep == 1 {
-                        NewStepView(
+                        FinalStepView(
                             showFinalStep: $showFinalStep,
                             viewModel: viewModel,
                             selections: selections,
@@ -107,16 +108,42 @@ struct HomeView: View {
     }
     var header: some View {
         HStack {
-            Image("profile")
-                .resizable()
-                .scaledToFill()
-                .frame(width: 50, height: 50)
-                .clipShape(Circle())
+            if let url = URL(string: userAuth.image), !userAuth.image.isEmpty {
+                AsyncImage(url: url) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 60, height: 60)
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle().stroke(Color.white, lineWidth: 3)
+                            )
+
+                    } else if phase.error != nil {
+                        Image("profile")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 50, height: 50)
+                            .clipShape(Circle())
+                    } else {
+                        ProgressView()
+                            .frame(width: 60, height: 60)
+                    }
+                }
+            } else {
+                Image("profile")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 50, height: 50)
+                    .clipShape(Circle())
+            }
             Spacer()
             HStack(spacing: 5) {
                 Image("location")
-                Text("Galway, Ireland")
-                    .font(AppFont.manropeSemiBold(16))
+                if let savedAddress = KeychainHelper.shared.get(forKey: "address") {
+                    Text(savedAddress).font(AppFont.manropeSemiBold(16))
+                }
             }
             Spacer()
             Image("bell")
@@ -942,7 +969,8 @@ struct StepEightView: View {
         .padding(.bottom, 8)
     }
 }
-struct NewStepView: View {
+struct FinalStepView: View {
+    @EnvironmentObject var userAuth: UserAuth
     @Binding var showFinalStep: Int
     @ObservedObject var viewModel: BasicModel
     @ObservedObject var selections: UserSelections
@@ -1006,16 +1034,42 @@ struct NewStepView: View {
     }
     var header: some View {
         HStack {
-            Image("profile")
-                .resizable()
-                .scaledToFill()
-                .frame(width: 50, height: 50)
-                .clipShape(Circle())
+            if let url = URL(string: userAuth.image), !userAuth.image.isEmpty {
+                AsyncImage(url: url) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 60, height: 60)
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle().stroke(Color.white, lineWidth: 3)
+                            )
+
+                    } else if phase.error != nil {
+                        Image("profile")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 50, height: 50)
+                            .clipShape(Circle())
+                    } else {
+                        ProgressView()
+                            .frame(width: 60, height: 60)
+                    }
+                }
+            } else {
+                Image("profile")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 50, height: 50)
+                    .clipShape(Circle())
+            }
             Spacer()
             HStack(spacing: 5) {
                 Image("location")
-                Text("Galway, Ireland")
-                    .font(AppFont.manropeSemiBold(16))
+                if let savedAddress = KeychainHelper.shared.get(forKey: "address") {
+                    Text(savedAddress).font(AppFont.manropeSemiBold(16))
+                }
             }
             Spacer()
             Image("bell")
@@ -1066,11 +1120,17 @@ struct NewStepView: View {
     }
 }
 struct GenderStepView: View {
+    @EnvironmentObject var userAuth: UserAuth
+    @StateObject private var STEP = StepTwoModel()
+    @State private var isUploading = false
+    @StateObject private var validator = ValidationHelper()
     @Binding var showFinalStep: Int
     @ObservedObject var viewModel: BasicModel
     @ObservedObject var selections: UserSelections
     let onNext: () -> Void
-    private let options = ["Male", "Female", "Non-binary", "Open to all"]
+    private var options: [OptionItem] {
+        viewModel.genders
+    }
     var body: some View {
         VStack {
             header
@@ -1088,61 +1148,44 @@ struct GenderStepView: View {
             
         }
     }
-    private var nextButton: some View {
-        HStack(spacing: 12) {
-            Button(action: {
-                showFinalStep -= 1
-            }) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(AppColors.primaryYellow)
-                            .frame(width: 56, height: 56)
-                        Image("dobleBack")
-                    }
-            }
-            Button(action: {
-                print("Selected Role: \(selections.selectedRole)")
-                print("Selected Category:",selections.selectedCategory ?? 0)
-                print("Selected Shift: \(selections.selectedShift)")
-                print("Selected Food: \(selections.selectedFood)")
-                print("Selected Parties:",selections.selectedParties ?? 0)
-                print("Selected Smoke: \(selections.selectedSmoke)")
-                print("Selected Drink: \(selections.selectedDrink)")
-                print("Selected About: \(selections.selectedAbout)")
-                print("Selected room Option: \(selections.roomOption)")
-                print("Selected gender Option: \(selections.genderOption)")
-                showFinalStep = 3
-            }) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(
-                            selections.genderOption.isEmpty
-                            ? Color.black.opacity(0.3)
-                            : Color.black
-                        )
-                        .frame(height: 56)
-                    Text("Next")
-                        .font(AppFont.manropeMedium(16))
-                        .foregroundColor(.white)
-                }
-            }
-            .disabled(selections.genderOption.isEmpty)
-        }
-        .padding(.horizontal, 10)
-        .padding(.bottom, 30)
-    }
     var header: some View {
         HStack {
-            Image("profile")
-                .resizable()
-                .scaledToFill()
-                .frame(width: 50, height: 50)
-                .clipShape(Circle())
+            if let url = URL(string: userAuth.image), !userAuth.image.isEmpty {
+                AsyncImage(url: url) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 60, height: 60)
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle().stroke(Color.white, lineWidth: 3)
+                            )
+
+                    } else if phase.error != nil {
+                        Image("profile")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 50, height: 50)
+                            .clipShape(Circle())
+                    } else {
+                        ProgressView()
+                            .frame(width: 60, height: 60)
+                    }
+                }
+            } else {
+                Image("profile")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 50, height: 50)
+                    .clipShape(Circle())
+            }
             Spacer()
             HStack(spacing: 5) {
                 Image("location")
-                Text("Galway, Ireland")
-                    .font(AppFont.manropeSemiBold(16))
+                if let savedAddress = KeychainHelper.shared.get(forKey: "address") {
+                    Text(savedAddress).font(AppFont.manropeSemiBold(16))
+                }
             }
             Spacer()
             Image("bell")
@@ -1165,47 +1208,124 @@ struct GenderStepView: View {
     }
     var optionsSection: some View {
         VStack(spacing: 16) {
-            ForEach(options, id: \.self) { option in
-                GenderOptionCard(
-                    title: option,
-                    isSelected: selections.genderOption == option
-                ) {
-                    selections.genderOption = option
-                }
+            ForEach(options) { field in
+                GenderOptionCard(field)
             }
         }
         .padding(.horizontal, 20)
     }
-    struct GenderOptionCard: View {
-        let title: String
-        let isSelected: Bool
-        let action: () -> Void
-        var body: some View {
-            Button(action: action) {
-                HStack(spacing: 14) {
-                    Image(isSelected ? "select" : "unselect")
-                        .resizable()
-                        .frame(width: 22, height: 22)
-                    Text(title)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.black)
-                    Spacer()
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 18)
-                .frame(maxWidth: .infinity)
-                .background(isSelected ? Color.yellow : Color.white)
-                .cornerRadius(14)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color.black, lineWidth: 1)
-                )
+    private func GenderOptionCard(_ field: OptionItem) -> some View {
+        Button {
+            selections.genderOption = field.id
+        } label: {
+            HStack(spacing: 14) {
+                Image(selections.genderOption == field.id ? "select" : "unselect")
+                    .resizable()
+                    .frame(width: 22, height: 22)
+
+                Text(field.title)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.black)
+
+                Spacer()
             }
-            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 18)
+            .frame(maxWidth: .infinity)
+            .background(
+                selections.genderOption == field.id
+                ? AppColors.primaryYellow
+                : Color.white
+            )
+            .cornerRadius(14)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.black, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+    private var nextButton: some View {
+        HStack(spacing: 12) {
+            Button(action: {
+                showFinalStep -= 1
+            }) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(AppColors.primaryYellow)
+                        .frame(width: 56, height: 56)
+                    Image("dobleBack")
+                }
+            }
+            Button(action: StepTwoSubmit) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            (selections.genderOption == nil || isUploading)
+                            ? Color.black.opacity(0.3)
+                            : Color.black
+                        )
+                        .frame(height: 56)
+                    HStack(spacing: 12) {
+                        if isUploading {
+                            ProgressView()
+                                .progressViewStyle(
+                                    CircularProgressViewStyle(tint: .white)
+                                )
+                        }
+                        Text("Next")
+                            .font(AppFont.manropeMedium(16))
+                            .foregroundColor(.white)
+                    }
+                }
+            }
+            .disabled(selections.genderOption == nil || isUploading)
+            .frame(maxWidth: .infinity)
+            .opacity(isUploading ? 0.7 : 1)
+        }
+        .padding(.horizontal, 10)
+        .padding(.bottom, 30)
+    }
+    func StepTwoSubmit() {
+        isUploading = true
+        let param: [String: Any] = [
+            "describe_you_best": selections.selectedRole.lowercased(),
+            "professional_field": selections.selectedCategory ?? 0,
+            "work_shift":selections.selectedShift.lowercased(),
+            "food_preference":selections.selectedFood.lowercased(),
+            "into_parties":selections.selectedParties ?? 0,
+            "smoking":selections.selectedSmoke.lowercased(),
+            "drinking":selections.selectedDrink.lowercased(),
+            "about_yourself":selections.selectedAbout.lowercased(),
+            "do_you_have_room":selections.roomOption.lowercased(),
+            "want_live_with":selections.genderOption ?? 0,
+        ]
+        STEP.StepTwoAPI(param: param) { response in
+            DispatchQueue.main.async {
+                guard let response = response else {
+                    validator.showValidation("Something went wrong")
+                    validator.showToast = true
+                    isUploading = false
+                    return
+                }
+                guard response.success else {
+                    validator.showValidation(response.message ?? "Request failed")
+                    validator.showToast = true
+                    isUploading = false
+                    return
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    validator.showValidation(response.message ?? "Success")
+                    validator.showToast = true
+                    isUploading = false
+                    showFinalStep = 3
+                }
+            }
         }
     }
 }
 struct SpaceView: View {
+    @EnvironmentObject var userAuth: UserAuth
     @Binding var showFinalStep: Int
     @ObservedObject var viewModel: BasicModel
     @ObservedObject var selections: UserSelections
@@ -1467,16 +1587,42 @@ struct SpaceView: View {
     }
     private var header: some View {
         HStack {
-            Image("profile")
-                .resizable()
-                .scaledToFill()
-                .frame(width: 50, height: 50)
-                .clipShape(Circle())
+            if let url = URL(string: userAuth.image), !userAuth.image.isEmpty {
+                AsyncImage(url: url) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 60, height: 60)
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle().stroke(Color.white, lineWidth: 3)
+                            )
+
+                    } else if phase.error != nil {
+                        Image("profile")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 50, height: 50)
+                            .clipShape(Circle())
+                    } else {
+                        ProgressView()
+                            .frame(width: 60, height: 60)
+                    }
+                }
+            } else {
+                Image("profile")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 50, height: 50)
+                    .clipShape(Circle())
+            }
             Spacer()
             HStack(spacing: 5) {
                 Image("location")
-                Text("Galway, Ireland")
-                    .font(AppFont.manropeSemiBold(16))
+                if let savedAddress = KeychainHelper.shared.get(forKey: "address") {
+                    Text(savedAddress).font(AppFont.manropeSemiBold(16))
+                }
             }
             Spacer()
             Image("bell")
@@ -1551,22 +1697,35 @@ struct SpaceView: View {
                 .padding(.top, 10)
                 .padding(.horizontal)
             }
-            .padding(.top, 5)
         }
-
-        // MARK: - Amenity Button
         private func AmenityButton(_ item: OptionItem) -> some View {
             Button {
                 toggleAmenity(item.id)
             } label: {
                 HStack(spacing: 8) {
-                    if let icon = item.icon {
-                        Image(icon)
+                    if let url = URL(string: item.icon ?? "") {
+                        AsyncImage(url: url) { phase in
+                            if let image = phase.image {
+                                image
+                                    .resizable()
+                                    .renderingMode(.original)
+                                    .scaledToFit()
+                                    .frame(width: 18, height: 18)
+                            } else {
+                                Image("parking")
+                                    .resizable()
+                                    .renderingMode(.original)
+                                    .scaledToFit()
+                                    .frame(width: 18, height: 18)
+                            }
+                        }
+                    } else {
+                        Image("parking")
                             .resizable()
+                            .renderingMode(.original)
                             .scaledToFit()
                             .frame(width: 18, height: 18)
                     }
-
                     Text(item.title)
                         .font(AppFont.manropeMedium(13))
                         .foregroundColor(.black)
@@ -1585,8 +1744,6 @@ struct SpaceView: View {
                 )
             }
         }
-
-        // MARK: - Toggle Logic
         private func toggleAmenity(_ id: Int) {
             if selectedAmenities.contains(id) {
                 selectedAmenities.remove(id)
@@ -1595,7 +1752,6 @@ struct SpaceView: View {
             }
         }
     }
-
     func uploadImages() {
         let allSelected = images.allSatisfy { $0 != nil }
         guard allSelected else {
@@ -1618,7 +1774,7 @@ struct SpaceView: View {
             "room_mate_want": selectedRoommates,
             "rent_split": rent,
             "furnish_type": 12,
-            "amenities[]": Array(selectedAmenities), // ✅ REQUIRED
+            "amenities[]": Array(selectedAmenities),
             "location": savedAddress,
             "lat": locationManager.latitude,
             "long": locationManager.longitude,
@@ -1638,5 +1794,4 @@ struct SpaceView: View {
             }
         }
     }
-
 }

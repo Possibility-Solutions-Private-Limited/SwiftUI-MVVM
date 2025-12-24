@@ -186,7 +186,7 @@ struct VerifyOTPView: View {
                 if response.success {
                     let data = response.data
                     KeychainHelper.shared.save(response.token ?? "", forKey: "access_token")
-                    KeychainHelper.shared.save(data?.first_name ?? "", forKey: "first_name")
+                    KeychainHelper.shared.save(data?.firstName ?? "", forKey: "first_name")
                     KeychainHelper.shared.save(data?.email ?? "", forKey: "email")
                     KeychainHelper.shared.save(data?.mobile ?? "", forKey: "mobile")
                     KeychainHelper.shared.save(data?.gender ?? "", forKey: "gender")

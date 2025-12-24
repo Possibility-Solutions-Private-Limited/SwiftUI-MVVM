@@ -206,7 +206,7 @@ final class UserSelections: ObservableObject {
     @Published var selectedDrink = ""
     @Published var selectedAbout = ""
     @Published var roomOption = ""
-    @Published var genderOption = ""
+    @Published var genderOption:Int?
 }
 class BasicModel: ObservableObject {
     @Published var roomTypes: [OptionItem] = []

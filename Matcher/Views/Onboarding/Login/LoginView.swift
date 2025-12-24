@@ -400,15 +400,16 @@ struct LoginView: View {
             let data = response.data
             isUploading = false
             KeychainHelper.shared.save(response.token ?? "", forKey: "access_token")
-            KeychainHelper.shared.save(data?.first_name ?? "", forKey: "first_name")
+            KeychainHelper.shared.save(data?.firstName ?? "", forKey: "first_name")
             KeychainHelper.shared.save(data?.email ?? "", forKey: "email")
             KeychainHelper.shared.save(data?.mobile ?? "", forKey: "mobile")
             KeychainHelper.shared.save(data?.gender ?? "", forKey: "gender")
             if let imageFile = data?.photos?.first?.file, !imageFile.isEmpty {
                 KeychainHelper.shared.save(imageFile, forKey: "image")
+                print("imageFile",imageFile)
                 userAuth.image = imageFile
             }
-            userAuth.firstName = data?.first_name ?? ""
+            userAuth.firstName = data?.firstName ?? ""
             userAuth.email = data?.email ?? ""
             userAuth.mobile = data?.mobile ?? ""
             userAuth.gender = data?.gender ?? ""
@@ -458,7 +459,7 @@ struct LoginView: View {
             "device_token": KeychainHelper.shared.get(forKey: "device_token") ?? "",
             "device_type": "ios"
         ]
-        SIGNUP.SignUpAPI(param: param) { response in
+        SIGNUP.SignUpAPI(param: param) { response in            
             guard let response else {
                 validator.showValidation("Something went wrong")
                 validator.showToast = true
@@ -538,14 +539,14 @@ struct LoginView: View {
             }
             let data = response.data
             KeychainHelper.shared.save(response.token ?? "", forKey: "access_token")
-            KeychainHelper.shared.save(data?.first_name ?? name ?? "", forKey: "first_name")
+            KeychainHelper.shared.save(data?.firstName ?? name ?? "", forKey: "first_name")
             KeychainHelper.shared.save(data?.email ?? email ?? "", forKey: "email")
             KeychainHelper.shared.save(data?.mobile ?? "", forKey: "mobile")
             if let image = data?.photos?.first?.file {
                 KeychainHelper.shared.save(image, forKey: "image")
                 userAuth.image = image
             }
-            userAuth.firstName = data?.first_name ?? ""
+            userAuth.firstName = data?.firstName ?? ""
             userAuth.email = data?.email ?? ""
             userAuth.login(email: email ?? "", password: "12345")
         }

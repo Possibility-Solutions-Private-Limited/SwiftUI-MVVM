@@ -50,7 +50,7 @@ struct ChatListView: View {
                     chatId: chat.id,
                     receiverId: receiverDetail?.id ?? 0,
                     UserImg:"",
-                    userName:senderDetail?.first_name ?? ""
+                    userName:senderDetail?.firstName ?? ""
                 )
             }
             .navigationDestination(item: $selectedUser) { user in
@@ -84,7 +84,7 @@ struct ChatRowView: View {
                     .frame(width: 40, height: 40)
                     .clipShape(Circle())
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(userDetail?.first_name ?? "")
+                    Text(userDetail?.firstName ?? "")
                         .font(.headline)
                         .foregroundColor(.black)
                     HStack(spacing: 2) {
