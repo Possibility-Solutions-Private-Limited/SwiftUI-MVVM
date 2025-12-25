@@ -406,13 +406,21 @@ struct LoginView: View {
             KeychainHelper.shared.save(data?.gender ?? "", forKey: "gender")
             if let imageFile = data?.photos?.first?.file, !imageFile.isEmpty {
                 KeychainHelper.shared.save(imageFile, forKey: "image")
-                print("imageFile",imageFile)
                 userAuth.image = imageFile
             }
             userAuth.firstName = data?.firstName ?? ""
             userAuth.email = data?.email ?? ""
             userAuth.mobile = data?.mobile ?? ""
             userAuth.gender = data?.gender ?? ""
+            if let profile = data?.profile {
+                print(profile)
+                if let photos = data?.photos, !photos.isEmpty {
+                    userAuth.stepsComplete()
+                    userAuth.spaceComplete()
+                } else {
+                    userAuth.stepsComplete()
+                }
+            }
             userAuth.login(email: email, password: password)
         }
     }
@@ -542,9 +550,9 @@ struct LoginView: View {
             KeychainHelper.shared.save(data?.firstName ?? name ?? "", forKey: "first_name")
             KeychainHelper.shared.save(data?.email ?? email ?? "", forKey: "email")
             KeychainHelper.shared.save(data?.mobile ?? "", forKey: "mobile")
-            if let image = data?.photos?.first?.file {
-                KeychainHelper.shared.save(image, forKey: "image")
-                userAuth.image = image
+            if let imageFile = data?.photos?.first?.file, !imageFile.isEmpty {
+                KeychainHelper.shared.save(imageFile, forKey: "image")
+                userAuth.image = imageFile
             }
             userAuth.firstName = data?.firstName ?? ""
             userAuth.email = data?.email ?? ""

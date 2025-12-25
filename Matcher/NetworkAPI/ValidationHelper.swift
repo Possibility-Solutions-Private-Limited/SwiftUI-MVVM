@@ -226,3 +226,49 @@ struct MultilineTextView: UIViewRepresentable {
         }
     }
 }
+struct KeyboardDoneTextField: UIViewRepresentable {
+    @Binding var text: String
+    var placeholder: String
+
+    func makeUIView(context: Context) -> UITextField {
+        let textField = UITextField()
+        textField.placeholder = placeholder
+        textField.keyboardType = .numberPad
+        textField.text = text         // 👈 SHOW DEFAULT
+        textField.delegate = context.coordinator
+        
+        // Toolbar
+        let toolbar = UIToolbar()
+        toolbar.sizeToFit()
+        toolbar.items = [
+            UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil),
+            UIBarButtonItem(title: "Done", style: .done, target: context.coordinator, action: #selector(Coordinator.doneTapped))
+        ]
+        textField.inputAccessoryView = toolbar
+        return textField
+    }
+
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        if uiView.text != text {
+            uiView.text = text       // 👈 KEEP SYNCED
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, UITextFieldDelegate {
+        var parent: KeyboardDoneTextField
+        init(_ parent: KeyboardDoneTextField) { self.parent = parent }
+
+        @objc func doneTapped() {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                            to: nil, from: nil, for: nil)
+        }
+
+        func textFieldDidChangeSelection(_ textField: UITextField) {
+            parent.text = textField.text ?? ""
+        }
+    }
+}

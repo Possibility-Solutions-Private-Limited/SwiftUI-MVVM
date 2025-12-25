@@ -32,63 +32,306 @@ struct HomeView: View {
                 )
                 .ignoresSafeArea()
                 VStack {
-                    if showFinalStep == 1 {
-                        FinalStepView(
-                            showFinalStep: $showFinalStep,
-                            viewModel: viewModel,
-                            selections: selections,
-                            onNext: next
-                        )
-                    } else if showFinalStep == 2 {
-                        GenderStepView(
-                            showFinalStep: $showFinalStep,
-                            viewModel: viewModel,
-                            selections: selections,
-                            onNext: next
-                        )
-                    } else if showFinalStep == 3 {
-                        SpaceView(
-                            showFinalStep: $showFinalStep,
-                            viewModel: viewModel,
-                            selections: selections,
-                            onNext: next
-                        )
-                    } else {
-                        header
-                        title
-                        ZStack {
-                            ForEach(cards) { card in
-                                let index = cards.firstIndex { $0.id == card.id } ?? 0
-                                SwipeCard(
-                                    viewModel: viewModel,
-                                    selections: selections,
-                                    step: card.step,
-                                    currentStep: displayStep(for: card.step),
-                                    totalSteps: totalSteps,
-                                    maxHeight: geo.size.height * 0.7
-                                ) {
-                                    withAnimation(.spring()) {
-                                        cards.removeAll { $0.id == card.id }
-                                        if cards.isEmpty {
-                                            showFinalStep = 1
+                    if userAuth.steps {
+                        if userAuth.space {
+                            header
+                            Text("Nearby Rooms & Roommates")
+                                .font(.title3.bold())
+                                .padding(.horizontal)
+                            searchBar
+                            ZStack {
+                                RoommateDetailView()
+                            }
+                            .padding(.horizontal)
+                        }else{
+                            SpaceView(
+                                showFinalStep: $showFinalStep,
+                                viewModel: viewModel,
+                                selections: selections,
+                                onNext: next
+                            )
+                        }
+                    }else{
+                        if showFinalStep == 1 {
+                            FinalStepView(
+                                showFinalStep: $showFinalStep,
+                                viewModel: viewModel,
+                                selections: selections,
+                                onNext: next
+                            )
+                        } else if showFinalStep == 2 {
+                            GenderStepView(
+                                showFinalStep: $showFinalStep,
+                                viewModel: viewModel,
+                                selections: selections,
+                                onNext: next
+                            )
+                        } else if showFinalStep == 3 {
+                            SpaceView(
+                                showFinalStep: $showFinalStep,
+                                viewModel: viewModel,
+                                selections: selections,
+                                onNext: next
+                            )
+                        } else {
+                            header
+                            title
+                            ZStack {
+                                ForEach(cards) { card in
+                                    let index = cards.firstIndex { $0.id == card.id } ?? 0
+                                    SwipeCard(
+                                        viewModel: viewModel,
+                                        selections: selections,
+                                        step: card.step,
+                                        currentStep: displayStep(for: card.step),
+                                        totalSteps: totalSteps,
+                                        maxHeight: geo.size.height * 0.7
+                                    ) {
+                                        withAnimation(.spring()) {
+                                            cards.removeAll { $0.id == card.id }
+                                            if cards.isEmpty {
+                                                showFinalStep = 1
+                                            }
                                         }
                                     }
+                                    .offset(y: CGFloat(index) * 7)
                                 }
-                                .offset(y: CGFloat(index) * 7)
                             }
+                            .padding(.horizontal)
+                            Spacer(minLength: 5)
                         }
-                        .padding(.horizontal)
-                        Spacer(minLength: 5)
                     }
                 }
             }
         }
         .onAppear {
-            cards = initialCards
+            if userAuth.steps {
+                if userAuth.space {
+                    
+                }
+            }else{
+                cards = initialCards
+            }
             viewModel.fetchBasicData()
         }
         .onChange(of: selections.selectedRole) {
             rebuildCards()
+        }
+    }
+    // main CARD======
+    struct RoommateDetailView: View {
+        var body: some View {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 16) {
+                    bigProfile
+                    profileInfo
+                    professionChips
+                    habitGrid
+                    partyChip
+                    roomPhotos
+                    roommatesNeeded
+                    roomShortInfo
+                    locationBox
+                }
+                .padding(.vertical, 10)
+                .padding(.horizontal, 10)
+            }
+            .background(AppColors.backgroundClear)
+            .ignoresSafeArea()
+        }
+        private var bigProfile: some View {
+            ZStack(alignment: .bottomTrailing) {
+                Image("girls")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(height: 400)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                HStack(alignment: .bottom) {
+                    VStack(alignment: .leading, spacing: 15) {
+                        Text("Daneils Daney 🌼 28")
+                            .font(AppFont.manropeSemiBold(22))
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        
+                        VStack(alignment: .leading, spacing: 15) {
+                            Text("Software Engineer, Delhi")
+                                .font(AppFont.manrope(14))
+                                .foregroundColor(.white)
+                            
+                            Text("Day Shift")
+                                .font(AppFont.manrope(14))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Color.black.opacity(0.2))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color.white, lineWidth: 1)
+                                )
+                                .cornerRadius(10)
+                        }
+                    }.padding(.leading,10)
+                    
+                    Spacer()
+                    
+                    VStack(spacing: 15) {
+                        CircleButton(icon: "xmark", bg: .blue)
+                        CircleButton(icon: "heart.fill", bg: .red)
+                    }.padding(.bottom, 10).padding(.trailing,10)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 10)
+                .padding(.bottom, 20)
+            }
+        }
+        private var profileInfo: some View {
+            VStack(spacing: 6) {
+                Text("Website Designer")
+                    .font(AppFont.manropeSemiBold(16))
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 6)
+                Text("Working professional with a calm lifestyle and clean habits.\nLooking for a respectful and friendly roommate")
+                    .font(AppFont.manrope(12))
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        private var professionChips: some View {
+            HStack(spacing: 12) {
+                chip(icon: "briefcase.fill", text: "Working")
+                chip(icon: "cart.fill", text: "Retail & E-Commerce")
+            }
+        }
+        private func chip(icon: String, text: String) -> some View {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                Text(text).font(AppFont.manrope(13))
+            }
+            .padding(.vertical, 6)
+            .padding(.horizontal, 12)
+            .background(Color.black.opacity(0.05))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.black, lineWidth: 1)
+            )
+            .cornerRadius(10)
+        }
+        private var habitGrid: some View {
+            VStack(spacing: 6) {
+                HStack {
+                    gridTitle("Food Choice")
+                    gridTitle("Smoking")
+                    gridTitle("Shift")
+                    gridTitle("Drinking")
+                }
+                HStack {
+                    gridChoice(choiceButton("Non-veg", selected: true))
+                    gridChoice(choiceButton("Yes", selected: true))
+                    gridChoice(choiceButton("Night", selected: true))
+                    gridChoice(choiceButton("Yes", selected: true))
+                }
+            }
+        }
+        private func gridTitle(_ text: String) -> some View {
+            Text(text)
+                .frame(maxWidth: .infinity)
+                .font(.caption)
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+        }
+        private func gridChoice<V: View>(_ view: V) -> some View {
+            view.frame(maxWidth: .infinity)
+        }
+        private func choiceButton(_ title: String, selected: Bool = false, color: Color = .yellow) -> some View {
+            Text(title)
+                .font(AppFont.manrope(13))
+                .padding(.vertical, 10)
+                .padding(.horizontal, 10)
+                .background(selected ? color : Color.black.opacity(0.07))
+                .foregroundColor(selected ? .black : .gray)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+        private var partyChip: some View {
+            Label("Not Party Person", systemImage: "party.popper.fill")
+                .font(AppFont.manropeSemiBold(16))
+                .padding(.vertical, 8)
+                .padding(.horizontal, 16)
+                .background(Color.red.opacity(0.1))
+                .clipShape(Capsule())
+        }
+        private var roomPhotos: some View {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Rooms Photo").font(AppFont.manropeBold(16))
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    ForEach(1..<5) { index in
+                        Image("room\(index)")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(height: 110)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                }
+            }
+        }
+        private var roommatesNeeded: some View {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("3 Roommates Needed")
+                    .font(AppFont.manropeBold(16))
+                HStack(spacing: -10) {
+                    Image("user1")
+                        .resizable().frame(width: 38, height: 38)
+                        .clipShape(Circle())
+                    Image("user2")
+                        .resizable().frame(width: 38, height: 38)
+                        .clipShape(Circle())
+                    
+                    Text("3")
+                        .padding(8)
+                        .background(Color.yellow)
+                        .clipShape(Circle())
+                }
+            }
+        }
+        private var roomShortInfo: some View {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Room Short Info").font(AppFont.manropeBold(16))
+                
+                HStack(spacing: 10) {
+                    detailBox("2 BHK")
+                    detailBox("5000")
+                    detailBox("Semi Furnished")
+                    detailBox("Female")
+                }
+            }
+        }
+        private func detailBox(_ text: String) -> some View {
+            Text(text)
+                .font(AppFont.manrope(13))
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
+                .background(Color.black.opacity(0.06))
+                .cornerRadius(8)
+        }
+        private var locationBox: some View {
+            HStack {
+                Text("Location : Brooklyn, New York, NY 11226")
+                    .font(AppFont.manrope(13))
+                Spacer()
+                Image(systemName: "arrow.right.circle.fill")
+            }
+            .padding()
+            .background(Color.yellow.opacity(0.25))
+            .cornerRadius(12)
+        }
+        private func CircleButton(icon: String, bg: Color) -> some View {
+            Image(systemName: icon)
+                .font(AppFont.manrope(15))
+                .foregroundColor(.white)
+                .padding()
+                .background(bg)
+                .clipShape(Circle())
         }
     }
     private func next() {}
@@ -148,6 +391,33 @@ struct HomeView: View {
             Spacer()
             Image("bell")
         }
+        .padding(.horizontal)
+    }
+    var searchBar: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Your Perfect Room Starts Here")
+                    .font(.callout.bold())
+                Text("Discover Your Next Room & Roommate")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            Spacer()
+            
+            Image(systemName: "slider.horizontal.3")
+                .padding(6)
+                .background(Color.black.opacity(0.05))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            
+            Image(systemName: "map")
+                .padding(6)
+                .background(Color.black.opacity(0.05))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(radius: 3)
         .padding(.horizontal)
     }
     var title: some View {
@@ -1315,6 +1585,7 @@ struct GenderStepView: View {
                     return
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    userAuth.stepsComplete()
                     validator.showValidation(response.message ?? "Success")
                     validator.showToast = true
                     isUploading = false
@@ -1337,7 +1608,7 @@ struct SpaceView: View {
     @State private var img4: UIImage?
     @State private var selectedSpaceType: OptionItem?
     @State private var selectedRoommates = 1
-    @State private var rent = "5000"
+    @State private var rent: String = "5000"
     @State private var selectedFurnishing: OptionItem?
     @State private var selectedGender: OptionItem?
     @State private var selectedAmenities: Set<Int> = []
@@ -1506,8 +1777,7 @@ struct SpaceView: View {
         }
     }
     private var rentField: some View {
-        TextField("5000", text: $rent)
-            .keyboardType(.numberPad)
+        KeyboardDoneTextField(text: $rent, placeholder: "")
             .padding()
             .background(AppColors.backgroundWhite)
             .cornerRadius(12)
@@ -1804,7 +2074,7 @@ struct SpaceView: View {
             switch result {
             case .success(let response):
                 print("Success:", response)
-                showFinalStep = 4
+                userAuth.spaceComplete()
             case .failure(let error):
                 print("Error:", error.localizedDescription)
             }
