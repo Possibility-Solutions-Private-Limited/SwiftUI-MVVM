@@ -36,12 +36,10 @@ struct HomeView: View {
                         if userAuth.space {
                             header
                             Text("Nearby Rooms & Roommates")
-                                .font(.title3.bold())
+                                .font(AppFont.manropeExtraBold(18))
                                 .padding(.horizontal)
                             searchBar
-                            ZStack {
-                                RoommateDetailView()
-                            }
+                            RoommateDetailView()
                             .padding(.horizontal)
                         }else{
                             SpaceView(
@@ -124,7 +122,7 @@ struct HomeView: View {
     struct RoommateDetailView: View {
         var body: some View {
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 16) {
+                VStack(spacing: 0) {
                     bigProfile
                     profileInfo
                     professionChips
@@ -136,10 +134,9 @@ struct HomeView: View {
                     locationBox
                 }
                 .padding(.vertical, 10)
-                .padding(.horizontal, 10)
-            }
-            .background(AppColors.backgroundClear)
-            .ignoresSafeArea()
+               
+            } .padding(.bottom, 10)
+            .padding(.horizontal, 10)
         }
         private var bigProfile: some View {
             ZStack(alignment: .bottomTrailing) {
@@ -148,6 +145,11 @@ struct HomeView: View {
                     .scaledToFill()
                     .frame(height: 400)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                    )
+                
                 HStack(alignment: .bottom) {
                     VStack(alignment: .leading, spacing: 15) {
                         Text("Daneils Daney 🌼 28")
@@ -156,7 +158,7 @@ struct HomeView: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
                         
-                        VStack(alignment: .leading, spacing: 15) {
+                        VStack(alignment: .leading, spacing: 8) {
                             Text("Software Engineer, Delhi")
                                 .font(AppFont.manrope(14))
                                 .foregroundColor(.white)
@@ -166,39 +168,35 @@ struct HomeView: View {
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 4)
-                                .background(Color.black.opacity(0.2))
+                                .background(Color.black.opacity(0.25))
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 10)
                                         .stroke(Color.white, lineWidth: 1)
                                 )
-                                .cornerRadius(10)
                         }
-                    }.padding(.leading,10)
-                    
+                    }
                     Spacer()
-                    
-                    VStack(spacing: 15) {
+                    VStack(spacing: 14) {
                         CircleButton(icon: "xmark", bg: .blue)
                         CircleButton(icon: "heart.fill", bg: .red)
-                    }.padding(.bottom, 10).padding(.trailing,10)
+                    }
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 10)
-                .padding(.bottom, 20)
+                .padding(.horizontal, 18)
+                .padding(.bottom, 22)
             }
         }
         private var profileInfo: some View {
             VStack(spacing: 6) {
                 Text("Website Designer")
                     .font(AppFont.manropeSemiBold(16))
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 6)
+                    .padding(.top, 4)
+                
                 Text("Working professional with a calm lifestyle and clean habits.\nLooking for a respectful and friendly roommate")
                     .font(AppFont.manrope(12))
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.center)
             }
-            .frame(maxWidth: .infinity)
         }
         private var professionChips: some View {
             HStack(spacing: 12) {
@@ -211,17 +209,17 @@ struct HomeView: View {
                 Image(systemName: icon)
                 Text(text).font(AppFont.manrope(13))
             }
-            .padding(.vertical, 6)
+            .padding(.vertical, 8)
             .padding(.horizontal, 12)
             .background(Color.black.opacity(0.05))
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.black, lineWidth: 1)
+                    .stroke(Color.black.opacity(0.3), lineWidth: 1)
             )
             .cornerRadius(10)
         }
         private var habitGrid: some View {
-            VStack(spacing: 6) {
+            VStack(spacing: 10) {
                 HStack {
                     gridTitle("Food Choice")
                     gridTitle("Smoking")
@@ -251,16 +249,17 @@ struct HomeView: View {
                 .font(AppFont.manrope(13))
                 .padding(.vertical, 10)
                 .padding(.horizontal, 10)
+                .frame(maxWidth: .infinity)
                 .background(selected ? color : Color.black.opacity(0.07))
                 .foregroundColor(selected ? .black : .gray)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
         }
         private var partyChip: some View {
             Label("Not Party Person", systemImage: "party.popper.fill")
-                .font(AppFont.manropeSemiBold(16))
+                .font(AppFont.manropeSemiBold(15))
                 .padding(.vertical, 8)
                 .padding(.horizontal, 16)
-                .background(Color.red.opacity(0.1))
+                .background(Color.red.opacity(0.12))
                 .clipShape(Capsule())
         }
         private var roomPhotos: some View {
@@ -299,7 +298,6 @@ struct HomeView: View {
         private var roomShortInfo: some View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Room Short Info").font(AppFont.manropeBold(16))
-                
                 HStack(spacing: 10) {
                     detailBox("2 BHK")
                     detailBox("5000")
@@ -331,7 +329,7 @@ struct HomeView: View {
             Image(systemName: icon)
                 .font(AppFont.manrope(15))
                 .foregroundColor(.white)
-                .padding()
+                .padding(12)
                 .background(bg)
                 .clipShape(Circle())
         }

@@ -11,8 +11,8 @@ struct UserModel: Codable {
         case status = "status"
         case message = "message"
         case data = "data"
-        case token = "token"
         case email = "email"
+        case token = "token"
     }
 }
 struct User: Codable, Identifiable {
