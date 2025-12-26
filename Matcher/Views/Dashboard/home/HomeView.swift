@@ -112,7 +112,9 @@ struct HomeView: View {
             }else{
                 cards = initialCards
             }
-            viewModel.fetchBasicData()
+            if viewModel.professionalFields.isEmpty {
+                viewModel.fetchBasicData()
+            }
         }
         .onChange(of: selections.selectedRole) {
             rebuildCards()
@@ -1630,6 +1632,27 @@ struct SpaceView: View {
     @StateObject private var validator = ValidationHelper()
     @StateObject private var ROOM = RoomModel()
     @State private var isUploading = false
+    init(
+        showFinalStep: Binding<Int>,
+        viewModel: BasicModel,
+        selections: UserSelections,
+        onNext: @escaping () -> Void
+    ) {
+        self._showFinalStep = showFinalStep
+        self.viewModel = viewModel
+        self.selections = selections
+        self.onNext = onNext
+        
+        if let first = viewModel.roomTypes.first {
+            _selectedSpaceType.wrappedValue = first
+        }
+        if let first = viewModel.furnishTypes.first {
+            _selectedFurnishing.wrappedValue = first
+        }
+        if let first = viewModel.genders.first {
+            _selectedGender.wrappedValue = first
+        }
+    }
     var body: some View {
         VStack(spacing: 20) {
             header
@@ -1659,10 +1682,20 @@ struct SpaceView: View {
                 .padding(.bottom, 40)
             }
         }
-        .onAppear {
-            selectedSpaceType = viewModel.roomTypes.first
-            selectedFurnishing = viewModel.furnishTypes.first
-            selectedGender = viewModel.genders.first
+        .onReceive(viewModel.$roomTypes) { list in
+            if selectedSpaceType == nil, let first = list.first {
+                selectedSpaceType = first
+            }
+        }
+        .onReceive(viewModel.$furnishTypes) { list in
+            if selectedFurnishing == nil, let first = list.first {
+                selectedFurnishing = first
+            }
+        }
+        .onReceive(viewModel.$genders) { list in
+            if selectedGender == nil, let first = list.first {
+                selectedGender = first
+            }
         }
         .toast(message: validator.validationMessage, isPresented: $validator.showToast)
         .onChange(of: locationManager.latitude) { _, _ in
