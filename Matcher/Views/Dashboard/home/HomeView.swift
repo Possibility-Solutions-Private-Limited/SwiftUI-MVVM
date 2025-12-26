@@ -39,8 +39,27 @@ struct HomeView: View {
                                 .font(AppFont.manropeExtraBold(18))
                                 .padding(.horizontal)
                             searchBar
-                            RoommateDetailView()
+                            ZStack {
+                                ForEach(cards) { card in
+                                    SwipeCard(
+                                        viewModel: viewModel,
+                                        selections: selections,
+                                        step: card.step,
+                                        currentStep: displayStep(for: card.step),
+                                        totalSteps: totalSteps,
+                                        maxHeight: geo.size.height * 2
+                                    ) {
+                                        withAnimation(.spring()) {
+                                            cards.removeAll { $0.id == card.id }
+                                            if cards.isEmpty {
+                                                showFinalStep = 1
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             .padding(.horizontal)
+                            Spacer(minLength: 5)
                         }else{
                             SpaceView(
                                 showFinalStep: $showFinalStep,
@@ -77,7 +96,7 @@ struct HomeView: View {
                             ZStack {
                                 ForEach(cards) { card in
                                     let index = cards.firstIndex { $0.id == card.id } ?? 0
-                                    SwipeCard(
+                                    ProfileSwipeCard(
                                         viewModel: viewModel,
                                         selections: selections,
                                         step: card.step,
@@ -105,7 +124,7 @@ struct HomeView: View {
         .onAppear {
             if userAuth.steps {
                 if userAuth.space {
-                    
+                    cards = initialCards
                 }
             }else{
                 cards = initialCards
@@ -119,24 +138,75 @@ struct HomeView: View {
         }
     }
     // main CARD======
-    struct RoommateDetailView: View {
+    struct SwipeCard: View {
+        @ObservedObject var viewModel: BasicModel
+        @ObservedObject var selections: UserSelections
+        let step: Int
+        let currentStep: Int
+        let totalSteps: Int
+        let maxHeight: CGFloat
+        let onRemove: () -> Void
+        @State private var offset: CGSize = .zero
+        @State private var rotation: Double = 0
+        private func swipeLeft() {
+            withAnimation(.interpolatingSpring(stiffness: 35, damping: 18)) {
+                offset = CGSize(width: -500, height: 0)
+                rotation = -18
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { onRemove() }
+        }
+        private func swipeRight() {
+            withAnimation(.interpolatingSpring(stiffness: 35, damping: 18)) {
+                offset = CGSize(width: 500, height: 0)
+                rotation = 18
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { onRemove() }
+        }
         var body: some View {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    bigProfile
-                    profileInfo
-                    professionChips
-                    habitGrid
-                    partyChip
-                    roomPhotos
-                    roommatesNeeded
-                    roomShortInfo
-                    locationBox
+            VStack {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        bigProfile
+                        profileInfo
+                        professionChips
+                        habitGrid
+                        partyChip
+                        roomPhotos
+                        roommatesNeeded
+                        roomShortInfo
+                        locationBox
+                    }
+                    .padding(10)
+                    .background(LinearGradient(colors: [.splashTop, .splashBottom],
+                                               startPoint: .top, endPoint: .bottom))
+                    .clipShape(RoundedRectangle(cornerRadius: 30))
                 }
-                .padding(.vertical, 10)
-               
-            } .padding(.bottom, 10)
-            .padding(.horizontal, 10)
+            }
+            .frame(maxWidth: .infinity, maxHeight: maxHeight)
+            .background(Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: 30))
+            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 0)
+            .offset(offset)
+            .rotationEffect(.degrees(rotation))
+            .gesture(
+                DragGesture()
+                    .onChanged { gesture in
+                        offset = gesture.translation
+                        rotation = Double(gesture.translation.width / 20)
+                    }
+                    .onEnded { gesture in
+                        if gesture.translation.width > 120 {
+                            swipeRight()
+                        } else if gesture.translation.width < -120 {
+                            swipeLeft()
+                        } else {
+                            withAnimation(.spring()) {
+                                offset = .zero
+                                rotation = 0
+                        }
+                    }
+                }
+            )
         }
         private var bigProfile: some View {
             ZStack(alignment: .bottomTrailing) {
@@ -145,11 +215,9 @@ struct HomeView: View {
                     .scaledToFill()
                     .frame(height: 400)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color.black.opacity(0.05), lineWidth: 1)
-                    )
-                
+                    .overlay(RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.black.opacity(0.05), lineWidth: 1))
+
                 HStack(alignment: .bottom) {
                     VStack(alignment: .leading, spacing: 15) {
                         Text("Daneils Daney 🌼 28")
@@ -157,12 +225,12 @@ struct HomeView: View {
                             .foregroundColor(.white)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
-                        
+
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Software Engineer, Delhi")
                                 .font(AppFont.manrope(14))
                                 .foregroundColor(.white)
-                            
+
                             Text("Day Shift")
                                 .font(AppFont.manrope(14))
                                 .foregroundColor(.white)
@@ -170,16 +238,15 @@ struct HomeView: View {
                                 .padding(.vertical, 4)
                                 .background(Color.black.opacity(0.25))
                                 .clipShape(RoundedRectangle(cornerRadius: 10))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .stroke(Color.white, lineWidth: 1)
-                                )
+                                .overlay(RoundedRectangle(cornerRadius: 10)
+                                            .stroke(Color.white, lineWidth: 1))
                         }
                     }
+
                     Spacer()
                     VStack(spacing: 14) {
-                        CircleButton(icon: "xmark", bg: .blue)
-                        CircleButton(icon: "heart.fill", bg: .red)
+                        circleButton(icon: "xmark", bg: .blue) { swipeLeft() }
+                        circleButton(icon: "heart.fill", bg: .red) { swipeRight() }
                     }
                 }
                 .padding(.horizontal, 18)
@@ -191,7 +258,6 @@ struct HomeView: View {
                 Text("Website Designer")
                     .font(AppFont.manropeSemiBold(16))
                     .padding(.top, 4)
-                
                 Text("Working professional with a calm lifestyle and clean habits.\nLooking for a respectful and friendly roommate")
                     .font(AppFont.manrope(12))
                     .foregroundColor(.gray)
@@ -212,10 +278,8 @@ struct HomeView: View {
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
             .background(Color.black.opacity(0.05))
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.black.opacity(0.3), lineWidth: 1)
-            )
+            .overlay(RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.black.opacity(0.3), lineWidth: 1))
             .cornerRadius(10)
         }
         private var habitGrid: some View {
@@ -267,7 +331,7 @@ struct HomeView: View {
                 Text("Rooms Photo").font(AppFont.manropeBold(16))
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     ForEach(1..<5) { index in
-                        Image("room\(index)")
+                        Image("girls")
                             .resizable()
                             .scaledToFill()
                             .frame(height: 110)
@@ -281,13 +345,15 @@ struct HomeView: View {
                 Text("3 Roommates Needed")
                     .font(AppFont.manropeBold(16))
                 HStack(spacing: -10) {
-                    Image("user1")
+                    Image("girls")
                         .resizable().frame(width: 38, height: 38)
                         .clipShape(Circle())
-                    Image("user2")
+                    Image("girls")
                         .resizable().frame(width: 38, height: 38)
                         .clipShape(Circle())
-                    
+                    Image("girls")
+                        .resizable().frame(width: 38, height: 38)
+                        .clipShape(Circle())
                     Text("3")
                         .padding(8)
                         .background(Color.yellow)
@@ -325,13 +391,15 @@ struct HomeView: View {
             .background(Color.yellow.opacity(0.25))
             .cornerRadius(12)
         }
-        private func CircleButton(icon: String, bg: Color) -> some View {
-            Image(systemName: icon)
-                .font(AppFont.manrope(15))
-                .foregroundColor(.white)
-                .padding(12)
-                .background(bg)
-                .clipShape(Circle())
+        private func circleButton(icon: String, bg: Color, action: @escaping () -> Void) -> some View {
+            Button(action: action) {
+                Image(systemName: icon)
+                    .font(AppFont.manrope(15))
+                    .foregroundColor(.white)
+                    .padding(12)
+                    .background(bg)
+                    .clipShape(Circle())
+            }
         }
     }
     private func next() {}
@@ -434,7 +502,7 @@ struct HomeView: View {
         .padding(.leading,2)
         .padding(.trailing,2)
     }
-    struct SwipeCard: View {
+    struct ProfileSwipeCard: View {
         @ObservedObject var viewModel: BasicModel
         @ObservedObject var selections: UserSelections
         let step: Int
