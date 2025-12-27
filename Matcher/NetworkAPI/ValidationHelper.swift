@@ -272,3 +272,13 @@ struct KeyboardDoneTextField: UIViewRepresentable {
         }
     }
 }
+func calculateAge(_ dob: String?) -> Int {
+    guard let dob = dob else { return 0 }
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    guard let birthDate = formatter.date(from: dob) else { return 0 }
+    let ageComponents = Calendar.current.dateComponents([.year], from: birthDate, to: Date())
+    return ageComponents.year ?? 0
+}
+

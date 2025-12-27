@@ -12,6 +12,8 @@ struct HomeView: View {
     @State private var showFinalStep = 0
     @StateObject private var viewModel = BasicModel()
     @StateObject private var selections = UserSelections()
+    @StateObject var dashboardView = DashboardViewModel()
+    @State private var profiles: [Profiles] = []
     private let initialCards: [Card] = [
         Card(step: 7),
         Card(step: 6),
@@ -40,21 +42,12 @@ struct HomeView: View {
                                 .padding(.horizontal)
                             searchBar
                             ZStack {
-                                ForEach(cards) { card in
+                                ForEach(profiles) { profiles in
                                     SwipeCard(
-                                        viewModel: viewModel,
-                                        selections: selections,
-                                        step: card.step,
-                                        currentStep: displayStep(for: card.step),
-                                        totalSteps: totalSteps,
+                                        profiles: profiles,
                                         maxHeight: geo.size.height * 2
                                     ) {
-                                        withAnimation(.spring()) {
-                                            cards.removeAll { $0.id == card.id }
-                                            if cards.isEmpty {
-                                                showFinalStep = 1
-                                            }
-                                        }
+                                        removeProfile(profiles)
                                     }
                                 }
                             }
@@ -124,7 +117,17 @@ struct HomeView: View {
         .onAppear {
             if userAuth.steps {
                 if userAuth.space {
-                    cards = initialCards
+                    dashboardView.loadDashboard(params: [
+                                "lat": "",
+                                "long": "",
+                                "age": "",
+                                "distance": "",
+                                "want_to_live_with": "",
+                                "food_preference": "",
+                                "party_preference": "",
+                                "smoking": "",
+                                "drinking": ""
+                            ])
                 }
             }else{
                 cards = initialCards
@@ -133,17 +136,16 @@ struct HomeView: View {
                 viewModel.fetchBasicData()
             }
         }
+        .onReceive(dashboardView.$profiles) { newProfiles in
+            profiles = newProfiles
+        }
         .onChange(of: selections.selectedRole) {
             rebuildCards()
         }
     }
     // main CARD======
     struct SwipeCard: View {
-        @ObservedObject var viewModel: BasicModel
-        @ObservedObject var selections: UserSelections
-        let step: Int
-        let currentStep: Int
-        let totalSteps: Int
+        let profiles: Profiles
         let maxHeight: CGFloat
         let onRemove: () -> Void
         @State private var offset: CGSize = .zero
@@ -168,11 +170,9 @@ struct HomeView: View {
                     VStack(spacing: 0) {
                         bigProfile
                         profileInfo
-                        professionChips
                         habitGrid
                         partyChip
                         roomPhotos
-                        roommatesNeeded
                         roomShortInfo
                         locationBox
                     }
@@ -200,9 +200,9 @@ struct HomeView: View {
                         } else if gesture.translation.width < -120 {
                             swipeLeft()
                         } else {
-                            withAnimation(.spring()) {
-                                offset = .zero
-                                rotation = 0
+                        withAnimation(.spring()) {
+                            offset = .zero
+                            rotation = 0
                         }
                     }
                 }
@@ -210,94 +210,100 @@ struct HomeView: View {
         }
         private var bigProfile: some View {
             ZStack(alignment: .bottomTrailing) {
-                Image("girls")
-                    .resizable()
-                    .scaledToFill()
+                if let photoUrl = profiles.photos?.first?.file,
+                   let url = URL(string: photoUrl) {
+                    AsyncImage(url: url) { image in
+                        image.resizable().scaledToFill()
+                    } placeholder: {
+                        Color.gray.opacity(0.3)
+                    }
                     .frame(height: 400)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                     .overlay(RoundedRectangle(cornerRadius: 20)
                                 .stroke(Color.black.opacity(0.05), lineWidth: 1))
-
+                } else {
+                    Image("girls")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 400)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .overlay(RoundedRectangle(cornerRadius: 20)
+                                    .stroke(Color.black.opacity(0.05), lineWidth: 1))
+                }
                 HStack(alignment: .bottom) {
-                    VStack(alignment: .leading, spacing: 15) {
-                        Text("Daneils Daney 🌼 28")
-                            .font(AppFont.manropeSemiBold(22))
-                            .foregroundColor(.white)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Software Engineer, Delhi")
-                                .font(AppFont.manrope(14))
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 0) {
+                            Text("\(profiles.first_name ?? "") \(profiles.last_name ?? "") 🌼")
+                                .font(AppFont.manropeSemiBold(18))
                                 .foregroundColor(.white)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
 
-                            Text("Day Shift")
-                                .font(AppFont.manrope(14))
+                            Text(" \(calculateAge(profiles.dob ?? ""))")
+                                .font(AppFont.manropeExtraBold(22))
                                 .foregroundColor(.white)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(profiles.profile?.professional_field_data?.title ?? "")
+                                .font(AppFont.manropeMedium(14))
+                                .foregroundColor(.white)
+                                .padding(.bottom, 10)
+
+                            Text(profiles.profile?.work_shift ?? "Day Shift")
+                                .font(AppFont.manropeMedium(13))
+                                .foregroundColor(.white)
+                                .frame(minWidth: 50, minHeight: 24)
                                 .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
+                                .padding(.vertical, 2)
                                 .background(Color.black.opacity(0.25))
                                 .clipShape(RoundedRectangle(cornerRadius: 10))
-                                .overlay(RoundedRectangle(cornerRadius: 10)
-                                            .stroke(Color.white, lineWidth: 1))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color.white, lineWidth: 1)
+                                )
                         }
                     }
-
                     Spacer()
                     VStack(spacing: 14) {
                         circleButton(icon: "xmark", bg: .blue) { swipeLeft() }
                         circleButton(icon: "heart.fill", bg: .red) { swipeRight() }
                     }
                 }
-                .padding(.horizontal, 18)
-                .padding(.bottom, 22)
+                .padding(.horizontal, 10)
+                .padding(.bottom, 24)
             }
         }
         private var profileInfo: some View {
-            VStack(spacing: 6) {
-                Text("Website Designer")
-                    .font(AppFont.manropeSemiBold(16))
-                    .padding(.top, 4)
-                Text("Working professional with a calm lifestyle and clean habits.\nLooking for a respectful and friendly roommate")
-                    .font(AppFont.manrope(12))
+            VStack(spacing: 0) {
+                Text(profiles.profile?.describe_you_best ?? "")
+                    .font(AppFont.manropeExtraBold(18))
+                    .padding(.top, 5)
+
+                Text(profiles.profile?.about_yourself ?? "")
+                    .font(AppFont.manropeMedium(14))
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.center)
             }
-        }
-        private var professionChips: some View {
-            HStack(spacing: 12) {
-                chip(icon: "briefcase.fill", text: "Working")
-                chip(icon: "cart.fill", text: "Retail & E-Commerce")
-            }
-        }
-        private func chip(icon: String, text: String) -> some View {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                Text(text).font(AppFont.manrope(13))
-            }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
-            .background(Color.black.opacity(0.05))
-            .overlay(RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.black.opacity(0.3), lineWidth: 1))
-            .cornerRadius(10)
+            .padding(.top, 10)
+            .padding(.bottom, 10)
         }
         private var habitGrid: some View {
             VStack(spacing: 10) {
                 HStack {
-                    gridTitle("Food Choice")
+                    gridTitle("Food")
                     gridTitle("Smoking")
                     gridTitle("Shift")
                     gridTitle("Drinking")
                 }
                 HStack {
-                    gridChoice(choiceButton("Non-veg", selected: true))
-                    gridChoice(choiceButton("Yes", selected: true))
-                    gridChoice(choiceButton("Night", selected: true))
-                    gridChoice(choiceButton("Yes", selected: true))
+                    gridChoice(choiceButton(profiles.profile?.food_preference ?? "Non-veg", selected: true))
+                    gridChoice(choiceButton(profiles.profile?.smoking ?? "No", selected: true))
+                    gridChoice(choiceButton(profiles.profile?.work_shift ?? "Day", selected: true))
+                    gridChoice(choiceButton(profiles.profile?.drinking ?? "No", selected: true))
                 }
             }
         }
+        
         private func gridTitle(_ text: String) -> some View {
             Text(text)
                 .frame(maxWidth: .infinity)
@@ -305,9 +311,11 @@ struct HomeView: View {
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.center)
         }
+        
         private func gridChoice<V: View>(_ view: V) -> some View {
             view.frame(maxWidth: .infinity)
         }
+        
         private func choiceButton(_ title: String, selected: Bool = false, color: Color = .yellow) -> some View {
             Text(title)
                 .font(AppFont.manrope(13))
@@ -318,71 +326,51 @@ struct HomeView: View {
                 .foregroundColor(selected ? .black : .gray)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
         }
+        
         private var partyChip: some View {
-            Label("Not Party Person", systemImage: "party.popper.fill")
+            Label(profiles.profile?.into_parties == 1 ? "Party Person" : "Not Party Person",
+                  systemImage: "party.popper.fill")
                 .font(AppFont.manropeSemiBold(15))
                 .padding(.vertical, 8)
                 .padding(.horizontal, 16)
                 .background(Color.red.opacity(0.12))
                 .clipShape(Capsule())
         }
+        
         private var roomPhotos: some View {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Rooms Photo").font(AppFont.manropeBold(16))
+                Text("Room Photos").font(AppFont.manropeBold(16))
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    ForEach(1..<5) { index in
-                        Image("girls")
-                            .resizable()
-                            .scaledToFill()
+                    ForEach(profiles.rooms ?? [], id: \.id) { room in
+                        if let file = room.photos?.first?.file, let url = URL(string: file) {
+                            AsyncImage(url: url) { image in
+                                image.resizable().scaledToFill()
+                            } placeholder: {
+                                Color.gray.opacity(0.3)
+                            }
                             .frame(height: 110)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
+                        }
                     }
                 }
             }
         }
-        private var roommatesNeeded: some View {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("3 Roommates Needed")
-                    .font(AppFont.manropeBold(16))
-                HStack(spacing: -10) {
-                    Image("girls")
-                        .resizable().frame(width: 38, height: 38)
-                        .clipShape(Circle())
-                    Image("girls")
-                        .resizable().frame(width: 38, height: 38)
-                        .clipShape(Circle())
-                    Image("girls")
-                        .resizable().frame(width: 38, height: 38)
-                        .clipShape(Circle())
-                    Text("3")
-                        .padding(8)
-                        .background(Color.yellow)
-                        .clipShape(Circle())
-                }
-            }
-        }
+        
         private var roomShortInfo: some View {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Room Short Info").font(AppFont.manropeBold(16))
+                Text("Room Info").font(AppFont.manropeBold(16))
                 HStack(spacing: 10) {
-                    detailBox("2 BHK")
-                    detailBox("5000")
-                    detailBox("Semi Furnished")
-                    detailBox("Female")
+                    Text("Rooms: \(profiles.rooms?.count ?? 0)")
+                    Text("Gender: \(profiles.gender ?? "N/A")")
+                    Text("Want to live with: \(profiles.profile?.want_live_with ?? 0)")
                 }
+                .font(AppFont.manrope(13))
             }
         }
-        private func detailBox(_ text: String) -> some View {
-            Text(text)
-                .font(AppFont.manrope(13))
-                .padding(.vertical, 8)
-                .frame(maxWidth: .infinity)
-                .background(Color.black.opacity(0.06))
-                .cornerRadius(8)
-        }
+        
         private var locationBox: some View {
             HStack {
-                Text("Location : Brooklyn, New York, NY 11226")
+                Text("Location: \(profiles.location ?? "Unknown")")
                     .font(AppFont.manrope(13))
                 Spacer()
                 Image(systemName: "arrow.right.circle.fill")
@@ -391,6 +379,7 @@ struct HomeView: View {
             .background(Color.yellow.opacity(0.25))
             .cornerRadius(12)
         }
+        
         private func circleButton(icon: String, bg: Color, action: @escaping () -> Void) -> some View {
             Button(action: action) {
                 Image(systemName: icon)
@@ -399,6 +388,15 @@ struct HomeView: View {
                     .padding(12)
                     .background(bg)
                     .clipShape(Circle())
+            }
+        }
+    }
+
+    private func removeProfile(_ profile: Profiles) {
+        withAnimation(.spring()) {
+            profiles.removeAll { $0.id == profile.id }
+            if profiles.isEmpty {
+                showFinalStep = 1
             }
         }
     }

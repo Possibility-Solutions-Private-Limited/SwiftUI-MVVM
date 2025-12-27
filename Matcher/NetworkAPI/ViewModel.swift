@@ -295,6 +295,29 @@ class RoomModel: ObservableObject {
         }
     }
 }
+class DashboardViewModel: ObservableObject {
+    @Published var profiles: [Profiles] = []
+    @Published var isLoading = false
+    func loadDashboard(params: [String: Any] = [:]) {
+        isLoading = true
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.dashboard,
+            method: "GET",
+            parameters: params
+        ) { (result: Result<DashboardResponse, Error>) in
+            DispatchQueue.main.async {
+                self.isLoading = false
+                switch result {
+                case .success(let response):
+                    print("📥 Dashboard Response:", response)
+                    self.profiles = response.data?.profiles ?? []
+                case .failure(let error):
+                    print("❌ Dashboard Error:", error.localizedDescription)
+                }
+            }
+        }
+    }
+}
 class ChatsModel: ObservableObject {
     @Published var chats: [Chat] = []
     @Published var users: [Users] = []
@@ -335,6 +358,4 @@ class ChatHistoryModel: ObservableObject {
         }
     }
 }
-
-
 

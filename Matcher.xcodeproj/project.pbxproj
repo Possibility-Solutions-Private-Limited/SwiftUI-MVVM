@@ -62,6 +62,7 @@
 		5DFDE8C62EEBD8DF004CD35B /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 5DFDE8C52EEBD8DF004CD35B /* SDWebImage */; };
 		5DFDE8C82EEBD8DF004CD35B /* SDWebImageMapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5DFDE8C72EEBD8DF004CD35B /* SDWebImageMapKit */; };
 		5DFDE8CB2EEBD945004CD35B /* SocketIO in Frameworks */ = {isa = PBXBuildFile; productRef = 5DFDE8CA2EEBD945004CD35B /* SocketIO */; };
+		5DFE0D832EFFD80A000C27EF /* DashboardResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DFE0D822EFFD7FF000C27EF /* DashboardResponse.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -121,6 +122,7 @@
 		5DD4E4E92DBB98DA008F48B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		5DD4E4EA2DBBA7FA008F48B4 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		5DD4E4EE2DBBBA29008F48B4 /* SocketService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketService.swift; sourceTree = "<group>"; };
+		5DFE0D822EFFD7FF000C27EF /* DashboardResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardResponse.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -309,6 +311,7 @@
 			isa = PBXGroup;
 			children = (
 				5D9AB28B2DB9126000E3480F /* UserModel.swift */,
+				5DFE0D822EFFD7FF000C27EF /* DashboardResponse.swift */,
 				5D14990C2EF969B900C5021A /* BasicDataModel.swift */,
 				5D08E91D2EFC27C40052B4B4 /* SpaceModel.swift */,
 				5D4331712DE48F120016B700 /* MessageModel.swift */,
@@ -451,6 +454,7 @@
 				5D9AB28F2DB91B8800E3480F /* KeychainHelper.swift in Sources */,
 				5DD4E4EB2DBBA7FA008F48B4 /* ChatView.swift in Sources */,
 				5D9AB2822DB8EDC900E3480F /* LoginView.swift in Sources */,
+				5DFE0D832EFFD80A000C27EF /* DashboardResponse.swift in Sources */,
 				5DD4E4EF2DBBBA29008F48B4 /* SocketService.swift in Sources */,
 				5D0EF5622DBA65C000CF3F6C /* SplashView.swift in Sources */,
 				5D9AB2682DB8ED8C00E3480F /* AttendanceApp.swift in Sources */,

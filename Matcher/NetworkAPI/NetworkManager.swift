@@ -49,6 +49,24 @@ class NetworkManager {
             }
         }.resume()
     }
+    func makeRequestAsync<T: Decodable>(
+        endpoint: String,
+        method: String,
+        parameters: [String: Any]?
+    ) async throws -> T {
+        
+        let urlString = APIConstants.baseURL + endpoint
+        var components = URLComponents(string: urlString)!
+        
+        if method == "GET", let params = parameters {
+            components.queryItems = params.map { URLQueryItem(name: $0.key, value: "\($0.value)") }
+        }
+        var request = URLRequest(url: components.url!)
+        request.httpMethod = method
+        
+        let (data, _) = try await URLSession.shared.data(for: request)
+        return try JSONDecoder().decode(T.self, from: data)
+    }
     func uploadMultipart<T: Decodable>(
         endpoint: String,
         parameters: [String: Any],
