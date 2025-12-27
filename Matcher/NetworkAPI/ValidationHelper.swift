@@ -281,4 +281,14 @@ func calculateAge(_ dob: String?) -> Int {
     let ageComponents = Calendar.current.dateComponents([.year], from: birthDate, to: Date())
     return ageComponents.year ?? 0
 }
+extension String {
+    func cleanDecimal() -> String {
+        guard let number = Double(self) else { return self }
+        let formatter = NumberFormatter()
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 2
+        formatter.numberStyle = .decimal
+        return formatter.string(from: NSNumber(value: number)) ?? self
+    }
+}
 

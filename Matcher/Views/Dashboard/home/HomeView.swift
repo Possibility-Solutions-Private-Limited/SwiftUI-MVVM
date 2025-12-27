@@ -171,9 +171,17 @@ struct HomeView: View {
                         bigProfile
                         profileInfo
                         habitGrid
-                        partyChip
-                        roomPhotos
-                        roomShortInfo
+                        PartyPreferencesView()
+                        RoomPhotosDisplayView(photos: profiles.rooms?.first?.photos ?? [])
+                        RoomShortInfoSection(
+                            spaceType: profiles.rooms?.first?.roomType ?? "",
+                            rentSplit: profiles.rooms?.first?.rentSplit ?? "",
+                            furnishing: profiles.rooms?.first?.furnishType ?? "",
+                            spaceFor: profiles.rooms?.first?.wantToLiveWith ?? ""
+                        )
+                        ShowAmenitiesView(
+                            profiles: profiles,
+                        )
                         locationBox
                     }
                     .padding(10)
@@ -277,12 +285,13 @@ struct HomeView: View {
             VStack(spacing: 0) {
                 Text(profiles.profile?.describe_you_best ?? "")
                     .font(AppFont.manropeExtraBold(18))
-                    .padding(.top, 5)
-
+                    .padding(.top, 10)
                 Text(profiles.profile?.about_yourself ?? "")
                     .font(AppFont.manropeMedium(14))
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.center)
+                    .padding(.top, 10)
+                    .padding(.bottom, 10)
             }
             .padding(.top, 10)
             .padding(.bottom, 10)
@@ -327,65 +336,195 @@ struct HomeView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10))
         }
         
-        private var partyChip: some View {
-            Label(profiles.profile?.into_parties == 1 ? "Party Person" : "Not Party Person",
-                  systemImage: "party.popper.fill")
-                .font(AppFont.manropeSemiBold(15))
-                .padding(.vertical, 8)
-                .padding(.horizontal, 16)
-                .background(Color.red.opacity(0.12))
-                .clipShape(Capsule())
+        struct PartyPreferencesView: View {
+            var body: some View {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Party Preferences")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.black)
+                    HStack {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 16, weight: .medium))
+                        Text("Not Party Person")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 18)
+                    .background(
+                        Capsule()
+                            .fill(Color(red: 1.0, green: 0.36, blue: 0.43))
+                    )
+                    .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 1)
+                }
+            }
         }
-        
-        private var roomPhotos: some View {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Room Photos").font(AppFont.manropeBold(16))
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    ForEach(profiles.rooms ?? [], id: \.id) { room in
-                        if let file = room.photos?.first?.file, let url = URL(string: file) {
-                            AsyncImage(url: url) { image in
-                                image.resizable().scaledToFill()
-                            } placeholder: {
-                                Color.gray.opacity(0.3)
+        struct RoomPhotosDisplayView: View {
+            let photos: [Photos]
+            var body: some View {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Rooms Photo")
+                        .font(AppFont.manropeSemiBold(18))
+                        .foregroundColor(.black)
+                        .padding(.horizontal)
+                    HStack(spacing: 5) {
+                        photoBox(size: UIScreen.main.bounds.width * 0.42, index: 0)
+                        VStack(spacing: 5) {
+                            HStack(spacing: 5) {
+                                photoBox(size: UIScreen.main.bounds.width * 0.20, index: 1)
+                                photoBox(size: UIScreen.main.bounds.width * 0.20, index: 2)
                             }
-                            .frame(height: 110)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            HStack(spacing: 5) {
+                                photoBox(size: UIScreen.main.bounds.width * 0.20, index: 3)
+                                photoBox(size: UIScreen.main.bounds.width * 0.20, index: 4)
+                            }
+                        }
+                    }
+                }
+                .padding(.top, 5)
+            }
+            private func photoBox(size: CGFloat, index: Int) -> some View {
+                let urlStr = index < photos.count ? photos[index].file : nil
+                return ZStack {
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color.gray.opacity(0.3),
+                                style: StrokeStyle(lineWidth: 1, dash: [6]))
+                        .frame(width: size, height: size)
+                    if let urlStr,
+                       let url = URL(string: urlStr) {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let img):
+                                img.resizable()
+                                    .scaledToFill()
+                                    .frame(width: size, height: size)
+                                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .stroke(Color.white, lineWidth: 3)
+                                    )
+                                    .cornerRadius(14)
+                            default:
+                                placeholder(size)
+                            }
+                        }
+                    } else {
+                        placeholder(size)
+                    }
+                }
+            }
+            private func placeholder(_ size: CGFloat) -> some View {
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.gray.opacity(0.15))
+                    .frame(width: size, height: size)
+            }
+        }
+        struct RoomShortInfoSection: View {
+            var spaceType: String
+            var rentSplit: String
+            var furnishing: String
+            var spaceFor: String
+
+            var body: some View {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Room Short Info")
+                        .font(AppFont.manropeMedium(14))
+                        .foregroundColor(.black)
+                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 4), spacing: 5) {
+                        pillItem(title: "Space Type", value: spaceType, theme: .dark)
+                        pillItem(title: "Rent Split", value: rentSplit, theme: .yellow)
+                        pillItem(title: "Furnishing", value: furnishing, theme: .yellow)
+                        pillItem(title: "Space For", value: spaceFor, theme: .dark)
+                    }
+                }
+                .padding(.horizontal, 5)
+                .padding(.vertical, 5)
+                .background(Color.clear)
+            }
+            @ViewBuilder
+            private func pillItem(title: String, value: String, theme: PillTheme) -> some View {
+                VStack(spacing: 2) {
+                    Text(title)
+                        .font(AppFont.manropeMedium(13))
+                        .foregroundColor(.black.opacity(0.7))
+                    Text(value.cleanDecimal())
+                        .font(AppFont.manropeMedium(12))
+                        .foregroundColor(theme == .yellow ? .black : .white)
+                        .frame(maxWidth: .infinity)
+                        .frame(maxHeight: 44)
+                        .background(theme == .yellow ? Color.yellow : Color.black)
+                        .cornerRadius(8)
+                }
+            }
+            enum PillTheme {
+                case yellow, dark
+            }
+        }
+        struct ShowAmenitiesView: View {
+            var profiles: Profiles
+            var body: some View {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Facilities").font(AppFont.manropeBold(16))
+                        .padding(.leading,10)
+                    ScrollView {
+                        if let amenities = profiles.rooms?.first?.amenities, !amenities.isEmpty {
+                            FlowLayout(spacing: 10) {
+                                ForEach(amenities) { item in
+                                    AmenityItem(item)
+                                }
+                            }
+                            .padding(.top, 10)
+                            .padding(.horizontal)
+                        } else {
+                            Text("No amenities available")
+                                .font(AppFont.manropeMedium(14))
+                                .foregroundColor(.gray)
+                                .padding(.vertical, 10)
                         }
                     }
                 }
             }
-        }
-        
-        private var roomShortInfo: some View {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Room Info").font(AppFont.manropeBold(16))
-                HStack(spacing: 10) {
-                    Text("Rooms: \(profiles.rooms?.count ?? 0)")
-                    Text("Gender: \(profiles.gender ?? "N/A")")
-                    Text("Want to live with: \(profiles.profile?.want_live_with ?? 0)")
+            private func AmenityItem(_ item: Amenity) -> some View {
+                HStack(spacing: 8) {
+                    if let url = URL(string: item.icon ?? "") {
+                        AsyncImage(url: url) { image in
+                            image.resizable().scaledToFit()
+                        } placeholder: {
+                            Color.gray.opacity(0.3)
+                        }
+                        .frame(width: 18, height: 18)
+                    }
+                    Text(item.title ?? "")
+                        .font(AppFont.manropeMedium(13))
+                        .foregroundColor(.black)
                 }
-                .font(AppFont.manrope(13))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.black.opacity(0.05))
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.black.opacity(0.3), lineWidth: 1)
+                )
             }
         }
-        
         private var locationBox: some View {
             HStack {
-                Text("Location: \(profiles.location ?? "Unknown")")
+                Text("Location: \(profiles.rooms?.first?.location ?? "")")
                     .font(AppFont.manrope(13))
                 Spacer()
                 Image(systemName: "arrow.right.circle.fill")
             }
-            .padding()
+            .padding(.top,10)
             .background(Color.yellow.opacity(0.25))
             .cornerRadius(12)
         }
-        
         private func circleButton(icon: String, bg: Color, action: @escaping () -> Void) -> some View {
             Button(action: action) {
                 Image(systemName: icon)
                     .font(AppFont.manrope(15))
                     .foregroundColor(.white)
-                    .padding(12)
+                    .padding(15)
                     .background(bg)
                     .clipShape(Circle())
             }
