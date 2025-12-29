@@ -148,6 +148,9 @@ struct HomeView: View {
         let profiles: Profiles
         let maxHeight: CGFloat
         let onRemove: () -> Void
+        @State private var currentImageIndex: Int = 0
+        private let sliderHeight: CGFloat = 420
+        private let autoSlideTime: TimeInterval = 3
         @State private var offset: CGSize = .zero
         @State private var rotation: Double = 0
         private func swipeLeft() {
@@ -170,7 +173,12 @@ struct HomeView: View {
                     VStack(spacing: 0) {
                         bigProfile
                         profileInfo
-                        habitGrid
+                        habitGrid(
+                            FoodPreference: profiles.profile?.food_preference ?? "",
+                            Smoking: profiles.profile?.smoking ?? "",
+                            WorkShift: profiles.profile?.work_shift ?? "",
+                            Drinking: profiles.profile?.drinking ?? ""
+                        )
                         PartyPreferencesView()
                         RoomPhotosDisplayView(photos: profiles.rooms?.first?.photos ?? [])
                         RoomShortInfoSection(
@@ -217,36 +225,60 @@ struct HomeView: View {
             )
         }
         private var bigProfile: some View {
-            ZStack(alignment: .bottomTrailing) {
-                if let photoUrl = profiles.photos?.first?.file,
-                   let url = URL(string: photoUrl) {
-                    AsyncImage(url: url) { image in
-                        image.resizable().scaledToFill()
-                    } placeholder: {
-                        Color.gray.opacity(0.3)
-                    }
-                    .frame(height: 400)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
-                    .overlay(RoundedRectangle(cornerRadius: 20)
-                                .stroke(Color.black.opacity(0.05), lineWidth: 1))
-                } else {
-                    Image("girls")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(height: 400)
+            ZStack(alignment: .bottom) {
+                TabView(selection: $currentImageIndex) {
+                    ForEach(Array((profiles.photos ?? []).enumerated()), id: \.offset) { index, photo in
+                        Group {
+                            if let file = photo.file, let url = URL(string: file) {
+                                AsyncImage(url: url) { image in
+                                    image.resizable().scaledToFill()
+                                } placeholder: {
+                                    Color.gray.opacity(0.3)
+                                }
+                            } else {
+                                Image("girls")
+                                    .resizable()
+                                    .scaledToFill()
+                            }
+                        }
+                        .frame(height: sliderHeight)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
-                        .overlay(RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.black.opacity(0.05), lineWidth: 1))
+                        .tag(index)
+                    }
                 }
-                HStack(alignment: .bottom) {
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                .frame(height: sliderHeight)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                )
+                .onAppear { startAutoSlide() }
+                VStack {
+                    HStack(spacing: 6) {
+                        let count = CGFloat(profiles.photos?.count ?? 1)
+                        let totalWidth: CGFloat = UIScreen.main.bounds.width - 80
+                        let progressWidth = max((totalWidth - (6 * (count - 1))) / count, 15)
+
+                        ForEach(0..<(profiles.photos?.count ?? 1), id: \.self) { index in
+                            Rectangle()
+                                .fill(index == currentImageIndex ? Color.white : Color.white.opacity(0.35))
+                                .frame(width: progressWidth, height: 3)
+                                .cornerRadius(2)
+                        }
+                    }
+                    .padding(.top, 10)
+                    .padding(.horizontal, 10)
+                    Spacer()
+                }
+                .frame(height: sliderHeight)
+                .allowsHitTesting(false)
+                 HStack(alignment: .bottom) {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 0) {
                             Text("\(profiles.first_name ?? "") \(profiles.last_name ?? "") 🌼")
                                 .font(AppFont.manropeSemiBold(18))
                                 .foregroundColor(.white)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
-
                             Text(" \(calculateAge(profiles.dob ?? ""))")
                                 .font(AppFont.manropeExtraBold(22))
                                 .foregroundColor(.white)
@@ -256,7 +288,6 @@ struct HomeView: View {
                                 .font(AppFont.manropeMedium(14))
                                 .foregroundColor(.white)
                                 .padding(.bottom, 10)
-
                             Text(profiles.profile?.work_shift ?? "Day Shift")
                                 .font(AppFont.manropeMedium(13))
                                 .foregroundColor(.white)
@@ -277,8 +308,31 @@ struct HomeView: View {
                         circleButton(icon: "heart.fill", bg: .red) { swipeRight() }
                     }
                 }
-                .padding(.horizontal, 10)
+                .padding(.horizontal, 20)
                 .padding(.bottom, 24)
+            }
+            .padding(.top, 5)
+        }
+        private func nextImage() {
+            guard let total = profiles.photos?.count, total > 0 else { return }
+            if currentImageIndex < total - 1 {
+                currentImageIndex += 1
+            }
+        }
+        private func previousImage() {
+            guard let total = profiles.photos?.count, total > 0 else { return }
+            if currentImageIndex > 0 {
+                currentImageIndex -= 1
+            }
+        }
+        private func startAutoSlide() {
+            Timer.scheduledTimer(withTimeInterval: autoSlideTime, repeats: true) { _ in
+                let count = profiles.photos?.count ?? 1
+                if count > 1 {
+                    withAnimation(.easeInOut) {
+                        currentImageIndex = (currentImageIndex + 1) % count
+                    }
+                }
             }
         }
         private var profileInfo: some View {
@@ -296,67 +350,68 @@ struct HomeView: View {
             .padding(.top, 10)
             .padding(.bottom, 10)
         }
-        private var habitGrid: some View {
-            VStack(spacing: 10) {
-                HStack {
-                    gridTitle("Food")
-                    gridTitle("Smoking")
-                    gridTitle("Shift")
-                    gridTitle("Drinking")
-                }
-                HStack {
-                    gridChoice(choiceButton(profiles.profile?.food_preference ?? "Non-veg", selected: true))
-                    gridChoice(choiceButton(profiles.profile?.smoking ?? "No", selected: true))
-                    gridChoice(choiceButton(profiles.profile?.work_shift ?? "Day", selected: true))
-                    gridChoice(choiceButton(profiles.profile?.drinking ?? "No", selected: true))
-                }
-            }
-        }
-        
-        private func gridTitle(_ text: String) -> some View {
-            Text(text)
-                .frame(maxWidth: .infinity)
-                .font(.caption)
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.center)
-        }
-        
-        private func gridChoice<V: View>(_ view: V) -> some View {
-            view.frame(maxWidth: .infinity)
-        }
-        
-        private func choiceButton(_ title: String, selected: Bool = false, color: Color = .yellow) -> some View {
-            Text(title)
-                .font(AppFont.manrope(13))
-                .padding(.vertical, 10)
-                .padding(.horizontal, 10)
-                .frame(maxWidth: .infinity)
-                .background(selected ? color : Color.black.opacity(0.07))
-                .foregroundColor(selected ? .black : .gray)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-        }
-        
-        struct PartyPreferencesView: View {
+        struct habitGrid: View {
+            var FoodPreference: String
+            var Smoking: String
+            var WorkShift: String
+            var Drinking: String
+
             var body: some View {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Party Preferences")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.black)
-                    HStack {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 16, weight: .medium))
-                        Text("Not Party Person")
-                            .font(.system(size: 16, weight: .semibold))
+                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 4), spacing: 5) {
+                         Items(title: "Food Choice", value: FoodPreference, theme: .dark)
+                         Items(title: "Smoking", value: Smoking, theme: .yellow)
+                         Items(title: "Shift", value: WorkShift, theme: .yellow)
+                         Items(title: "Drinking", value: Drinking, theme: .dark)
                     }
-                    .foregroundColor(.white)
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 18)
-                    .background(
-                        Capsule()
-                            .fill(Color(red: 1.0, green: 0.36, blue: 0.43))
-                    )
-                    .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 1)
                 }
+                .padding(.top, 10)
+            }
+            @ViewBuilder
+            private func Items(title: String, value: String, theme: ItemsTheme) -> some View {
+                VStack(spacing: 2) {
+                    Text(title)
+                        .font(AppFont.manropeMedium(13))
+                        .foregroundColor(.black.opacity(0.7)).padding(.bottom,10)
+                    Text(value.cleanDecimal())
+                        .font(AppFont.manropeMedium(12))
+                        .foregroundColor(theme == .yellow ? .black : .white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 34)
+                        .background(theme == .yellow ? Color.yellow : Color.black)
+                        .cornerRadius(8)
+                }
+            }
+            enum ItemsTheme {
+                case yellow, dark
+            }
+        }
+        struct PartyPreferencesView: View {
+            var body: some View {
+                HStack {
+                    VStack(alignment: .leading, spacing: 10) {
+
+                        Text("Party Preferences")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.black)
+                        HStack {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 16, weight: .medium))
+                            Text("Not Party Person")
+                                .font(.system(size: 16, weight: .semibold))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 18)
+                        .background(
+                            Capsule()
+                                .fill(Color(red: 1.0, green: 0.36, blue: 0.43))
+                        )
+                        .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 1)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.top, 20)
             }
         }
         struct RoomPhotosDisplayView: View {
@@ -366,7 +421,6 @@ struct HomeView: View {
                     Text("Rooms Photo")
                         .font(AppFont.manropeSemiBold(18))
                         .foregroundColor(.black)
-                        .padding(.horizontal)
                     HStack(spacing: 5) {
                         photoBox(size: UIScreen.main.bounds.width * 0.42, index: 0)
                         VStack(spacing: 5) {
@@ -381,7 +435,7 @@ struct HomeView: View {
                         }
                     }
                 }
-                .padding(.top, 5)
+                .padding(.top, 10)
             }
             private func photoBox(size: CGFloat, index: Int) -> some View {
                 let urlStr = index < photos.count ? photos[index].file : nil
@@ -426,9 +480,9 @@ struct HomeView: View {
             var spaceFor: String
 
             var body: some View {
-                VStack(alignment: .leading, spacing: 5) {
+                VStack(alignment: .leading, spacing: 10) {
                     Text("Room Short Info")
-                        .font(AppFont.manropeMedium(14))
+                        .font(AppFont.manropeSemiBold(18))
                         .foregroundColor(.black)
                      LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 4), spacing: 5) {
                         pillItem(title: "Space Type", value: spaceType, theme: .dark)
@@ -437,16 +491,14 @@ struct HomeView: View {
                         pillItem(title: "Space For", value: spaceFor, theme: .dark)
                     }
                 }
-                .padding(.horizontal, 5)
-                .padding(.vertical, 5)
-                .background(Color.clear)
+                .padding(.top, 10)
             }
             @ViewBuilder
             private func pillItem(title: String, value: String, theme: PillTheme) -> some View {
                 VStack(spacing: 2) {
                     Text(title)
                         .font(AppFont.manropeMedium(13))
-                        .foregroundColor(.black.opacity(0.7))
+                        .foregroundColor(.black.opacity(0.7)).padding(.bottom,10)
                     Text(value.cleanDecimal())
                         .font(AppFont.manropeMedium(12))
                         .foregroundColor(theme == .yellow ? .black : .white)
@@ -464,8 +516,9 @@ struct HomeView: View {
             var profiles: Profiles
             var body: some View {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Facilities").font(AppFont.manropeBold(16))
-                        .padding(.leading,10)
+                    Text("Facilities")
+                        .font(AppFont.manropeSemiBold(18))
+                        .foregroundColor(.black)
                     ScrollView {
                         if let amenities = profiles.rooms?.first?.amenities, !amenities.isEmpty {
                             FlowLayout(spacing: 10) {
@@ -483,6 +536,8 @@ struct HomeView: View {
                         }
                     }
                 }
+                .padding(.top, 10)
+                .padding(.bottom, 10)
             }
             private func AmenityItem(_ item: Amenity) -> some View {
                 HStack(spacing: 8) {
@@ -515,7 +570,8 @@ struct HomeView: View {
                 Spacer()
                 Image(systemName: "arrow.right.circle.fill")
             }
-            .padding(.top,10)
+            .padding()
+            .padding(.horizontal)
             .background(Color.yellow.opacity(0.25))
             .cornerRadius(12)
         }
@@ -524,13 +580,12 @@ struct HomeView: View {
                 Image(systemName: icon)
                     .font(AppFont.manrope(15))
                     .foregroundColor(.white)
-                    .padding(15)
+                    .padding()
                     .background(bg)
                     .clipShape(Circle())
             }
         }
     }
-
     private func removeProfile(_ profile: Profiles) {
         withAnimation(.spring()) {
             profiles.removeAll { $0.id == profile.id }
