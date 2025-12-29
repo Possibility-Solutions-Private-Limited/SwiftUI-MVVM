@@ -303,13 +303,13 @@ struct HomeView: View {
                         }
                     }
                     Spacer()
-                    VStack(spacing: 14) {
-                        circleButton(icon: "xmark", bg: .blue) { swipeLeft() }
-                        circleButton(icon: "heart.fill", bg: .red) { swipeRight() }
-                    }
+                     VStack(spacing: 10) {
+                         circleButton(icon: "cross") { swipeLeft() }
+                         circleButton(icon: "dil") { swipeRight() }
+                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.bottom, 24)
+                .padding(.bottom, 20)
             }
             .padding(.top, 5)
         }
@@ -568,32 +568,24 @@ struct HomeView: View {
                 Text("Location :")
                     .font(AppFont.manropeExtraBold(14))
                     .foregroundColor(.black)
-                
                 Text("\(profiles.rooms?.first?.location ?? "")")
                     .font(AppFont.manropeMedium(14))
                     .foregroundColor(.black)
                 
                 Spacer()
-                
                 Image("vack")
                     .frame(width: 30, height: 25)
                     .background(Color.black)
                     .cornerRadius(8)
-
             }
             .frame(height: 44)
             .padding(.horizontal, 16)
             .background(Color.yellow)
             .cornerRadius(12)
         }
-        private func circleButton(icon: String, bg: Color, action: @escaping () -> Void) -> some View {
+        private func circleButton(icon: String, action: @escaping () -> Void) -> some View {
             Button(action: action) {
-                Image(systemName: icon)
-                    .font(AppFont.manrope(15))
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(bg)
-                    .clipShape(Circle())
+                Image(icon)
             }
         }
     }
