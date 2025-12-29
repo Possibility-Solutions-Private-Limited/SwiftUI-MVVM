@@ -167,6 +167,34 @@ struct HomeView: View {
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { onRemove() }
         }
+        private var cardSwipeGesture: some Gesture {
+            DragGesture()
+                .onChanged { gesture in
+                    if abs(gesture.translation.width) > abs(gesture.translation.height) {
+                        offset = gesture.translation
+                        rotation = Double(gesture.translation.width / 20)
+                    }
+                }
+                .onEnded { gesture in
+                    if abs(gesture.translation.width) > abs(gesture.translation.height) {
+                        if gesture.translation.width > 120 {
+                            swipeRight()
+                        } else if gesture.translation.width < -120 {
+                            swipeLeft()
+                        } else {
+                            withAnimation(.spring()) {
+                                offset = .zero
+                                rotation = 0
+                            }
+                        }
+                    } else {
+                        withAnimation(.spring()) {
+                            offset = .zero
+                            rotation = 0
+                     }
+                }
+            }
+        }
         var body: some View {
             VStack {
                 ScrollView(showsIndicators: false) {
@@ -187,9 +215,7 @@ struct HomeView: View {
                             furnishing: profiles.rooms?.first?.furnishType ?? "",
                             spaceFor: profiles.rooms?.first?.wantToLiveWith ?? ""
                         )
-                        ShowAmenitiesView(
-                            profiles: profiles,
-                        )
+                        ShowAmenitiesView(profiles: profiles)
                         locationBox
                     }
                     .padding(10)
@@ -204,25 +230,8 @@ struct HomeView: View {
             .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 0)
             .offset(offset)
             .rotationEffect(.degrees(rotation))
-            .gesture(
-                DragGesture()
-                    .onChanged { gesture in
-                        offset = gesture.translation
-                        rotation = Double(gesture.translation.width / 20)
-                    }
-                    .onEnded { gesture in
-                        if gesture.translation.width > 120 {
-                            swipeRight()
-                        } else if gesture.translation.width < -120 {
-                            swipeLeft()
-                        } else {
-                        withAnimation(.spring()) {
-                            offset = .zero
-                            rotation = 0
-                        }
-                    }
-                }
-            )
+            .contentShape(Rectangle())
+            .gesture(cardSwipeGesture, including: .gesture)
         }
         private var bigProfile: some View {
             ZStack(alignment: .bottom) {
@@ -254,6 +263,7 @@ struct HomeView: View {
                         .stroke(Color.black.opacity(0.05), lineWidth: 1)
                 )
                 .onAppear { startAutoSlide() }
+                .allowsHitTesting(false)
                 VStack {
                     HStack(spacing: 6) {
                         let count = CGFloat(profiles.photos?.count ?? 1)
@@ -273,7 +283,7 @@ struct HomeView: View {
                 }
                 .frame(height: sliderHeight)
                 .allowsHitTesting(false)
-                 HStack(alignment: .bottom) {
+                HStack(alignment: .bottom) {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 0) {
                             Text("\(profiles.first_name ?? "") \(profiles.last_name ?? "") 🌼")
@@ -303,10 +313,10 @@ struct HomeView: View {
                         }
                     }
                     Spacer()
-                     VStack(spacing: 10) {
-                         circleButton(icon: "cross") { swipeLeft() }
-                         circleButton(icon: "dil") { swipeRight() }
-                     }
+                    VStack(spacing: 10) {
+                        circleButton(icon: "cross") { swipeLeft() }
+                        circleButton(icon: "dil") { swipeRight() }
+                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 20)
@@ -577,6 +587,7 @@ struct HomeView: View {
             }
         }
     }
+
     private func removeProfile(_ profile: Profiles) {
         withAnimation(.spring()) {
             profiles.removeAll { $0.id == profile.id }
