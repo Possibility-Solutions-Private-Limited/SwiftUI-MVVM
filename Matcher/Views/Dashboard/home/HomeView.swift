@@ -565,14 +565,25 @@ struct HomeView: View {
         }
         private var locationBox: some View {
             HStack {
-                Text("Location: \(profiles.rooms?.first?.location ?? "")")
-                    .font(AppFont.manrope(13))
+                Text("Location :")
+                    .font(AppFont.manropeExtraBold(14))
+                    .foregroundColor(.black)
+                
+                Text("\(profiles.rooms?.first?.location ?? "")")
+                    .font(AppFont.manropeMedium(14))
+                    .foregroundColor(.black)
+                
                 Spacer()
-                Image(systemName: "arrow.right.circle.fill")
+                
+                Image("vack")
+                    .frame(width: 30, height: 25)
+                    .background(Color.black)
+                    .cornerRadius(8)
+
             }
-            .padding()
-            .padding(.horizontal)
-            .background(Color.yellow.opacity(0.25))
+            .frame(height: 44)
+            .padding(.horizontal, 16)
+            .background(Color.yellow)
             .cornerRadius(12)
         }
         private func circleButton(icon: String, bg: Color, action: @escaping () -> Void) -> some View {
