@@ -339,6 +339,44 @@ class ChatsModel: ObservableObject {
         }
     }
 }
+class likesModel: ObservableObject {
+    @Published var messages: String = ""
+    func SwipeLikeAPI(type: String,userId:Int) {
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.like + String(userId), method: "POST",
+            parameters: nil
+        ) { (result: Result<CustomModel, Error>) in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    print("message: \(String(describing: response.message))")
+                    self.messages = response.message ?? ""
+                case .failure(let error):
+                    print("Error fetching deductions: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+}
+class DislikesModel: ObservableObject {
+    @Published var messages: String = ""
+    func SwipeDislikeAPI(type: String,userId:Int) {
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.dislike + String(userId), method: "POST",
+            parameters: nil
+        ) { (result: Result<CustomModel, Error>) in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    print("message: \(String(describing: response.message))")
+                    self.messages = response.message ?? ""
+                case .failure(let error):
+                    print("Error fetching deductions: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+}
 class ChatHistoryModel: ObservableObject {
     @Published var messages: [Message] = []
     func fetchChatHistory(chatId: String) {

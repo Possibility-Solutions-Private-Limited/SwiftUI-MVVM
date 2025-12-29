@@ -153,11 +153,14 @@ struct HomeView: View {
         private let autoSlideTime: TimeInterval = 3
         @State private var offset: CGSize = .zero
         @State private var rotation: Double = 0
+        @StateObject private var like = likesModel()
+        @StateObject private var dislike = DislikesModel()
         private func swipeLeft() {
             withAnimation(.interpolatingSpring(stiffness: 35, damping: 18)) {
                 offset = CGSize(width: -500, height: 0)
                 rotation = -18
             }
+            dislike.SwipeDislikeAPI(type: "dislike",userId:profiles.profile?.id ?? 0)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { onRemove() }
         }
         private func swipeRight() {
@@ -165,6 +168,7 @@ struct HomeView: View {
                 offset = CGSize(width: 500, height: 0)
                 rotation = 18
             }
+            like.SwipeLikeAPI(type: "like",userId:profiles.profile?.id ?? 0)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { onRemove() }
         }
         private var cardSwipeGesture: some Gesture {
@@ -388,21 +392,19 @@ struct HomeView: View {
             var body: some View {
                 HStack {
                     VStack(alignment: .leading, spacing: 10) {
-
                         Text("Party Preferences")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(AppFont.manropeSemiBold(18))
                             .foregroundColor(.black)
                         HStack {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 16, weight: .medium))
+                            Image("sparkles")
                             Text("Not Party Person")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(AppFont.manropeMedium(14))
                         }
                         .foregroundColor(.white)
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 18)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal)
                         .background(
-                            Capsule()
+                            RoundedRectangle(cornerRadius: 8)
                                 .fill(Color(red: 1.0, green: 0.36, blue: 0.43))
                         )
                         .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 1)
@@ -476,7 +478,6 @@ struct HomeView: View {
             var rentSplit: String
             var furnishing: String
             var spaceFor: String
-
             var body: some View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Room Short Info")
@@ -587,7 +588,6 @@ struct HomeView: View {
             }
         }
     }
-
     private func removeProfile(_ profile: Profiles) {
         withAnimation(.spring()) {
             profiles.removeAll { $0.id == profile.id }
@@ -665,12 +665,10 @@ struct HomeView: View {
                     .foregroundColor(.gray)
             }
             Spacer()
-            
             Image(systemName: "slider.horizontal.3")
                 .padding(6)
                 .background(Color.black.opacity(0.05))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
-            
             Image(systemName: "map")
                 .padding(6)
                 .background(Color.black.opacity(0.05))
@@ -882,12 +880,11 @@ struct StepOneView: View {
                         ? AppColors.primaryYellow
                         : AppColors.lightGray
                     )
-            )
+              )
         }
     }
     var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selections.selectedRole)")
             onNext()
         }) {
             HStack {
@@ -932,7 +929,6 @@ struct StepTwoView: View {
                     Text("What’s Your Professional Field?")
                         .font(AppFont.manropeBold(16))
                         .padding(.top, 50)
-
                     FlowLayout(spacing: 10) {
                         ForEach(fields) { field in
                             CategoryButton(field)
@@ -947,7 +943,6 @@ struct StepTwoView: View {
         }
         .frame(maxHeight: maxHeight)
     }
-
     private func CategoryButton(_ field: OptionItem) -> some View {
         Button {
             selections.selectedCategory = field.id
@@ -971,8 +966,6 @@ struct StepTwoView: View {
     }
     private var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selections.selectedRole)")
-            print("Selected Category:",selections.selectedCategory ?? 0)
             onNext()
         }) {
             HStack {
@@ -1046,14 +1039,11 @@ struct StepThreeView: View {
                         ? AppColors.primaryYellow
                         : AppColors.lightGray
                     )
-            )
+             )
         }
     }
     var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selections.selectedRole)")
-            print("Selected Category:",selections.selectedCategory ?? 0)
-            print("Selected Shift: \(selections.selectedShift)")
             onNext()
         }) {
             HStack {
@@ -1075,7 +1065,7 @@ struct StepThreeView: View {
                         ? Color.black.opacity(0.3)
                         : Color.black
                     )
-            )
+             )
         }
         .disabled(selections.selectedShift.isEmpty)
         .padding(.bottom, 8)
@@ -1133,10 +1123,6 @@ struct StepFourView: View {
     }
     var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selections.selectedRole)")
-            print("Selected Category:",selections.selectedCategory ?? 0)
-            print("Selected Shift: \(selections.selectedShift)")
-            print("Selected Food: \(selections.selectedFood)")
             onNext()
         }) {
             HStack {
@@ -1158,7 +1144,7 @@ struct StepFourView: View {
                         ? Color.black.opacity(0.3)
                         : Color.black
                     )
-            )
+             )
         }
         .disabled(selections.selectedFood.isEmpty)
         .padding(.bottom, 8)
@@ -1218,7 +1204,6 @@ struct StepFiveView: View {
     }
     private var nextButton: some View {
         Button(action: {
-            print(selections.selectedParties ?? 0)
             onNext()
         }) {
             HStack {
@@ -1239,7 +1224,7 @@ struct StepFiveView: View {
                         selections.selectedParties == nil ? Color.black.opacity(0.3)
                         : Color.black
                     )
-            )
+             )
         }
         .disabled(selections.selectedParties == nil)
         .padding(.bottom, 8)
@@ -1297,12 +1282,6 @@ struct StepSixView: View {
     }
     var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selections.selectedRole)")
-            print("Selected Category:",selections.selectedCategory ?? 0)
-            print("Selected Shift: \(selections.selectedShift)")
-            print("Selected Food: \(selections.selectedFood)")
-            print("Selected Parties:",selections.selectedParties ?? 0)
-            print("Selected Smoke: \(selections.selectedSmoke)")
             onNext()
         }) {
             HStack {
@@ -1324,7 +1303,7 @@ struct StepSixView: View {
                         ? Color.black.opacity(0.3)
                         : Color.black
                     )
-            )
+             )
         }
         .disabled(selections.selectedSmoke.isEmpty)
         .padding(.bottom, 8)
@@ -1382,13 +1361,6 @@ struct StepSevenView: View {
     }
     var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selections.selectedRole)")
-            print("Selected Category:",selections.selectedCategory ?? 0)
-            print("Selected Shift: \(selections.selectedShift)")
-            print("Selected Food: \(selections.selectedFood)")
-            print("Selected Parties:",selections.selectedParties ?? 0)
-            print("Selected Smoke: \(selections.selectedSmoke)")
-            print("Selected Drink: \(selections.selectedDrink)")
             onNext()
         }) {
             HStack {
@@ -1410,7 +1382,7 @@ struct StepSevenView: View {
                         ? Color.black.opacity(0.3)
                         : Color.black
                     )
-            )
+             )
         }
         .disabled(selections.selectedDrink.isEmpty)
         .padding(.bottom, 8)
@@ -1466,14 +1438,6 @@ struct StepEightView: View {
     }
     private var nextButton: some View {
         Button(action: {
-            print("Selected Role: \(selections.selectedRole)")
-            print("Selected Category:",selections.selectedCategory ?? 0)
-            print("Selected Shift: \(selections.selectedShift)")
-            print("Selected Food: \(selections.selectedFood)")
-            print("Selected Parties:",selections.selectedParties ?? 0)
-            print("Selected Smoke: \(selections.selectedSmoke)")
-            print("Selected Drink: \(selections.selectedDrink)")
-            print("Selected About: \(selections.selectedAbout)")
             onNext()
         }) {
             HStack {
@@ -1495,7 +1459,7 @@ struct StepEightView: View {
                         ? Color.black.opacity(0.3)
                         : Color.black
                     )
-            )
+             )
         }
         .disabled(selections.selectedAbout.isEmpty)
         .padding(.bottom, 8)
@@ -1535,15 +1499,6 @@ struct FinalStepView: View {
     private var nextButton: some View {
         HStack(spacing: 12) {
             Button(action: {
-                print("Selected Role: \(selections.selectedRole)")
-                print("Selected Category:",selections.selectedCategory ?? 0)
-                print("Selected Shift: \(selections.selectedShift)")
-                print("Selected Food: \(selections.selectedFood)")
-                print("Selected Parties:",selections.selectedParties ?? 0)
-                print("Selected Smoke: \(selections.selectedSmoke)")
-                print("Selected Drink: \(selections.selectedDrink)")
-                print("Selected About: \(selections.selectedAbout)")
-                print("Selected room Option: \(selections.roomOption)")
                 showFinalStep = 2
             }) {
                 ZStack {
@@ -1677,7 +1632,6 @@ struct GenderStepView: View {
         }
         .edgesIgnoringSafeArea(.bottom)
         .onAppear {
-            
         }
     }
     var header: some View {
@@ -1693,7 +1647,6 @@ struct GenderStepView: View {
                             .overlay(
                                 Circle().stroke(Color.white, lineWidth: 3)
                             )
-
                     } else if phase.error != nil {
                         Image("profile")
                             .resizable()
@@ -2117,12 +2070,6 @@ struct SpaceView: View {
         return HStack(spacing: 12) {
             Button(action: {
                 if canProceed {
-                    print("Selected Space Type:", selectedSpaceType ?? "")
-                    print("Selected Roommates:", selectedRoommates)
-                    print("Rent:", rent)
-                    print("Selected Furnishing:", selectedFurnishing ?? "")
-                    print("Selected Gender:", selectedGender ?? "")
-                    print("Selected Amenities:", selectedAmenities)
                     uploadImages()
                     onNext()
                 } else {
@@ -2213,7 +2160,6 @@ struct SpaceView: View {
     struct SegmentedView: View {
         let options: [OptionItem]
         @Binding var selected: OptionItem?
-
         var body: some View {
             HStack(spacing: 0) {
                 ForEach(options.indices, id: \.self) { index in
@@ -2261,7 +2207,6 @@ struct SpaceView: View {
         }
     }
     struct StepAmenitiesView: View {
-
         @ObservedObject var viewModel: BasicModel
         @Binding var selectedAmenities: Set<Int>
         var body: some View {

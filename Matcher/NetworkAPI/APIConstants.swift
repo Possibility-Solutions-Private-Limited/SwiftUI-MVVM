@@ -24,8 +24,10 @@ struct APIConstants {
         static let ChangePassword = "change-password"
         static let chatUser = "users"
         static let chatlist = "chat-list"
-    
         static let dashboard = "dashboard?"
+        static let like = "interaction/like/"
+        static let dislike = "interaction/dislike/"
+
 
     }
 }

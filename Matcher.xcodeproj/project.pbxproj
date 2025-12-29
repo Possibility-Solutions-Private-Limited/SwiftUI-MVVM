@@ -55,6 +55,7 @@
 		5D9AB28C2DB9126000E3480F /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9AB28B2DB9126000E3480F /* UserModel.swift */; };
 		5D9AB28F2DB91B8800E3480F /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9AB28E2DB91B8800E3480F /* KeychainHelper.swift */; };
 		5D9EB8312DF7FBC80064B056 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9EB8302DF7FBC80064B056 /* ImagePicker.swift */; };
+		5DACB5122F02E5E4002299C0 /* CustomModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DACB5112F02E5D9002299C0 /* CustomModel.swift */; };
 		5DBF0E972DBB8B010028D953 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5DBF0E962DBB8B010028D953 /* GoogleService-Info.plist */; };
 		5DD4E4EB2DBBA7FA008F48B4 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DD4E4EA2DBBA7FA008F48B4 /* ChatView.swift */; };
 		5DD4E4EF2DBBBA29008F48B4 /* SocketService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DD4E4EE2DBBBA29008F48B4 /* SocketService.swift */; };
@@ -117,6 +118,7 @@
 		5D9AB28B2DB9126000E3480F /* UserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModel.swift; sourceTree = "<group>"; };
 		5D9AB28E2DB91B8800E3480F /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
 		5D9EB8302DF7FBC80064B056 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
+		5DACB5112F02E5D9002299C0 /* CustomModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomModel.swift; sourceTree = "<group>"; };
 		5DBF0E962DBB8B010028D953 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		5DBF0E982DBB8B590028D953 /* Matcher.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Matcher.entitlements; sourceTree = "<group>"; };
 		5DD4E4E92DBB98DA008F48B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -311,6 +313,7 @@
 			isa = PBXGroup;
 			children = (
 				5D9AB28B2DB9126000E3480F /* UserModel.swift */,
+				5DACB5112F02E5D9002299C0 /* CustomModel.swift */,
 				5DFE0D822EFFD7FF000C27EF /* DashboardResponse.swift */,
 				5D14990C2EF969B900C5021A /* BasicDataModel.swift */,
 				5D08E91D2EFC27C40052B4B4 /* SpaceModel.swift */,
@@ -457,6 +460,7 @@
 				5DFE0D832EFFD80A000C27EF /* DashboardResponse.swift in Sources */,
 				5DD4E4EF2DBBBA29008F48B4 /* SocketService.swift in Sources */,
 				5D0EF5622DBA65C000CF3F6C /* SplashView.swift in Sources */,
+				5DACB5122F02E5E4002299C0 /* CustomModel.swift in Sources */,
 				5D9AB2682DB8ED8C00E3480F /* AttendanceApp.swift in Sources */,
 				5D5056612EF3D3930013453F /* LikeView.swift in Sources */,
 				5D4331722DE48F120016B700 /* MessageModel.swift in Sources */,
