@@ -313,18 +313,6 @@ struct HomeView: View {
             }
             .padding(.top, 5)
         }
-        private func nextImage() {
-            guard let total = profiles.photos?.count, total > 0 else { return }
-            if currentImageIndex < total - 1 {
-                currentImageIndex += 1
-            }
-        }
-        private func previousImage() {
-            guard let total = profiles.photos?.count, total > 0 else { return }
-            if currentImageIndex > 0 {
-                currentImageIndex -= 1
-            }
-        }
         private func startAutoSlide() {
             Timer.scheduledTimer(withTimeInterval: autoSlideTime, repeats: true) { _ in
                 let count = profiles.photos?.count ?? 1
