@@ -24,7 +24,19 @@ struct HomeView: View {
         Card(step: 1),
         Card(step: 0)
     ]
+    //filter=============
+    @StateObject private var locationManager = LocationPermissionManager()
     @State private var showFilters = false
+    @State private var savedFilters: FiltersData? = nil
+    @State private var gender: String = ""
+    @State private var age: Double = 25
+    @State private var foodChoice: String = ""
+    @State private var partyPreference: String = ""
+    @State private var smoke: String = ""
+    @State private var drink: String = ""
+    @State private var distanceMin: Double = 0
+    @State private var distanceMax: Double = 100
+    //========
     var body: some View {
         GeometryReader { geo in
             ZStack {
@@ -118,16 +130,17 @@ struct HomeView: View {
         .onAppear {
             if userAuth.steps {
                 if userAuth.space {
+                    loadSavedFilters()
                     dashboardView.loadDashboard(params: [
-                                "lat": "",
-                                "long": "",
-                                "age": "",
-                                "distance": "",
-                                "want_to_live_with": "",
-                                "food_preference": "",
-                                "party_preference": "",
-                                "smoking": "",
-                                "drinking": ""
+                               "lat": locationManager.latitude,
+                                "long": locationManager.longitude,
+                                "age":Int(age),
+                                "distance":Int(distanceMax),
+                                "want_to_live_with": gender.lowercased(),
+                                "food_preference": foodChoice.lowercased(),
+                                "party_preference": partyPreference.lowercased(),
+                                "smoking": smoke.lowercased(),
+                                "drinking": drink.lowercased()
                             ])
                 }
             }else{
@@ -143,6 +156,26 @@ struct HomeView: View {
         .onChange(of: selections.selectedRole) {
             rebuildCards()
         }
+    }
+    func loadSavedFilters() {
+        guard let saved = UserDefaults.standard.data(forKey: "SavedFilters"),
+              let decoded = try? JSONDecoder().decode(FiltersData.self, from: saved)
+        else {
+            gender = ""
+            foodChoice = ""
+            partyPreference = ""
+            smoke = ""
+            drink = ""
+            return
+        }
+        gender = decoded.gender
+        age = Double(decoded.age)
+        foodChoice = decoded.foodChoice
+        partyPreference = decoded.partyPreference
+        smoke = decoded.smoke
+        drink = decoded.drink
+        distanceMin = Double(decoded.distanceMin)
+        distanceMax = Double(decoded.distanceMax)
     }
     // main CARD======
     struct SwipeCard: View {
@@ -223,6 +256,7 @@ struct HomeView: View {
                         )
                         ShowAmenitiesView(profiles: profiles)
                         locationBox
+                        Spacer()
                     }
                     .padding(10)
                     .background(LinearGradient(colors: [.splashTop, .splashBottom],
@@ -545,9 +579,9 @@ struct HomeView: View {
                 .cornerRadius(16)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white, lineWidth: 2)
+                        .stroke(Color.white, lineWidth: 1)
                 )
-                .shadow(color: Color.white, radius: 5, x: 0, y: 2)
+                .shadow(color: Color.white, radius: 5, x: 0, y: 1)
             }
         }
         struct RoomShortInfoSection: View {
@@ -703,7 +737,7 @@ struct HomeView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, 10)
                     Text("Who Would You Like To Live With?")
-                        .font(AppFont.manropeMedium(14))
+                        .font(AppFont.manropeBold(14))
                     HStack {
                         genderButton("Male")
                         genderButton("Female")
@@ -713,7 +747,7 @@ struct HomeView: View {
                     VStack(alignment: .leading) {
                         HStack {
                             Text("Age")
-                                .font(AppFont.manropeMedium(14))
+                                .font(AppFont.manropeBold(14))
                             Spacer()
                             Text("\(Int(age))")
                                 .font(AppFont.manropeSemiBold(14))
@@ -723,7 +757,7 @@ struct HomeView: View {
                             .tint(AppColors.primaryYellow)
                     }
                     Text("Food Choice")
-                        .font(AppFont.manropeMedium(14))
+                        .font(AppFont.manropeBold(14))
                     HStack(spacing: 0) {
                         foodButton("Veg")
                         foodButton("Non-Veg")
@@ -736,7 +770,7 @@ struct HomeView: View {
                     VStack(alignment: .leading) {
                         HStack {
                             Text("Distance")
-                                .font(AppFont.manropeMedium(14))
+                                .font(AppFont.manropeBold(14))
                             Spacer()
                             Text("\(Int(distanceMin)) - \(Int(distanceMax)) Km")
                                 .font(AppFont.manropeSemiBold(14))
@@ -750,15 +784,15 @@ struct HomeView: View {
                         }
                     }
                     Text("Party Preferences")
-                        .font(AppFont.manropeMedium(14))
+                        .font(AppFont.manropeBold(14))
                     HStack {
                         prefButton("Not Into It")
                         prefButton("Some Time")
                         prefButton("Weekends")
                     }
-                    prefButton("Love It")
+                    prefButton("Love It").frame(maxWidth: 130)
                     Text("Smoking")
-                        .font(AppFont.manropeMedium(14))
+                        .font(AppFont.manropeBold(14))
                     HStack(spacing: 0) {
                         yesNoButton("Yes", selected: $smoke)
                         yesNoButton("No", selected: $smoke)
@@ -769,7 +803,7 @@ struct HomeView: View {
                             .stroke(AppColors.borderGray, lineWidth: 1)
                     )
                     Text("Drinking")
-                        .font(AppFont.manropeMedium(14))
+                        .font(AppFont.manropeBold(14))
                     HStack(spacing: 0) {
                         yesNoButton("Yes", selected: $drink)
                         yesNoButton("No", selected: $drink)
@@ -781,7 +815,7 @@ struct HomeView: View {
                     )
                     Button(action: applyFilters) {
                         Text("Apply Filters")
-                            .font(AppFont.manropeSemiBold(16))
+                            .font(AppFont.manropeBold(16))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -941,7 +975,6 @@ struct HomeView: View {
         }
         .padding(.horizontal)
     }
-
     var searchBar: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
@@ -974,6 +1007,18 @@ struct HomeView: View {
         .sheet(isPresented: $showFilters) {
              FiltersSheetView { appliedData in
              print("Filters Applied:", appliedData)
+                 loadSavedFilters()
+                 dashboardView.loadDashboard(params: [
+                            "lat": locationManager.latitude,
+                             "long": locationManager.longitude,
+                             "age":Int(age),
+                             "distance":Int(distanceMax),
+                             "want_to_live_with": gender.lowercased(),
+                             "food_preference": foodChoice.lowercased(),
+                             "party_preference": partyPreference.lowercased(),
+                             "smoking": smoke.lowercased(),
+                             "drinking": drink.lowercased()
+                         ])
             }
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
