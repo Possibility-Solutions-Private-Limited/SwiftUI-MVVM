@@ -28,10 +28,10 @@ struct HomeView: View {
     @StateObject private var locationManager = LocationPermissionManager()
     @State private var showFilters = false
     @State private var savedFilters: FiltersData? = nil
-    @State private var gender: String = ""
+    @State private var genderId: Int = 0
     @State private var age: Double = 25
     @State private var foodChoice: String = ""
-    @State private var partyPreference: String = ""
+    @State private var partyPreference: Int = 0
     @State private var smoke: String = ""
     @State private var drink: String = ""
     @State private var distanceMin: Double = 0
@@ -52,7 +52,6 @@ struct HomeView: View {
                             header
                             Text("Nearby Rooms & Roommates")
                                 .font(AppFont.manropeExtraBold(18))
-                                .padding(.horizontal)
                             searchBar
                             ZStack {
                                 ForEach(profiles) { profiles in
@@ -136,9 +135,9 @@ struct HomeView: View {
                                 "long": locationManager.longitude,
                                 "age":Int(age),
                                 "distance":Int(distanceMax),
-                                "want_to_live_with": gender.lowercased(),
+                                "want_to_live_with": Int(genderId),
                                 "food_preference": foodChoice.lowercased(),
-                                "party_preference": partyPreference.lowercased(),
+                                "party_preference": Int(partyPreference),
                                 "smoking": smoke.lowercased(),
                                 "drinking": drink.lowercased()
                             ])
@@ -161,14 +160,14 @@ struct HomeView: View {
         guard let saved = UserDefaults.standard.data(forKey: "SavedFilters"),
               let decoded = try? JSONDecoder().decode(FiltersData.self, from: saved)
         else {
-            gender = ""
-            foodChoice = ""
-            partyPreference = ""
-            smoke = ""
-            drink = ""
+            genderId = viewModel.genders.first?.id ?? 0
+            foodChoice = "Veg"
+            partyPreference = viewModel.partyPreferences.first?.id ?? 0
+            smoke = "Yes"
+            drink = "Yes"
             return
         }
-        gender = decoded.gender
+        genderId = decoded.genderId
         age = Double(decoded.age)
         foodChoice = decoded.foodChoice
         partyPreference = decoded.partyPreference
@@ -262,10 +261,8 @@ struct HomeView: View {
                     .background(LinearGradient(colors: [.splashTop, .splashBottom],
                                                startPoint: .top, endPoint: .bottom))
                     .clipShape(RoundedRectangle(cornerRadius: 30))
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: maxHeight)
-            .background(Color.clear)
+                 }
+             }
             .clipShape(RoundedRectangle(cornerRadius: 30))
             .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 0)
             .offset(offset)
@@ -300,7 +297,7 @@ struct HomeView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                               .stroke(Color.white, lineWidth: 3)
                 )
                 .onAppear { startAutoSlide() }
                 .allowsHitTesting(false)
@@ -309,7 +306,6 @@ struct HomeView: View {
                         let count = CGFloat(profiles.photos?.count ?? 1)
                         let totalWidth: CGFloat = UIScreen.main.bounds.width - 80
                         let progressWidth = max((totalWidth - (6 * (count - 1))) / count, 15)
-
                         ForEach(0..<(profiles.photos?.count ?? 1), id: \.self) { index in
                             Rectangle()
                                 .fill(index == currentImageIndex ? Color.white : Color.white.opacity(0.35))
@@ -394,9 +390,13 @@ struct HomeView: View {
         }
         private func prefChip(_ text: String) -> some View {
             Text(text)
+                .font(AppFont.manropeMedium(14))
                 .padding(.vertical, 8)
                 .padding(.horizontal, 16)
-                .background(Color.black.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.black, lineWidth: 1)
+                )
                 .cornerRadius(10)
         }
         struct habitGrid: View {
@@ -708,26 +708,38 @@ struct HomeView: View {
         }
     }
     struct FiltersData: Codable {
-        let gender: String
+        let genderId: Int
         let age: Int
         let foodChoice: String
-        let partyPreference: String
+        let partyPreference: Int
         let smoke: String
         let drink: String
         let distanceMin: Int
         let distanceMax: Int
     }
     struct FiltersSheetView: View {
+        @ObservedObject var viewModel: BasicModel
         @Environment(\.dismiss) private var dismiss
-        @State private var gender: String = ""
+        @State private var genderId:Int = 0
         @State private var age: Double = 25
         @State private var foodChoice: String = ""
-        @State private var partyPreference: String = ""
+        @State private var partyPreference:Int = 0
         @State private var smoke: String = ""
         @State private var drink: String = ""
         @State private var distanceMin: Double = 0
         @State private var distanceMax: Double = 100
         let onApply: (FiltersData) -> Void
+        private var options: [OptionItem] {
+            viewModel.genders
+        }
+        private var fields: [OptionItem] {
+            viewModel.partyPreferences
+        }
+        init(viewModel: BasicModel, onApply: @escaping (FiltersData) -> Void) {
+          self.viewModel = viewModel
+          self.onApply = onApply
+          UISlider.appearance().thumbTintColor = UIColor(AppColors.primaryYellow)
+        }
         var body: some View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 22) {
@@ -739,10 +751,11 @@ struct HomeView: View {
                     Text("Who Would You Like To Live With?")
                         .font(AppFont.manropeBold(14))
                     HStack {
-                        genderButton("Male")
-                        genderButton("Female")
-                        genderButton("Non-binary")
-                        genderButton("Open to all")
+                        FlowLayout(spacing: 10) {
+                            ForEach(options) { field in
+                                genderButton(field)
+                            }
+                        }
                     }
                     VStack(alignment: .leading) {
                         HStack {
@@ -776,21 +789,19 @@ struct HomeView: View {
                                 .font(AppFont.manropeSemiBold(14))
                                 .foregroundColor(AppColors.primaryYellow)
                         }
-                        ZStack {
-                            Slider(value: $distanceMin, in: 0...100)
-                                .tint(AppColors.primaryYellow.opacity(0.6))
-                            Slider(value: $distanceMax, in: 0...100)
-                                .tint(AppColors.primaryYellow)
-                        }
+                        HStack {
+                            RangeSlider(minValue: $distanceMin, maxValue: $distanceMax, range: 0...1000)
+                        }.padding()
                     }
                     Text("Party Preferences")
                         .font(AppFont.manropeBold(14))
                     HStack {
-                        prefButton("Not Into It")
-                        prefButton("Some Time")
-                        prefButton("Weekends")
+                        FlowLayout(spacing: 10) {
+                            ForEach(fields) { field in
+                                PartyButton(field)
+                            }
+                        }
                     }
-                    prefButton("Love It").frame(maxWidth: 130)
                     Text("Smoking")
                         .font(AppFont.manropeBold(14))
                     HStack(spacing: 0) {
@@ -813,6 +824,7 @@ struct HomeView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(AppColors.borderGray, lineWidth: 1)
                     )
+                    Spacer()
                     Button(action: applyFilters) {
                         Text("Apply Filters")
                             .font(AppFont.manropeBold(16))
@@ -830,7 +842,7 @@ struct HomeView: View {
         }
         func applyFilters() {
             let data = FiltersData(
-                gender: gender,
+                genderId: Int(genderId),
                 age: Int(age),
                 foodChoice: foodChoice,
                 partyPreference: partyPreference,
@@ -849,14 +861,14 @@ struct HomeView: View {
             guard let saved = UserDefaults.standard.data(forKey: "SavedFilters"),
                   let decoded = try? JSONDecoder().decode(FiltersData.self, from: saved)
             else {
-                gender = "Male"
+                genderId = viewModel.genders.first?.id ?? 0
                 foodChoice = "Veg"
-                partyPreference = "Not Into It"
+                partyPreference = viewModel.partyPreferences.first?.id ?? 0
                 smoke = "Yes"
                 drink = "Yes"
                 return
             }
-            gender = decoded.gender
+            genderId = decoded.genderId
             age = Double(decoded.age)
             foodChoice = decoded.foodChoice
             partyPreference = decoded.partyPreference
@@ -865,15 +877,15 @@ struct HomeView: View {
             distanceMin = Double(decoded.distanceMin)
             distanceMax = Double(decoded.distanceMax)
         }
-        func genderButton(_ title: String) -> some View {
+        func genderButton(_ field: OptionItem) -> some View {
             Button {
-                gender = title
+                genderId = field.id
             } label: {
-                Text(title)
+                Text(field.title)
                     .font(AppFont.manropeMedium(12))
-                    .foregroundColor(gender == title ? .black : .white)
+                    .foregroundColor(genderId == field.id ? .black : .white)
                     .padding()
-                    .background(gender == title ? AppColors.primaryYellow : AppColors.Black)
+                    .background(genderId == field.id ? AppColors.primaryYellow : AppColors.Black)
                     .cornerRadius(8)
             }
         }
@@ -889,20 +901,18 @@ struct HomeView: View {
                     .background(foodChoice == title ? AppColors.primaryYellow : AppColors.Black)
             }
         }
-        func prefButton(_ title: String) -> some View {
+        private func PartyButton(_ field: OptionItem) -> some View {
             Button {
-                partyPreference = title
+                partyPreference = field.id
             } label: {
-                Text(title)
+                Text(field.title)
                     .font(AppFont.manropeMedium(12))
-                    .foregroundColor(partyPreference == title ? .black : .white)
+                    .foregroundColor(partyPreference == field.id ? .black : .white)
                     .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(partyPreference == title ? AppColors.primaryYellow : AppColors.Black)
+                    .background(partyPreference == field.id ? AppColors.primaryYellow : AppColors.Black)
                     .cornerRadius(8)
             }
         }
-        
         func yesNoButton(_ title: String, selected: Binding<String>) -> some View {
             Button {
                 selected.wrappedValue = title
@@ -976,53 +986,56 @@ struct HomeView: View {
         .padding(.horizontal)
     }
     var searchBar: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Your Perfect Room Starts Here")
-                    .font(.callout.bold())
-                Text("Discover Your Next Room & Roommate")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
-            Spacer()
+        HStack(spacing: 5) {
+                HStack(spacing: 5) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Your Perfect Room Starts Here")
+                            .font(AppFont.manropeSemiBold(15))
+                            .foregroundColor(.black)
+                        Text("Discover Your Next Room & Roommate")
+                            .font(AppFont.manrope(11))
+                            .foregroundColor(.gray)
+                    }
+                    Spacer()
+                    Button {
+                        showFilters.toggle()
+                    } label: {
+                    Image("slider")
+                    }
+                    .sheet(isPresented: $showFilters) {
+                        FiltersSheetView(viewModel: viewModel) { filter in
+                            dashboardView.loadDashboard(params: [
+                                "lat": locationManager.latitude,
+                                "long": locationManager.longitude,
+                                "age":Int(filter.age),
+                                "distance":Int(filter.distanceMax),
+                                "want_to_live_with": Int(filter.genderId),
+                                "food_preference": filter.foodChoice.lowercased(),
+                                "party_preference": Int(filter.partyPreference),
+                                "smoking": filter.smoke.lowercased(),
+                                "drinking": filter.drink.lowercased()
+                            ])
+                        }
+                        .presentationDetents([.medium, .large])
+                        .presentationDragIndicator(.visible)
+                    }
+                }
+                .frame(height: 40)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 10)
+                .background(Color.white)
+                .cornerRadius(10)
+                .overlay(
+                   RoundedRectangle(cornerRadius: 10)
+                  .stroke(Color.gray.opacity(0.25), lineWidth: 1)
+                )
             Button {
-                showFilters.toggle()
             } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .padding(6)
-                    .background(Color.black.opacity(0.05))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
-
-            Image(systemName: "map")
-                .padding(6)
-                .background(Color.black.opacity(0.05))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-        }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(12)
-        .shadow(radius: 3)
-        .padding(.horizontal)
-        .sheet(isPresented: $showFilters) {
-             FiltersSheetView { appliedData in
-             print("Filters Applied:", appliedData)
-                 loadSavedFilters()
-                 dashboardView.loadDashboard(params: [
-                            "lat": locationManager.latitude,
-                             "long": locationManager.longitude,
-                             "age":Int(age),
-                             "distance":Int(distanceMax),
-                             "want_to_live_with": gender.lowercased(),
-                             "food_preference": foodChoice.lowercased(),
-                             "party_preference": partyPreference.lowercased(),
-                             "smoking": smoke.lowercased(),
-                             "drinking": drink.lowercased()
-                         ])
-            }
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
-        }
+                Image("map")
+             }
+         }
+        .padding(.horizontal, 20)
+        .padding(.bottom,5)
     }
     var title: some View {
         VStack(spacing: 5) {

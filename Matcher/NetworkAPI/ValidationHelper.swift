@@ -291,4 +291,62 @@ extension String {
         return formatter.string(from: NSNumber(value: number)) ?? self
     }
 }
+struct RangeSlider: View {
+    @Binding var minValue: Double
+    @Binding var maxValue: Double
+    var range: ClosedRange<Double>
+    private let barHeight: CGFloat = 4
+    private let thumbSize: CGFloat = 28
+    var body: some View {
+        GeometryReader { geo in
+            let width = geo.size.width
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(height: barHeight)
+                Capsule()
+                    .fill(AppColors.primaryYellow)
+                    .frame(width: selectedWidth(width), height: barHeight)
+                    .offset(x: minX(width))
+                Circle()
+                    .fill(AppColors.primaryYellow)
+                    .frame(width: thumbSize, height: thumbSize)
+                    .offset(x: minX(width) - thumbSize / 2)
+                    .gesture(
+                        DragGesture().onChanged { value in
+                            let new = valueToRange(x: value.location.x, width: width)
+                            minValue = min(max(new, range.lowerBound), maxValue)
+                        }
+                    )
+                Circle()
+                    .fill(AppColors.primaryYellow)
+                    .frame(width: thumbSize, height: thumbSize)
+                    .offset(x: maxX(width) - thumbSize / 2)
+                    .gesture(
+                        DragGesture().onChanged { value in
+                            let new = valueToRange(x: value.location.x, width: width)
+                            maxValue = max(min(new, range.upperBound), minValue)
+                        }
+                    )
+            }
+        }
+    }
+    private func minX(_ width: CGFloat) -> CGFloat {
+        let percent = (minValue - range.lowerBound) / (range.upperBound - range.lowerBound)
+        return percent * width
+    }
+    private func maxX(_ width: CGFloat) -> CGFloat {
+        let percent = (maxValue - range.lowerBound) / (range.upperBound - range.lowerBound)
+        return percent * width
+    }
+    private func selectedWidth(_ width: CGFloat) -> CGFloat {
+        maxX(width) - minX(width)
+    }
+    private func valueToRange(x: CGFloat, width: CGFloat) -> Double {
+        let pos = max(0, min(x, width))
+        let percent = Double(pos / width)
+        return range.lowerBound + percent * (range.upperBound - range.lowerBound)
+    }
+}
+
 
