@@ -213,6 +213,7 @@ struct HomeView: View {
                         )
                         PartyPreferencesView()
                         RoomPhotosDisplayView(photos: profiles.rooms?.first?.photos ?? [])
+                        RoommatesNeededSection()
                         RoomShortInfoSection(
                             spaceType: profiles.rooms?.first?.roomType ?? "",
                             rentSplit: profiles.rooms?.first?.rentSplit ?? "",
@@ -348,16 +349,26 @@ struct HomeView: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, 10)
                     .padding(.bottom, 10)
+                HStack(spacing: 10) {
+                    prefChip(profiles.profile?.describe_you_best ?? "")
+                    prefChip(profiles.profile?.professional_field_data?.title ?? "")
+                }
             }
             .padding(.top, 10)
             .padding(.bottom, 10)
+        }
+        private func prefChip(_ text: String) -> some View {
+            Text(text)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 16)
+                .background(Color.black.opacity(0.05))
+                .cornerRadius(10)
         }
         struct habitGrid: View {
             var FoodPreference: String
             var Smoking: String
             var WorkShift: String
             var Drinking: String
-
             var body: some View {
                 VStack(alignment: .leading, spacing: 10) {
                      LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 4), spacing: 5) {
@@ -412,6 +423,7 @@ struct HomeView: View {
                     Spacer(minLength: 0)
                 }
                 .padding(.top, 20)
+                .padding(.bottom, 4)
             }
         }
         struct RoomPhotosDisplayView: View {
@@ -436,6 +448,7 @@ struct HomeView: View {
                     }
                 }
                 .padding(.top, 10)
+                .padding(.bottom, 4)
             }
             private func photoBox(size: CGFloat, index: Int) -> some View {
                 let urlStr = index < photos.count ? photos[index].file : nil
@@ -471,6 +484,69 @@ struct HomeView: View {
                 RoundedRectangle(cornerRadius: 14)
                     .fill(Color.gray.opacity(0.15))
                     .frame(width: size, height: size)
+            }
+        }
+        struct RoommatesNeededSection: View {
+            let roommatesImages: [String] = [
+                "girls",
+                "girls",
+                "girls"
+            ]
+            let numberOfRoommates: Int = 3
+            let onlyForFemale: Bool = true
+            var body: some View {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("\(numberOfRoommates) Roommates Needed")
+                            .font(AppFont.manropeSemiBold(16))
+                            .foregroundColor(.black)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+
+                        Spacer()
+                        if onlyForFemale {
+                            HStack(spacing: 6) {
+                                Circle()
+                                    .stroke(Color.black, lineWidth: 2)
+                                    .frame(width: 18, height: 18)
+                                    .overlay(
+                                        Circle()
+                                            .fill(Color.black)
+                                            .frame(width: 12, height: 12)
+                                        )
+                                Text("Only For Female")
+                                    .font(AppFont.manropeSemiBold(12))
+                                    .foregroundColor(.black)
+                                    .lineLimit(1)
+                            }
+                        }
+                    }
+                    HStack(spacing: -15) {
+                        ForEach(0..<min(roommatesImages.count, 3), id: \.self) { index in
+                            Image(roommatesImages[index])
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 50, height: 50)
+                                .clipShape(Circle())
+                                .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                                .zIndex(Double(roommatesImages.count - index))
+                        }
+                        Text("\(numberOfRoommates)")
+                            .font(.system(size: 16, weight: .semibold))
+                            .frame(width: 50, height: 50)
+                            .background(Color.yellow)
+                            .foregroundColor(.black)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .padding(.top, 5)
+                }
+                .padding()
+                .cornerRadius(16)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white, lineWidth: 2)
+                )
+                .shadow(color: Color.white, radius: 5, x: 0, y: 2)
             }
         }
         struct RoomShortInfoSection: View {
