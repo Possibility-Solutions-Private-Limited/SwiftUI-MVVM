@@ -24,6 +24,7 @@ struct HomeView: View {
         Card(step: 1),
         Card(step: 0)
     ]
+    @State private var showFilters = false
     var body: some View {
         GeometryReader { geo in
             ZStack {
@@ -672,6 +673,215 @@ struct HomeView: View {
             }
         }
     }
+    struct FiltersData: Codable {
+        let gender: String
+        let age: Int
+        let foodChoice: String
+        let partyPreference: String
+        let smoke: String
+        let drink: String
+        let distanceMin: Int
+        let distanceMax: Int
+    }
+    struct FiltersSheetView: View {
+        @Environment(\.dismiss) private var dismiss
+        @State private var gender: String = ""
+        @State private var age: Double = 25
+        @State private var foodChoice: String = ""
+        @State private var partyPreference: String = ""
+        @State private var smoke: String = ""
+        @State private var drink: String = ""
+        @State private var distanceMin: Double = 0
+        @State private var distanceMax: Double = 100
+        let onApply: (FiltersData) -> Void
+        var body: some View {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 22) {
+                    Text("Filters")
+                        .font(AppFont.manropeBold(22))
+                        .foregroundColor(AppColors.Black)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, 10)
+                    Text("Who Would You Like To Live With?")
+                        .font(AppFont.manropeMedium(14))
+                    HStack {
+                        genderButton("Male")
+                        genderButton("Female")
+                        genderButton("Non-binary")
+                        genderButton("Open to all")
+                    }
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text("Age")
+                                .font(AppFont.manropeMedium(14))
+                            Spacer()
+                            Text("\(Int(age))")
+                                .font(AppFont.manropeSemiBold(14))
+                                .foregroundColor(AppColors.primaryYellow)
+                        }
+                        Slider(value: $age, in: 18...60)
+                            .tint(AppColors.primaryYellow)
+                    }
+                    Text("Food Choice")
+                        .font(AppFont.manropeMedium(14))
+                    HStack(spacing: 0) {
+                        foodButton("Veg")
+                        foodButton("Non-Veg")
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(AppColors.borderGray, lineWidth: 1)
+                    )
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text("Distance")
+                                .font(AppFont.manropeMedium(14))
+                            Spacer()
+                            Text("\(Int(distanceMin)) - \(Int(distanceMax)) Km")
+                                .font(AppFont.manropeSemiBold(14))
+                                .foregroundColor(AppColors.primaryYellow)
+                        }
+                        ZStack {
+                            Slider(value: $distanceMin, in: 0...100)
+                                .tint(AppColors.primaryYellow.opacity(0.6))
+                            Slider(value: $distanceMax, in: 0...100)
+                                .tint(AppColors.primaryYellow)
+                        }
+                    }
+                    Text("Party Preferences")
+                        .font(AppFont.manropeMedium(14))
+                    HStack {
+                        prefButton("Not Into It")
+                        prefButton("Some Time")
+                        prefButton("Weekends")
+                    }
+                    prefButton("Love It")
+                    Text("Smoking")
+                        .font(AppFont.manropeMedium(14))
+                    HStack(spacing: 0) {
+                        yesNoButton("Yes", selected: $smoke)
+                        yesNoButton("No", selected: $smoke)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(AppColors.borderGray, lineWidth: 1)
+                    )
+                    Text("Drinking")
+                        .font(AppFont.manropeMedium(14))
+                    HStack(spacing: 0) {
+                        yesNoButton("Yes", selected: $drink)
+                        yesNoButton("No", selected: $drink)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(AppColors.borderGray, lineWidth: 1)
+                    )
+                    Button(action: applyFilters) {
+                        Text("Apply Filters")
+                            .font(AppFont.manropeSemiBold(16))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(AppColors.Black)
+                            .cornerRadius(10)
+                            .padding(.vertical, 10)
+                    }
+                }
+                .padding(.horizontal)
+            }
+            .onAppear { loadSavedFilters() }
+        }
+        func applyFilters() {
+            let data = FiltersData(
+                gender: gender,
+                age: Int(age),
+                foodChoice: foodChoice,
+                partyPreference: partyPreference,
+                smoke: smoke,
+                drink: drink,
+                distanceMin: Int(distanceMin),
+                distanceMax: Int(distanceMax)
+            )
+            onApply(data)
+            if let encoded = try? JSONEncoder().encode(data) {
+                UserDefaults.standard.set(encoded, forKey: "SavedFilters")
+            }
+            dismiss()
+        }
+        func loadSavedFilters() {
+            guard let saved = UserDefaults.standard.data(forKey: "SavedFilters"),
+                  let decoded = try? JSONDecoder().decode(FiltersData.self, from: saved)
+            else {
+                gender = "Male"
+                foodChoice = "Veg"
+                partyPreference = "Not Into It"
+                smoke = "Yes"
+                drink = "Yes"
+                return
+            }
+            gender = decoded.gender
+            age = Double(decoded.age)
+            foodChoice = decoded.foodChoice
+            partyPreference = decoded.partyPreference
+            smoke = decoded.smoke
+            drink = decoded.drink
+            distanceMin = Double(decoded.distanceMin)
+            distanceMax = Double(decoded.distanceMax)
+        }
+        func genderButton(_ title: String) -> some View {
+            Button {
+                gender = title
+            } label: {
+                Text(title)
+                    .font(AppFont.manropeMedium(12))
+                    .foregroundColor(gender == title ? .black : .white)
+                    .padding()
+                    .background(gender == title ? AppColors.primaryYellow : AppColors.Black)
+                    .cornerRadius(8)
+            }
+        }
+        func foodButton(_ title: String) -> some View {
+            Button {
+                foodChoice = title
+            } label: {
+                Text(title)
+                    .font(AppFont.manropeMedium(12))
+                    .foregroundColor(foodChoice == title ? .black : .white)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(foodChoice == title ? AppColors.primaryYellow : AppColors.Black)
+            }
+        }
+        func prefButton(_ title: String) -> some View {
+            Button {
+                partyPreference = title
+            } label: {
+                Text(title)
+                    .font(AppFont.manropeMedium(12))
+                    .foregroundColor(partyPreference == title ? .black : .white)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(partyPreference == title ? AppColors.primaryYellow : AppColors.Black)
+                    .cornerRadius(8)
+            }
+        }
+        
+        func yesNoButton(_ title: String, selected: Binding<String>) -> some View {
+            Button {
+                selected.wrappedValue = title
+            } label: {
+                Text(title)
+                    .font(AppFont.manropeMedium(12))
+                    .foregroundColor(selected.wrappedValue == title ? .black : .white)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(selected.wrappedValue == title ? AppColors.primaryYellow : AppColors.Black)
+            }
+        }
+    }
     private func next() {}
     private func rebuildCards() {
         if selections.selectedRole == "Student" {
@@ -731,6 +941,7 @@ struct HomeView: View {
         }
         .padding(.horizontal)
     }
+
     var searchBar: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
@@ -741,10 +952,15 @@ struct HomeView: View {
                     .foregroundColor(.gray)
             }
             Spacer()
-            Image(systemName: "slider.horizontal.3")
-                .padding(6)
-                .background(Color.black.opacity(0.05))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+            Button {
+                showFilters.toggle()
+            } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .padding(6)
+                    .background(Color.black.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+
             Image(systemName: "map")
                 .padding(6)
                 .background(Color.black.opacity(0.05))
@@ -755,6 +971,13 @@ struct HomeView: View {
         .cornerRadius(12)
         .shadow(radius: 3)
         .padding(.horizontal)
+        .sheet(isPresented: $showFilters) {
+             FiltersSheetView { appliedData in
+             print("Filters Applied:", appliedData)
+            }
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+        }
     }
     var title: some View {
         VStack(spacing: 5) {
