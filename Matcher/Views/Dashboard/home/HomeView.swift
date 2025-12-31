@@ -389,24 +389,37 @@ struct HomeView: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, 10)
                     .padding(.bottom, 10)
-                HStack(spacing: 10) {
-                    prefChip(profiles.profile?.describe_you_best ?? "")
-                    prefChip(profiles.profile?.professional_field_data?.title ?? "")
+                 HStack(spacing: 10) {
+                    if profiles.profile?.describe_you_best == "working"{
+                        prefChip(profiles.profile?.describe_you_best ?? "", imageName: "work")
+                    }else{
+                        prefChip(profiles.profile?.describe_you_best ?? "", imageName: "book")
+                    }
+                    prefChip(profiles.profile?.professional_field_data?.title ?? "", imageName: nil)
                 }
             }
             .padding(.top, 10)
             .padding(.bottom, 10)
         }
-        private func prefChip(_ text: String) -> some View {
-            Text(text)
-                .font(AppFont.manropeMedium(14))
-                .padding(.vertical, 8)
-                .padding(.horizontal, 16)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.black, lineWidth: 1)
-                )
-                .cornerRadius(10)
+        private func prefChip(_ text: String, imageName: String? = nil) -> some View {
+            HStack(spacing: 6) {
+                if let imageName = imageName, !imageName.isEmpty {
+                    Image(imageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 16, height: 16)
+                }
+                Text(text)
+                    .font(AppFont.manropeMedium(14))
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 16)
+            .background(Color.clear)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.black, lineWidth: 1)
+            )
+            .cornerRadius(10)
         }
         struct habitGrid: View {
             var FoodPreference: String
@@ -416,7 +429,7 @@ struct HomeView: View {
             var body: some View {
                 VStack(alignment: .leading, spacing: 10) {
                      LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 4), spacing: 5) {
-                         Items(title: "Food Choice", value: FoodPreference, theme: .dark)
+                         Items(title: "Food", value: FoodPreference, theme: .dark)
                          Items(title: "Smoking", value: Smoking, theme: .yellow)
                          Items(title: "Shift", value: WorkShift, theme: .yellow)
                          Items(title: "Drinking", value: Drinking, theme: .dark)
@@ -542,7 +555,7 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
                         Text("\(numberOfRoommates) Roommates Needed")
-                            .font(AppFont.manropeSemiBold(16))
+                            .font(AppFont.manropeSemiBold(14))
                             .foregroundColor(.black)
                             .lineLimit(1)
                             .truncationMode(.tail)
@@ -559,7 +572,7 @@ struct HomeView: View {
                                             .frame(width: 12, height: 12)
                                         )
                                 Text("Only For Female")
-                                    .font(AppFont.manropeSemiBold(12))
+                                    .font(AppFont.manropeSemiBold(10))
                                     .foregroundColor(.black)
                                     .lineLimit(1)
                             }
@@ -576,11 +589,16 @@ struct HomeView: View {
                                 .zIndex(Double(roommatesImages.count - index))
                         }
                         Text("\(numberOfRoommates)")
-                            .font(.system(size: 16, weight: .semibold))
-                            .frame(width: 50, height: 50)
+                            .font(AppFont.manropeSemiBold(14))
+                            .frame(width: 40, height: 40)
                             .background(Color.yellow)
                             .foregroundColor(.black)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.black.opacity(0.8), lineWidth: 1)
+                            )
+                            .padding(.leading, 20)
                     }
                     .padding(.top, 5)
                 }
