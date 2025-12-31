@@ -258,10 +258,12 @@ struct HomeView: View {
                         Spacer()
                     }
                     .padding(10)
-                    .background(LinearGradient(colors: [.splashTop, .splashBottom],
+                    .background(LinearGradient(colors: [.splashBottom, .splashTop],
                                                startPoint: .top, endPoint: .bottom))
                     .clipShape(RoundedRectangle(cornerRadius: 30))
                  }
+                .padding(.bottom,40)
+                .toolbar(.hidden, for: .tabBar)
              }
             .clipShape(RoundedRectangle(cornerRadius: 30))
             .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 0)
@@ -2249,8 +2251,10 @@ struct SpaceView: View {
                     nextButton
                 }
                 .padding(.horizontal, 20)
-                .padding(.bottom, 40)
             }
+            .padding(.bottom, 68)
+            .ignoresSafeArea(.container, edges: .bottom)
+            .toolbar(.hidden, for: .tabBar)
         }
         .onReceive(viewModel.$roomTypes) { list in
             if selectedSpaceType == nil, let first = list.first {
