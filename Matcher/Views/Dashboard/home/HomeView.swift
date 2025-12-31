@@ -54,12 +54,16 @@ struct HomeView: View {
                                 .font(AppFont.manropeExtraBold(18))
                             searchBar
                             ZStack {
-                                ForEach(profiles) { profiles in
-                                    SwipeCard(
-                                        profiles: profiles,
-                                        maxHeight: geo.size.height * 2
-                                    ) {
-                                        removeProfile(profiles)
+                                if profiles.isEmpty {
+                                    NoRoomsView()
+                                }else{
+                                    ForEach(profiles) { profiles in
+                                        SwipeCard(
+                                            profiles: profiles,
+                                            maxHeight: geo.size.height * 2
+                                        ) {
+                                            removeProfile(profiles)
+                                        }
                                     }
                                 }
                             }
@@ -175,6 +179,27 @@ struct HomeView: View {
         drink = decoded.drink
         distanceMin = Double(decoded.distanceMin)
         distanceMax = Double(decoded.distanceMax)
+    }
+    struct NoRoomsView: View {
+        var body: some View {
+            VStack {
+                Spacer(minLength: 100)
+                Image("no_room")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 140, height: 140)
+                Text("No Rooms Available Yet")
+                    .font(AppFont.manropeBold(18))
+                    .foregroundColor(.black)
+                Text("Try changing location or preferences")
+                    .font(AppFont.manrope(12))
+                    .foregroundColor(.black.opacity(0.5))
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.bottom,100)
+            .toolbar(.hidden, for: .tabBar)
+        }
     }
     // main CARD======
     struct SwipeCard: View {
