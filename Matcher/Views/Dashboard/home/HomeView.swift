@@ -464,7 +464,7 @@ struct HomeView: View {
             }
             @ViewBuilder
             private func Items(title: String, value: String, theme: ItemsTheme) -> some View {
-                VStack(spacing: 2) {
+                VStack(spacing: 6) {
                     Text(title)
                         .font(AppFont.manropeMedium(13))
                         .foregroundColor(.black.opacity(0.7)).padding(.bottom,10)
@@ -472,7 +472,7 @@ struct HomeView: View {
                         .font(AppFont.manropeMedium(12))
                         .foregroundColor(theme == .yellow ? .black : .white)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 34)
+                        .frame(height: 38)
                         .background(theme == .yellow ? Color.yellow : Color.black)
                         .cornerRadius(8)
                 }
@@ -657,7 +657,7 @@ struct HomeView: View {
             }
             @ViewBuilder
             private func pillItem(title: String, value: String, theme: PillTheme) -> some View {
-                VStack(spacing: 2) {
+                VStack(spacing: 6) {
                     Text(title)
                         .font(AppFont.manropeMedium(13))
                         .foregroundColor(.black.opacity(0.7)).padding(.bottom,10)
@@ -665,7 +665,7 @@ struct HomeView: View {
                         .font(AppFont.manropeMedium(12))
                         .foregroundColor(theme == .yellow ? .black : .white)
                         .frame(maxWidth: .infinity)
-                        .frame(maxHeight: 44)
+                        .frame(height: 38)
                         .background(theme == .yellow ? Color.yellow : Color.black)
                         .cornerRadius(8)
                 }
@@ -693,7 +693,7 @@ struct HomeView: View {
                         } else {
                             Text("No amenities available")
                                 .font(AppFont.manropeMedium(14))
-                                .foregroundColor(.gray)
+                                .foregroundColor(.gray.opacity(0.8))
                                 .padding(.vertical, 10)
                         }
                     }
@@ -717,11 +717,11 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(Color.black.opacity(0.05))
+                .background(Color.black.opacity(0.03))
                 .cornerRadius(8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.black.opacity(0.3), lineWidth: 1)
+                        .stroke(Color.black.opacity(0.5), lineWidth: 1)
                 )
             }
         }
