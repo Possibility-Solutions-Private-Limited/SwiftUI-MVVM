@@ -188,6 +188,7 @@ struct HomeView: View {
         @State private var rotation: Double = 0
         @StateObject private var like = likesModel()
         @StateObject private var dislike = DislikesModel()
+        @State private var slideTimer: Timer?
         private func swipeLeft() {
             withAnimation(.interpolatingSpring(stiffness: 35, damping: 18)) {
                 offset = CGSize(width: -500, height: 0)
@@ -299,9 +300,10 @@ struct HomeView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                               .stroke(Color.white, lineWidth: 3)
+                        .stroke(Color.white, lineWidth: 3)
                 )
                 .onAppear { startAutoSlide() }
+                .onDisappear { stopAutoSlide() }
                 .allowsHitTesting(false)
                 VStack {
                     HStack(spacing: 6) {
@@ -362,14 +364,19 @@ struct HomeView: View {
             .padding(.top, 5)
         }
         private func startAutoSlide() {
-            Timer.scheduledTimer(withTimeInterval: autoSlideTime, repeats: true) { _ in
+            stopAutoSlide()
+            slideTimer = Timer.scheduledTimer(withTimeInterval: autoSlideTime, repeats: true) { _ in
                 let count = profiles.photos?.count ?? 1
                 if count > 1 {
-                    withAnimation(.easeInOut) {
+                    withAnimation(.easeInOut(duration: 0.8)) {
                         currentImageIndex = (currentImageIndex + 1) % count
                     }
                 }
             }
+        }
+        private func stopAutoSlide() {
+            slideTimer?.invalidate()
+            slideTimer = nil
         }
         private var profileInfo: some View {
             VStack(spacing: 0) {
