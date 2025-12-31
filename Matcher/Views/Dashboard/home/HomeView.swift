@@ -29,7 +29,7 @@ struct HomeView: View {
     @State private var showFilters = false
     @State private var savedFilters: FiltersData? = nil
     @State private var genderId: Int = 0
-    @State private var age: Double = 25
+    @State private var age: Double = 50
     @State private var foodChoice: String = ""
     @State private var partyPreference: Int = 0
     @State private var smoke: String = ""
@@ -51,7 +51,7 @@ struct HomeView: View {
                         if userAuth.space {
                             header
                             Text("Nearby Rooms & Roommates")
-                                .font(AppFont.manropeExtraBold(18))
+                            .font(AppFont.manropeExtraBold(18))
                             searchBar
                             ZStack {
                                 if profiles.isEmpty {
@@ -195,7 +195,7 @@ struct HomeView: View {
                     .font(AppFont.manrope(12))
                     .foregroundColor(.black.opacity(0.5))
                 Spacer()
-            }
+             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.bottom,100)
             .toolbar(.hidden, for: .tabBar)
@@ -773,7 +773,7 @@ struct HomeView: View {
         @ObservedObject var viewModel: BasicModel
         @Environment(\.dismiss) private var dismiss
         @State private var genderId:Int = 0
-        @State private var age: Double = 25
+        @State private var age: Double = 50
         @State private var foodChoice: String = ""
         @State private var partyPreference:Int = 0
         @State private var smoke: String = ""

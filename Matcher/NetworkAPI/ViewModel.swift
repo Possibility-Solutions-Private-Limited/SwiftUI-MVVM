@@ -94,6 +94,30 @@ class ProfileModel: ObservableObject {
         }
     }
 }
+class GetProfileModel: ObservableObject {
+    func GetProfileAPI(param: [String: Any], completion: @escaping (UserModel?) -> Void) {
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.Profile,
+            method: "GET",
+            parameters: param,
+            completion: { (result: Result<UserModel, Error>) in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let response):
+                        print("Profile Success: \(response)")
+                        if response.success {
+                            completion(response)
+                        } else {
+                            completion(response)
+                        }
+                    case .failure(_):
+                        completion(nil)
+                    }
+                }
+            }
+        )
+    }
+}
 class VerifyModel: ObservableObject {
     func VerifyAPI(param: [String: Any], completion: @escaping (UserModel?) -> Void) {
         NetworkManager.shared.makeRequest(

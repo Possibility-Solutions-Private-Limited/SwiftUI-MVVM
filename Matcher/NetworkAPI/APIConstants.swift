@@ -19,6 +19,7 @@ struct APIConstants {
         static let BasicData = "basic-data"
         static let StepTwo = "profile/step/2"
         static let AddRoom = "profile/add-room"
+        static let Profile = "profile"
         static let sendOTP = "send-otp"
         static let verifyForgotOTP = "verify-forgot-otp"
         static let ChangePassword = "change-password"

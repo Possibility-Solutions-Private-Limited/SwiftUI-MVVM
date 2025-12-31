@@ -43,7 +43,6 @@
 		5D74270B2EF51AF700E60417 /* Manrope-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5D7427042EF51AF700E60417 /* Manrope-Medium.otf */; };
 		5D74270C2EF51AF700E60417 /* Manrope-ExtraLight.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5D7427022EF51AF700E60417 /* Manrope-ExtraLight.otf */; };
 		5D74270D2EF51AF700E60417 /* Manrope-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5D7427032EF51AF700E60417 /* Manrope-Light.otf */; };
-		5D89DF472ED82D7A00291332 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D89DF462ED82D7500291332 /* EditProfileView.swift */; };
 		5D9AB2682DB8ED8C00E3480F /* AttendanceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9AB2672DB8ED8C00E3480F /* AttendanceApp.swift */; };
 		5D9AB26C2DB8ED8D00E3480F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5D9AB26B2DB8ED8D00E3480F /* Assets.xcassets */; };
 		5D9AB27D2DB8EDC900E3480F /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9AB2752DB8EDC800E3480F /* ProfileView.swift */; };
@@ -105,7 +104,6 @@
 		5D7427042EF51AF700E60417 /* Manrope-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope-Medium.otf"; sourceTree = "<group>"; };
 		5D7427052EF51AF700E60417 /* Manrope-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope-Regular.otf"; sourceTree = "<group>"; };
 		5D7427062EF51AF700E60417 /* Manrope-SemiBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope-SemiBold.otf"; sourceTree = "<group>"; };
-		5D89DF462ED82D7500291332 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
 		5D9AB2642DB8ED8C00E3480F /* Matcher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Matcher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5D9AB2672DB8ED8C00E3480F /* AttendanceApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttendanceApp.swift; sourceTree = "<group>"; };
 		5D9AB26B2DB8ED8D00E3480F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -197,7 +195,6 @@
 			isa = PBXGroup;
 			children = (
 				5D9AB2752DB8EDC800E3480F /* ProfileView.swift */,
-				5D89DF462ED82D7500291332 /* EditProfileView.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -450,7 +447,6 @@
 				5D04CB432EEC38F900FB6A21 /* ProfilePicView.swift in Sources */,
 				5D9EB8312DF7FBC80064B056 /* ImagePicker.swift in Sources */,
 				5D0EF5562DB9FF8400CF3F6C /* UserAuth.swift in Sources */,
-				5D89DF472ED82D7A00291332 /* EditProfileView.swift in Sources */,
 				5D43316E2DE43B910016B700 /* ChatModel.swift in Sources */,
 				5D4053562ED98BF4003B0C11 /* Toast+SwiftUI.swift in Sources */,
 				5D9AB27D2DB8EDC900E3480F /* ProfileView.swift in Sources */,

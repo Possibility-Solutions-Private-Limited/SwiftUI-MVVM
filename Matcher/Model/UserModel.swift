@@ -29,6 +29,7 @@ struct User: Codable, Identifiable {
     let pageKey: Int?
     let photos: [Photo]?
     let profile: Profile?
+    let rooms: [Room]?
     enum CodingKeys: String, CodingKey {
         case id = "id"
         case firstName = "first_name"
@@ -43,6 +44,7 @@ struct User: Codable, Identifiable {
         case pageKey = "page_key"
         case photos = "photos"
         case profile = "profile"
+        case rooms = "rooms"
     }
 }
 struct Photo: Codable, Identifiable {
