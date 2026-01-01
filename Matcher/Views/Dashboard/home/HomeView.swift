@@ -131,24 +131,19 @@ struct HomeView: View {
         }
         .onAppear {
             if viewModel.genders.isEmpty {
-                viewModel.fetchBasicData()
-            }
-            if userAuth.steps {
-                if userAuth.space {
-                    loadSavedFilters()
-                    dashboardView.loadDashboard(params: [
-                         "lat": locationManager.latitude,
-                         "long": locationManager.longitude,
-                         "age":Int(age),
-                         "distance":Int(distanceMax),
-                         "want_to_live_with": Int(genderId),
-                         "food_preference": foodChoice.lowercased(),
-                         "party_preference": Int(partyPreference),
-                         "smoking": smoke.lowercased(),
-                         "drinking": drink.lowercased()
-                    ])
+                viewModel.fetchBasicData {
+                    if userAuth.steps && userAuth.space {
+                        loadSavedFilters()
+                        loadDashboardAPI()
+                    }
                 }
-            }else{
+            } else {
+                if userAuth.steps && userAuth.space {
+                    loadSavedFilters()
+                    loadDashboardAPI()
+                }
+            }
+            if !userAuth.steps   && !userAuth.space{
                 cards = initialCards
             }
         }
@@ -158,6 +153,23 @@ struct HomeView: View {
         .onChange(of: selections.selectedRole) {
             rebuildCards()
         }
+        .onChange(of: userAuth.space) {
+            loadSavedFilters()
+            loadDashboardAPI()
+        }
+    }
+    private func loadDashboardAPI() {
+        dashboardView.loadDashboard(params: [
+            "lat": locationManager.latitude,
+            "long": locationManager.longitude,
+            "age": Int(age),
+            "distance": Int(distanceMax),
+            "want_to_live_with": Int(genderId),
+            "food_preference": foodChoice.lowercased(),
+            "party_preference": Int(partyPreference),
+            "smoking": smoke.lowercased(),
+            "drinking": drink.lowercased()
+        ])
     }
     func loadSavedFilters() {
         guard let saved = UserDefaults.standard.data(forKey: "SavedFilters"),
@@ -186,11 +198,9 @@ struct HomeView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 120, height: 120)
-
                 Text("No Rooms Available Yet")
                     .font(AppFont.manropeBold(18))
                     .foregroundColor(.black)
-
                 Text("Try changing location or preferences")
                     .font(AppFont.manrope(12))
                     .foregroundColor(.black.opacity(0.5))
@@ -2723,6 +2733,7 @@ struct SpaceView: View {
             case .success(let response):
                 print("Success:", response)
                 userAuth.spaceComplete()
+                onNext()
             case .failure(let error):
                 print("Error:", error.localizedDescription)
             }

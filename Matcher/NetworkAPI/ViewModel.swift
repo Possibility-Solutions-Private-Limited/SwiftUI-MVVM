@@ -234,30 +234,31 @@ class BasicModel: ObservableObject {
     @Published var professionalFields: [OptionItem] = []
     @Published var partyPreferences: [OptionItem] = []
     @Published var errorMessage: String = ""
-    @Published var isLoading: Bool = false
-    func fetchBasicData() {
-        isLoading = true
+
+    func fetchBasicData(completion: @escaping () -> Void) {
         NetworkManager.shared.makeRequest(
             endpoint: APIConstants.Endpoints.BasicData,
             method: "GET",
             parameters: nil
         ) { (result: Result<BasicDataModel, Error>) in
+            
             DispatchQueue.main.async {
-                self.isLoading = false
                 switch result {
                 case .success(let response):
                     let data = response.data
-                    self.roomTypes.append(contentsOf: data.room.roomType)
-                    self.amenities.append(contentsOf: data.room.amenities)
-                    self.furnishTypes.append(contentsOf: data.room.furnishType)
-                    self.genders.append(contentsOf: data.gender)
-                    self.professionalFields.append(contentsOf: data.professionalField)
-                    self.partyPreferences.append(contentsOf: data.intoParty)
+                    self.roomTypes = data.room.roomType
+                    self.amenities = data.room.amenities
+                    self.furnishTypes = data.room.furnishType
+                    self.genders = data.gender
+                    self.professionalFields = data.professionalField
+                    self.partyPreferences = data.intoParty
                     print("✅ Basic Data Loaded Successfully")
-
+                    completion()   // 🔥 IMPORTANT
+                    
                 case .failure(let error):
                     self.errorMessage = error.localizedDescription
                     print("❌ Error fetching basic data:", error.localizedDescription)
+                    completion()   // 🔥 STILL CALL to allow next flow
                 }
             }
         }
