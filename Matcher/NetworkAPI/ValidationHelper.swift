@@ -348,6 +348,29 @@ struct RangeSlider: View {
         return range.lowerBound + percent * (range.upperBound - range.lowerBound)
     }
 }
-
+class ImageLoader: ObservableObject {
+    @Published var image: UIImage?
+    private var url: URL?
+    func load(from urlString: String) {
+        guard let url = URL(string: urlString) else { return }
+        self.url = url
+        if let cached = ImageCache.shared.get(forKey: urlString) {
+            self.image = cached
+            return
+        }
+        URLSession.shared.dataTask(with: url) { data, _, _ in
+            if let data = data, let uiImage = UIImage(data: data) {
+                ImageCache.shared.set(uiImage, forKey: urlString)
+                DispatchQueue.main.async { self.image = uiImage }
+            }
+        }.resume()
+    }
+}
+class ImageCache {
+    static let shared = ImageCache()
+    private let cache = NSCache<NSString, UIImage>()
+    func get(forKey key: String) -> UIImage? { cache.object(forKey: key as NSString) }
+    func set(_ image: UIImage, forKey key: String) { cache.setObject(image, forKey: key as NSString) }
+}
 
 

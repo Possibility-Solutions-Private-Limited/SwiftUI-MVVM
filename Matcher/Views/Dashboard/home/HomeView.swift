@@ -130,26 +130,26 @@ struct HomeView: View {
             }
         }
         .onAppear {
+            if viewModel.genders.isEmpty {
+                viewModel.fetchBasicData()
+            }
             if userAuth.steps {
                 if userAuth.space {
                     loadSavedFilters()
                     dashboardView.loadDashboard(params: [
-                               "lat": locationManager.latitude,
-                                "long": locationManager.longitude,
-                                "age":Int(age),
-                                "distance":Int(distanceMax),
-                                "want_to_live_with": Int(genderId),
-                                "food_preference": foodChoice.lowercased(),
-                                "party_preference": Int(partyPreference),
-                                "smoking": smoke.lowercased(),
-                                "drinking": drink.lowercased()
-                            ])
+                         "lat": locationManager.latitude,
+                         "long": locationManager.longitude,
+                         "age":Int(age),
+                         "distance":Int(distanceMax),
+                         "want_to_live_with": Int(genderId),
+                         "food_preference": foodChoice.lowercased(),
+                         "party_preference": Int(partyPreference),
+                         "smoking": smoke.lowercased(),
+                         "drinking": drink.lowercased()
+                    ])
                 }
             }else{
                 cards = initialCards
-            }
-            if viewModel.professionalFields.isEmpty {
-                viewModel.fetchBasicData()
             }
         }
         .onReceive(dashboardView.$profiles) { newProfiles in
@@ -283,7 +283,7 @@ struct HomeView: View {
                         Spacer()
                     }
                     .padding(10)
-                    .background(LinearGradient(colors: [.splashBottom, .splashTop],
+                    .background(LinearGradient(colors: [.splashTop, .splashBottom],
                                                startPoint: .top, endPoint: .bottom))
                     .clipShape(RoundedRectangle(cornerRadius: 30))
                  }
@@ -385,7 +385,6 @@ struct HomeView: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 20)
             }
-            .padding(.top, 5)
         }
         private func startAutoSlide() {
             stopAutoSlide()
@@ -687,7 +686,7 @@ struct HomeView: View {
                                     AmenityItem(item)
                                 }
                             }
-                            .padding(.top, 10)
+                            .padding(.top, 5)
                             .padding(.horizontal)
                         } else {
                             Text("No amenities available")
@@ -729,19 +728,18 @@ struct HomeView: View {
                 Text("Location :")
                     .font(AppFont.manropeExtraBold(14))
                     .foregroundColor(.black)
+                    .padding(.leading,5)
                 Text("\(profiles.rooms?.first?.location ?? "")")
-                    .font(AppFont.manropeMedium(14))
+                    .font(AppFont.manropeMedium(13))
                     .foregroundColor(.black)
-                
                 Spacer()
                 Image("vack")
-                    .frame(width: 30, height: 25)
+                    .padding()
                     .background(Color.black)
                     .cornerRadius(8)
             }
-            .frame(height: 44)
-            .padding(.horizontal, 16)
-            .background(Color.yellow)
+            .padding(5)
+            .background(AppColors.primaryYellow)
             .cornerRadius(12)
         }
         private func circleButton(icon: String, action: @escaping () -> Void) -> some View {

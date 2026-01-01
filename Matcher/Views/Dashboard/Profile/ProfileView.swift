@@ -106,7 +106,7 @@ struct ProfileView: View {
                         Spacer()
                     }
                     .padding(10)
-                    .background(LinearGradient(colors: [.splashBottom, .splashTop],
+                    .background(LinearGradient(colors: [.splashTop, .splashBottom],
                                                startPoint: .top, endPoint: .bottom))
                     .clipShape(RoundedRectangle(cornerRadius: 30))
                  }
@@ -123,7 +123,6 @@ struct ProfileView: View {
                 imageProgressBar
                 profileOverlayContent
             }
-            .padding(.top, 5)
         }
         private var profileImageSlider: some View {
             ZStack {
@@ -540,7 +539,7 @@ struct ProfileView: View {
                                     AmenityItem(item)
                                 }
                             }
-                            .padding(.top, 10)
+                            .padding(.top, 5)
                             .padding(.horizontal)
                         } else {
                             Text("No amenities available")
@@ -582,19 +581,18 @@ struct ProfileView: View {
                 Text("Location :")
                     .font(AppFont.manropeExtraBold(14))
                     .foregroundColor(.black)
+                    .padding(.leading,5)
                 Text("\(user.rooms?.first?.location ?? "")")
-                    .font(AppFont.manropeMedium(14))
+                    .font(AppFont.manropeMedium(13))
                     .foregroundColor(.black)
-                
                 Spacer()
                 Image("vack")
-                    .frame(width: 30, height: 25)
+                    .padding()
                     .background(Color.black)
                     .cornerRadius(8)
             }
-            .frame(height: 44)
-            .padding(.horizontal, 16)
-            .background(Color.yellow)
+            .padding(5)
+            .background(AppColors.primaryYellow)
             .cornerRadius(12)
         }
         private func circleButton(icon: String, action: @escaping () -> Void) -> some View {
