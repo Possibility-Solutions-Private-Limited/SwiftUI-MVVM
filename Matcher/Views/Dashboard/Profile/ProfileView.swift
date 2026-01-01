@@ -35,7 +35,11 @@ struct ProfileView: View {
     }
     var header: some View {
         HStack {
-            Image("setting")
+            Button {
+                userAuth.logout()
+            } label: {
+                Image("setting")
+            }
             Spacer()
             Text("Profile").font(AppFont.manropeSemiBold(16))
             Spacer()

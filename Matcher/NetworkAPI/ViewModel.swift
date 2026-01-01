@@ -401,6 +401,25 @@ class DislikesModel: ObservableObject {
         }
     }
 }
+class InteractionModel: ObservableObject {
+    @Published var InteractedUser: [InteractedUser] = []
+    func fetchInteraction() {
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.interaction, method: "GET",
+            parameters: nil
+        ) { (result: Result<Interaction, Error>) in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    print("Attandance: \(response)")
+                    self.InteractedUser = response.data.interacted_user
+                case .failure(let error):
+                    print("Error fetching deductions: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+}
 class ChatHistoryModel: ObservableObject {
     @Published var messages: [Message] = []
     func fetchChatHistory(chatId: String) {

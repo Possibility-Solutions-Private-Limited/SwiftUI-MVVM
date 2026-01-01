@@ -67,9 +67,8 @@ struct HomeView: View {
                                     }
                                 }
                             }
-                            .padding(.horizontal)
-                            Spacer(minLength: 5)
-                        }else{
+                          .padding(.horizontal)
+                         }else{
                             SpaceView(
                                 showFinalStep: $showFinalStep,
                                 viewModel: viewModel,
@@ -182,22 +181,22 @@ struct HomeView: View {
     }
     struct NoRoomsView: View {
         var body: some View {
-            VStack {
-                Spacer(minLength: 100)
+            VStack(spacing: 0) {
                 Image("no_room")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 140, height: 140)
+                    .frame(width: 120, height: 120)
+
                 Text("No Rooms Available Yet")
                     .font(AppFont.manropeBold(18))
                     .foregroundColor(.black)
+
                 Text("Try changing location or preferences")
                     .font(AppFont.manrope(12))
                     .foregroundColor(.black.opacity(0.5))
-                Spacer()
-             }
+            }
+            .padding(.bottom, 90)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.bottom,100)
             .toolbar(.hidden, for: .tabBar)
         }
     }
@@ -219,7 +218,7 @@ struct HomeView: View {
                 offset = CGSize(width: -500, height: 0)
                 rotation = -18
             }
-            dislike.SwipeDislikeAPI(type: "dislike",userId:profiles.profile?.id ?? 0)
+            dislike.SwipeDislikeAPI(type: "dislike",userId:profiles.profile?.user_id ?? 0)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { onRemove() }
         }
         private func swipeRight() {
@@ -227,7 +226,7 @@ struct HomeView: View {
                 offset = CGSize(width: 500, height: 0)
                 rotation = 18
             }
-            like.SwipeLikeAPI(type: "like",userId:profiles.profile?.id ?? 0)
+            like.SwipeLikeAPI(type: "like",userId:profiles.profile?.user_id ?? 0)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { onRemove() }
         }
         private var cardSwipeGesture: some Gesture {

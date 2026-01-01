@@ -28,7 +28,6 @@ struct APIConstants {
         static let dashboard = "dashboard?"
         static let like = "interaction/like/"
         static let dislike = "interaction/dislike/"
-
-
+        static let interaction = "interaction"
     }
 }
