@@ -18,8 +18,6 @@ struct ProfileView: View {
                             user: user,
                             maxHeight: geo.size.height * 2
                         )
-                    } else {
-                        NoRoomsView()
                     }
                     Spacer(minLength: 10)
                 }
@@ -51,27 +49,6 @@ struct ProfileView: View {
             }
         }
         .padding(.horizontal)
-    }
-    struct NoRoomsView: View {
-        var body: some View {
-            VStack {
-                Spacer(minLength: 100)
-                Image("no_room")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 140, height: 140)
-                Text("No Rooms Available Yet")
-                    .font(AppFont.manropeBold(18))
-                    .foregroundColor(.black)
-                Text("Try changing location or preferences")
-                    .font(AppFont.manrope(12))
-                    .foregroundColor(.black.opacity(0.5))
-                Spacer()
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.bottom, 100)
-            .toolbar(.hidden, for: .tabBar)
-        }
     }
     struct SwipeCard: View {
         let user: User
