@@ -271,7 +271,9 @@ struct ProfileView: View {
                     }else{
                         prefChip(user.profile?.describeYouBest ?? "", imageName: "book")
                     }
-                    prefChip(user.profile?.professionalFieldData?.title ?? "", imageName: nil)
+                    if ((user.profile?.professionalField) != nil){
+                         prefChip(user.profile?.professionalFieldData?.title ?? "", imageName: nil)
+                    }
                 }
             }
             .padding(.top, 10)

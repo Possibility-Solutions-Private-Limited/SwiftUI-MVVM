@@ -403,21 +403,39 @@ class DislikesModel: ObservableObject {
 }
 class InteractionModel: ObservableObject {
     @Published var InteractedUser: [InteractedUser] = []
-    func fetchInteraction() {
+    @Published var currentPage: Int = 1
+    @Published var isLoading: Bool = false
+    @Published var hasMoreData: Bool = true
+    func fetchInteraction(page: Int? = nil) {
+        guard !isLoading else { return }
+        isLoading = true
+        let targetPage = page ?? currentPage
+        let params: [String: Any] = ["page": targetPage]
         NetworkManager.shared.makeRequest(
-            endpoint: APIConstants.Endpoints.interaction, method: "GET",
-            parameters: nil
+            endpoint: APIConstants.Endpoints.interaction,
+            method: "GET",
+            parameters: params
         ) { (result: Result<Interaction, Error>) in
             DispatchQueue.main.async {
+                self.isLoading = false
                 switch result {
                 case .success(let response):
-                    print("Attandance: \(response)")
-                    self.InteractedUser = response.data.interacted_user
+                    let newUsers = response.data.interacted_user
+                    if newUsers.isEmpty {
+                        self.hasMoreData = false
+                    } else {
+                        self.InteractedUser.append(contentsOf: newUsers)
+                        self.currentPage += 1
+                    }
                 case .failure(let error):
-                    print("Error fetching deductions: \(error.localizedDescription)")
+                    print("❌ Fetch error: \(error.localizedDescription)")
                 }
             }
         }
+    }
+    func loadMore() {
+        guard hasMoreData, !isLoading else { return }
+        fetchInteraction(page: currentPage)
     }
 }
 class ChatHistoryModel: ObservableObject {

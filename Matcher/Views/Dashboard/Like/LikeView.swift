@@ -29,6 +29,11 @@ struct LikeView: View {
                                     ForEach(Interaction.InteractedUser) { user in
                                         ProfileCardView(Interaction: user, width: width)
                                             .id(user.id)
+                                            .onAppear {
+                                                if user.id == Interaction.InteractedUser.last?.id {
+                                                    Interaction.loadMore()
+                                                }
+                                            }
                                     }
                                 }
                             }

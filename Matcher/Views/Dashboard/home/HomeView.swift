@@ -418,7 +418,9 @@ struct HomeView: View {
                     }else{
                         prefChip(profiles.profile?.describe_you_best ?? "", imageName: "book")
                     }
-                    prefChip(profiles.profile?.professional_field_data?.title ?? "", imageName: nil)
+                     if ((profiles.profile?.professional_field) != nil){
+                         prefChip(profiles.profile?.professional_field_data?.title ?? "", imageName: nil)
+                     }
                 }
             }
             .padding(.top, 10)
@@ -2181,7 +2183,7 @@ struct GenderStepView: View {
         isUploading = true
         let param: [String: Any] = [
             "describe_you_best": selections.selectedRole.lowercased(),
-            "professional_field": selections.selectedCategory ?? 0,
+            "professional_field": selections.selectedCategory ?? "",
             "work_shift":selections.selectedShift.lowercased(),
             "food_preference":selections.selectedFood.lowercased(),
             "into_parties":selections.selectedParties ?? 0,
