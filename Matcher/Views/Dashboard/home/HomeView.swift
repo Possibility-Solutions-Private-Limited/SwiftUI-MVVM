@@ -37,6 +37,7 @@ struct HomeView: View {
     @State private var distanceMin: Double = 0
     @State private var distanceMax: Double = 100
     @Binding var currentPage: Int
+    @State private var showNotifications = false
     //========
     var body: some View {
         GeometryReader { geo in
@@ -1045,7 +1046,14 @@ struct HomeView: View {
                 }
             }
             Spacer()
-            Image("bell")
+            Button {
+                showNotifications = true
+            } label: {
+                Image("bell")
+            }
+            .sheet(isPresented: $showNotifications) {
+                NotificationView()
+            }
         }
         .padding(.horizontal)
     }
@@ -1888,6 +1896,7 @@ struct StepEightView: View {
     }
 }
 struct FinalStepView: View {
+    @State private var showNotifications = false
     @EnvironmentObject var userAuth: UserAuth
     @Binding var showFinalStep: Int
     @ObservedObject var viewModel: BasicModel
@@ -1981,7 +1990,14 @@ struct FinalStepView: View {
                 }
             }
             Spacer()
-            Image("bell")
+            Button {
+                showNotifications = true
+            } label: {
+                Image("bell")
+            }
+            .sheet(isPresented: $showNotifications) {
+                NotificationView()
+            }
         }
         .padding(.horizontal)
     }
@@ -2029,6 +2045,7 @@ struct FinalStepView: View {
     }
 }
 struct GenderStepView: View {
+    @State private var showNotifications = false
     @EnvironmentObject var userAuth: UserAuth
     @StateObject private var STEP = StepTwoModel()
     @State private var isUploading = false
@@ -2095,7 +2112,14 @@ struct GenderStepView: View {
                 }
             }
             Spacer()
-            Image("bell")
+            Button {
+                showNotifications = true
+            } label: {
+                Image("bell")
+            }
+            .sheet(isPresented: $showNotifications) {
+                NotificationView()
+            }
         }
         .padding(.horizontal)
     }
@@ -2233,6 +2257,7 @@ struct GenderStepView: View {
     }
 }
 struct SpaceView: View {
+    @State private var showNotifications = false
     @EnvironmentObject var userAuth: UserAuth
     @Binding var showFinalStep: Int
     @ObservedObject var viewModel: BasicModel
@@ -2559,7 +2584,14 @@ struct SpaceView: View {
                 }
             }
             Spacer()
-            Image("bell")
+            Button {
+                showNotifications = true
+            } label: {
+                Image("bell")
+            }
+            .sheet(isPresented: $showNotifications) {
+                NotificationView()
+            }
         }
         .padding(.horizontal)
     }

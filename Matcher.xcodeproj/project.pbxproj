@@ -59,6 +59,8 @@
 		5DD4E4EB2DBBA7FA008F48B4 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DD4E4EA2DBBA7FA008F48B4 /* ChatView.swift */; };
 		5DD4E4EF2DBBBA29008F48B4 /* SocketService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DD4E4EE2DBBBA29008F48B4 /* SocketService.swift */; };
 		5DE234952F0658AF0044B82B /* Interaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DE234942F0658A10044B82B /* Interaction.swift */; };
+		5DE61E152F07BC57006FFD10 /* NotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DE61E142F07BC4B006FFD10 /* NotificationView.swift */; };
+		5DE61E172F07D10F006FFD10 /* NotificationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DE61E162F07D10B006FFD10 /* NotificationModel.swift */; };
 		5DFDE8C32EEBD7A9004CD35B /* IQKeyboardManagerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 5DFDE8C22EEBD7A9004CD35B /* IQKeyboardManagerSwift */; };
 		5DFDE8C62EEBD8DF004CD35B /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 5DFDE8C52EEBD8DF004CD35B /* SDWebImage */; };
 		5DFDE8C82EEBD8DF004CD35B /* SDWebImageMapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5DFDE8C72EEBD8DF004CD35B /* SDWebImageMapKit */; };
@@ -124,6 +126,8 @@
 		5DD4E4EA2DBBA7FA008F48B4 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		5DD4E4EE2DBBBA29008F48B4 /* SocketService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketService.swift; sourceTree = "<group>"; };
 		5DE234942F0658A10044B82B /* Interaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interaction.swift; sourceTree = "<group>"; };
+		5DE61E142F07BC4B006FFD10 /* NotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationView.swift; sourceTree = "<group>"; };
+		5DE61E162F07D10B006FFD10 /* NotificationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationModel.swift; sourceTree = "<group>"; };
 		5DFE0D822EFFD7FF000C27EF /* DashboardResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardResponse.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -165,6 +169,7 @@
 		5D048E382DE9C35200D25202 /* Dashboard */ = {
 			isa = PBXGroup;
 			children = (
+				5DE61E132F07BC2D006FFD10 /* Notification */,
 				5D048E392DE9C3AA00D25202 /* home */,
 				5D50565F2EF3D33C0013453F /* Like */,
 				5D048E3A2DE9C3B800D25202 /* Chat */,
@@ -313,6 +318,7 @@
 			children = (
 				5D9AB28B2DB9126000E3480F /* UserModel.swift */,
 				5DACB5112F02E5D9002299C0 /* CustomModel.swift */,
+				5DE61E162F07D10B006FFD10 /* NotificationModel.swift */,
 				5DE234942F0658A10044B82B /* Interaction.swift */,
 				5DFE0D822EFFD7FF000C27EF /* DashboardResponse.swift */,
 				5D14990C2EF969B900C5021A /* BasicDataModel.swift */,
@@ -330,6 +336,14 @@
 				5D0EF55D2DBA63D600CF3F6C /* Constants.swift */,
 			);
 			path = KeychainHelper;
+			sourceTree = "<group>";
+		};
+		5DE61E132F07BC2D006FFD10 /* Notification */ = {
+			isa = PBXGroup;
+			children = (
+				5DE61E142F07BC4B006FFD10 /* NotificationView.swift */,
+			);
+			path = Notification;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -459,10 +473,12 @@
 				5DFE0D832EFFD80A000C27EF /* DashboardResponse.swift in Sources */,
 				5DE234952F0658AF0044B82B /* Interaction.swift in Sources */,
 				5DD4E4EF2DBBBA29008F48B4 /* SocketService.swift in Sources */,
+				5DE61E152F07BC57006FFD10 /* NotificationView.swift in Sources */,
 				5D0EF5622DBA65C000CF3F6C /* SplashView.swift in Sources */,
 				5DACB5122F02E5E4002299C0 /* CustomModel.swift in Sources */,
 				5D9AB2682DB8ED8C00E3480F /* AttendanceApp.swift in Sources */,
 				5D5056612EF3D3930013453F /* LikeView.swift in Sources */,
+				5DE61E172F07D10F006FFD10 /* NotificationModel.swift in Sources */,
 				5D4331722DE48F120016B700 /* MessageModel.swift in Sources */,
 				5D08E91E2EFC27CD0052B4B4 /* SpaceModel.swift in Sources */,
 				5D67B7552EEFC70A008E794D /* YourselfView.swift in Sources */,

@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct ChatListView: View {
+    @State private var showNotifications = false
     @EnvironmentObject var userAuth: UserAuth
     @StateObject var ChatModel = ChatsModel()
     @State private var selectedChat: Chat?
-
     var body: some View {
         GeometryReader { geo in
             ZStack {
@@ -116,7 +116,14 @@ struct ChatListView: View {
                 }
             }
             Spacer()
-            Image("bell")
+            Button {
+                showNotifications = true
+            } label: {
+                Image("bell")
+            }
+            .sheet(isPresented: $showNotifications) {
+                NotificationView()
+            }
         }
         .padding(.horizontal)
     }

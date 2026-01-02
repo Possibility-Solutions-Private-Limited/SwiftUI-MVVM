@@ -442,6 +442,43 @@ class InteractionModel: ObservableObject {
         fetchInteraction(page: currentPage)
     }
 }
+class NotificationsModel: ObservableObject {
+    @Published var notificationData: [NotificationData] = []
+    @Published var currentPage: Int = 1
+    @Published var isLoading: Bool = false
+    @Published var hasMoreData: Bool = true
+    func fetchNotification(page: Int? = nil) {
+        guard !isLoading else { return }
+        isLoading = true
+        let targetPage = page ?? currentPage
+        let params: [String: Any] = ["page": targetPage]
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.notification,
+            method: "GET",
+            parameters: params
+        ) { (result: Result<NotificationModel, Error>) in
+            DispatchQueue.main.async {
+                self.isLoading = false
+                switch result {
+                case .success(let response):
+                    let newUsers = response.data
+                    if newUsers.isEmpty {
+                        self.hasMoreData = false
+                    } else {
+                        self.notificationData.append(contentsOf: newUsers)
+                        self.currentPage += 1
+                    }
+                case .failure(let error):
+                    print("❌ Fetch error: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    func loadMoreNew() {
+        guard hasMoreData, !isLoading else { return }
+        fetchNotification(page: currentPage)
+    }
+}
 class ChatHistoryModel: ObservableObject {
     @Published var messages: [Message] = []
     func fetchChatHistory(chatId: String) {

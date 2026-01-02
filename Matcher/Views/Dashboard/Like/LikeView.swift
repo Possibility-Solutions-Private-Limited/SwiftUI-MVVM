@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct LikeView: View {
+    @State private var showNotifications = false
     @EnvironmentObject var userAuth: UserAuth
     @StateObject var Interaction = InteractionModel()
     private let spacing: CGFloat = 14
@@ -106,7 +107,14 @@ struct LikeView: View {
                 }
             }
             Spacer()
-            Image("bell")
+            Button {
+                showNotifications = true
+            } label: {
+                Image("bell")
+            }
+            .sheet(isPresented: $showNotifications) {
+                NotificationView()
+            }
         }
         .padding(.horizontal)
     }
