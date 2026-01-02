@@ -45,10 +45,11 @@ class AppRouter: ObservableObject {
 struct MainView: View {
     @EnvironmentObject var router: AppRouter
     @State private var selectedIndex: Int = 0
+    @State private var currentPage = 0
     var body: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $selectedIndex) {
-                HomeView().tag(0)
+                HomeView(currentPage: $currentPage).tag(0)
                 LikeView().tag(1)
                 ChatListView().tag(2)
                 ProfileView().tag(3)
@@ -58,7 +59,15 @@ struct MainView: View {
                 .padding(.horizontal, 10)
                 .padding(.bottom, 10)
                
-        }.ignoresSafeArea()
+        }.onAppear {
+            currentPage = 0
+        }
+        .onChange(of: selectedIndex) {
+            if selectedIndex == 0 {
+                currentPage = 0
+            }
+        }
+        .ignoresSafeArea()
     }
 }
 struct CustomTabBar: View {

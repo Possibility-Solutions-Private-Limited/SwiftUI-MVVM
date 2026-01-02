@@ -36,6 +36,7 @@ struct HomeView: View {
     @State private var drink: String = ""
     @State private var distanceMin: Double = 0
     @State private var distanceMax: Double = 100
+    @Binding var currentPage: Int
     //========
     var body: some View {
         GeometryReader { geo in
@@ -160,6 +161,7 @@ struct HomeView: View {
     }
     private func loadDashboardAPI() {
         dashboardView.loadDashboard(params: [
+            "page": currentPage,   
             "lat": locationManager.latitude,
             "long": locationManager.longitude,
             "age": Int(age),
@@ -764,7 +766,8 @@ struct HomeView: View {
         withAnimation(.spring()) {
             profiles.removeAll { $0.id == profile.id }
             if profiles.isEmpty {
-                showFinalStep = 1
+                loadSavedFilters()
+                loadDashboardAPI()
             }
         }
     }
@@ -1066,6 +1069,7 @@ struct HomeView: View {
                     .sheet(isPresented: $showFilters) {
                         FiltersSheetView(viewModel: viewModel) { filter in
                             dashboardView.loadDashboard(params: [
+                                "page": currentPage,
                                 "lat": locationManager.latitude,
                                 "long": locationManager.longitude,
                                 "age":Int(filter.age),

@@ -322,20 +322,23 @@ class RoomModel: ObservableObject {
 }
 class DashboardViewModel: ObservableObject {
     @Published var profiles: [Profiles] = []
-    @Published var isLoading = false
-    func loadDashboard(params: [String: Any] = [:]) {
-        isLoading = true
+    @Published var currentPage: Int = 0
+    func loadDashboard(page: Int? = nil, params: [String: Any] = [:]) {
+        currentPage = params["page"] as! Int
+        let requestParams = params
+        print("requestParams",requestParams)
         NetworkManager.shared.makeRequest(
             endpoint: APIConstants.Endpoints.dashboard,
             method: "GET",
-            parameters: params
+            parameters: requestParams
         ) { (result: Result<DashboardResponse, Error>) in
             DispatchQueue.main.async {
-                self.isLoading = false
                 switch result {
                 case .success(let response):
-                    print("📥 Dashboard Response:", response)
-                    self.profiles = response.data?.profiles ?? []
+                    let newProfiles = response.data?.profiles ?? []
+                    print("📥 Dashboard Response:", newProfiles)
+                    self.profiles = newProfiles.reversed()
+                    self.currentPage += 1
                 case .failure(let error):
                     print("❌ Dashboard Error:", error.localizedDescription)
                 }
