@@ -8,8 +8,8 @@
 import Foundation
 
 struct APIConstants {
-    static let baseURL = "http://172.20.10.2:8080/api/v1/"
-    static let socketURL = "http://172.20.10.2:3000"
+    static let baseURL = "http://192.168.31.46:8080/api/v1/"
+    static let socketURL = "http://192.168.31.46:3000"
     struct Endpoints {
         static let login = "login"
         static let Sociallogin = "social-login"
@@ -30,5 +30,6 @@ struct APIConstants {
         static let dislike = "interaction/dislike/"
         static let interaction = "interaction"
         static let notification = "notification"
+        static let notificationDelete = "notification/delete"
     }
 }

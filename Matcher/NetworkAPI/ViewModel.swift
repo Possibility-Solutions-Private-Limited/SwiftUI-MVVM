@@ -447,6 +447,7 @@ class NotificationsModel: ObservableObject {
     @Published var currentPage: Int = 1
     @Published var isLoading: Bool = false
     @Published var hasMoreData: Bool = true
+    @Published var deletingId: Int? = nil
     func fetchNotification(page: Int? = nil) {
         guard !isLoading else { return }
         isLoading = true
@@ -461,24 +462,46 @@ class NotificationsModel: ObservableObject {
                 self.isLoading = false
                 switch result {
                 case .success(let response):
-                    let newUsers = response.data
-                    if newUsers.isEmpty {
+                    let newData = response.data
+                    if newData.isEmpty {
                         self.hasMoreData = false
                     } else {
-                        self.notificationData.append(contentsOf: newUsers)
+                        self.notificationData.append(contentsOf: newData)
                         self.currentPage += 1
                     }
                 case .failure(let error):
-                    print("❌ Fetch error: \(error.localizedDescription)")
+                    print("❌ Fetch error:", error.localizedDescription)
                 }
             }
         }
+    }
+    func deleteNotification(id: Int) {
+        deletingId = id
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.notificationDelete,
+            method: "POST",
+            parameters: ["notification_id":deletingId ?? 0]
+        ) { (result: Result<CustomModel, Error>) in
+            DispatchQueue.main.async {
+                self.deletingId = nil
+                switch result {
+                case .success:
+                    self.notificationData.removeAll { $0.id == id }
+                case .failure(let error):
+                    print("❌ Delete error:", error.localizedDescription)
+                }
+            }
+        }
+    }
+    func delete(at offsets: IndexSet) {
+        notificationData.remove(atOffsets: offsets)
     }
     func loadMoreNew() {
         guard hasMoreData, !isLoading else { return }
         fetchNotification(page: currentPage)
     }
 }
+
 class ChatHistoryModel: ObservableObject {
     @Published var messages: [Message] = []
     func fetchChatHistory(chatId: String) {
