@@ -3,10 +3,12 @@ import SwiftUI
 struct ChatListView: View {
     @State private var showNotifications = false
     @EnvironmentObject var userAuth: UserAuth
-    @StateObject var ChatModel = ChatsModel()
+    @StateObject var chatModel = ChatsModel()
     @State private var selectedChat: Chat?
+    @State private var selectedUser: Users?
+
     var body: some View {
-        GeometryReader { geo in
+        NavigationStack {
             ZStack {
                 LinearGradient(
                     colors: [.splashTop, .splashBottom],
@@ -14,118 +16,115 @@ struct ChatListView: View {
                     endPoint: .bottom
                 )
                 .ignoresSafeArea()
-                VStack {
+
+                VStack(spacing: 0) {
                     header
-                    ZStack {
-                        if ChatModel.chats.isEmpty {
-                            NoChatsView()
-                        }else{
-                            List {
-                                Section(header: Text("Active Chats")) {
-                                    ForEach(ChatModel.chats, id: \.id) { chat in
-                                        Button {
-                                            selectedChat = chat
-                                        } label: {
+
+                    List {
+                        // MARK: Active Chats
+                        if !chatModel.chats.isEmpty {
+                            Section {
+                                ForEach(chatModel.chats, id: \.id) { chat in
+                                    Button {
+                                        selectedChat = chat
+                                    } label: {
+                                        VStack(spacing: 0) {
                                             ChatRowView(chats: chat)
+
+                                            Divider()
+                                                .padding(.leading, 80)
                                         }
                                     }
+                                    .buttonStyle(.plain)
+                                    .listRowInsets(EdgeInsets())
+                                    .listRowBackground(Color.clear)
                                 }
                             }
-                            .listStyle(InsetGroupedListStyle())
-                         }
+                        }
+
+                        // MARK: Nearby Users
+                        if !chatModel.users.isEmpty {
+                            Section {
+                                ForEach(chatModel.users, id: \.id) { user in
+                                    Button {
+                                        selectedUser = user
+                                    } label: {
+                                        VStack(spacing: 0) {
+                                            UserRowView(users: user)
+
+                                            Divider()
+                                                .padding(.leading, 80)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                    .listRowInsets(EdgeInsets())
+                                    .listRowBackground(Color.clear)
+                                }
+                            }
+                        }
                     }
-                    .padding(.horizontal)
-                    Spacer(minLength: 5)
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                 }
             }
-        }
-        .onAppear {
-            ChatModel.fetchChat()
-        }
-        .navigationDestination(item: $selectedChat) { chat in
-            let currentUserId = KeychainHelper.shared.getInt(forKey: "userId") ?? 0
-            let isCurrentUserSender = chat.senderID == currentUserId
-            let senderDetail = isCurrentUserSender ? chat.receiverDetail : chat.senderDetail
-            let receiverDetail = isCurrentUserSender ? chat.senderDetail : chat.receiverDetail
-            
-            ChatView(
-                senderId: senderDetail?.id ?? 0,
-                chatId: chat.id,
-                receiverId: receiverDetail?.id ?? 0,
-                UserImg: "",
-                userName: senderDetail?.firstName ?? ""
-            )
-        }
-    }
-    struct NoChatsView: View {
-        var body: some View {
-            VStack(spacing: 0) {
-                Image("no_chat")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 120, height: 120)
-
-                Text("No Conversations Yet")
-                    .font(AppFont.manropeBold(18))
-                    .foregroundColor(.black)
-
-                Text("Start the conversation and make a connection")
-                    .font(AppFont.manrope(12))
-                    .foregroundColor(.black.opacity(0.5))
+            .onAppear {
+                chatModel.fetchChat()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .toolbar(.hidden, for: .tabBar)
+            .navigationDestination(item: $selectedChat) { chat in
+                let currentUserId = KeychainHelper.shared.getInt(forKey: "userId") ?? 0
+                let isSender = chat.senderID == currentUserId
+                let sender = isSender ? chat.receiverDetail : chat.senderDetail
+                let receiver = isSender ? chat.senderDetail : chat.receiverDetail
+
+                ChatView(
+                    senderId: sender?.id ?? 0,
+                    chatId: chat.id,
+                    receiverId: receiver?.id ?? 0,
+                    UserImg: "",
+                    userName: sender?.firstName ?? ""
+                )
+            }
+            .navigationDestination(item: $selectedUser) { user in
+                let currentUserId = KeychainHelper.shared.getInt(forKey: "userId") ?? 0
+
+                ChatView(
+                    senderId: currentUserId,
+                    chatId: 0,
+                    receiverId: user.id ?? 0,
+                    UserImg: user.image ?? "",
+                    userName: user.first_name ?? ""
+                )
+            }
         }
     }
+
+    // MARK: Header
     private var header: some View {
         HStack {
-            if let url = URL(string: userAuth.image), !userAuth.image.isEmpty {
-                AsyncImage(url: url) { phase in
-                    if let image = phase.image {
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 60, height: 60)
-                            .clipShape(Circle())
-                            .overlay(
-                                Circle().stroke(Color.white, lineWidth: 3)
-                            )
-                    } else if phase.error != nil {
-                        Image("profile")
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 50, height: 50)
-                            .clipShape(Circle())
-                    } else {
-                        ProgressView()
-                            .frame(width: 60, height: 60)
-                    }
-                }
-            } else {
-                Image("profile")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 50, height: 50)
-                    .clipShape(Circle())
-            }
+            Image("profile")
+                .resizable()
+                .scaledToFill()
+                .frame(width: 56, height: 56)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.white, lineWidth: 3))
+
             Spacer()
-            HStack(spacing: 5) {
+
+            HStack(spacing: 6) {
                 Image("location")
-                if let savedAddress = KeychainHelper.shared.get(forKey: "address") {
-                    Text(savedAddress).font(AppFont.manropeSemiBold(16))
-                }
+                Text(KeychainHelper.shared.get(forKey: "address") ?? "")
+                    .font(AppFont.manropeSemiBold(16))
             }
+
             Spacer()
+
             Button {
                 showNotifications = true
             } label: {
                 Image("bell")
             }
-            .sheet(isPresented: $showNotifications) {
-                NotificationView()
-            }
         }
-        .padding(.horizontal)
+        .padding()
     }
 }
 struct ChatRowView: View {
@@ -141,59 +140,74 @@ struct ChatRowView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            HStack(spacing: 10) {
-                Image(systemName: "person.crop.circle.fill")
+        HStack(spacing: 14) {
+
+            // Avatar + online dot
+            ZStack(alignment: .bottomTrailing) {
+                Image("profile")
                     .resizable()
-                    .foregroundColor(.gray)
-                    .frame(width: 40, height: 40)
+                    .scaledToFill()
+                    .frame(width: 52, height: 52)
                     .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.white, lineWidth: 3))
 
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(userDetail?.firstName ?? "")
-                        .font(.headline)
-                        .foregroundColor(.black)
-
-                    HStack(spacing: 2) {
-                        HStack(spacing: -4) {
-                            Image(systemName: "checkmark")
-                                .font(.caption2)
-                                .foregroundColor(chats.last?.isSeen == "1" ? .blue : .gray)
-                            Image(systemName: "checkmark")
-                                .font(.caption2)
-                                .foregroundColor(chats.last?.isSeen == "1" ? .blue : .gray)
-                        }
-
-                        if let message = chats.last?.message, !message.isEmpty {
-                            Text(message)
-                                .font(.subheadline)
-                                .foregroundColor(.black)
-                                .lineLimit(1)
-                        } else {
-                            HStack(spacing: 2) {
-                                Image(systemName: "doc.fill")
-                                    .foregroundColor(.gray)
-                                Text("File")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                                    .lineLimit(1)
-                            }
-                        }
-                    }
-                }
-                Spacer()
+                Circle()
+                    .fill(Color.yellow)
+                    .frame(width: 10, height: 10)
             }
-            .padding(.vertical, 6)
 
-            if (chats.unseen_message_count ?? 0) > 0 {
-                Text("\(chats.unseen_message_count ?? 0)")
-                    .font(.caption2)
-                    .padding(10)
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .clipShape(Circle())
-                    .offset(x: -10, y: 20)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(userDetail?.firstName ?? "")
+                    .font(AppFont.manropeSemiBold(16))
+                    .foregroundColor(.black)
+
+                Text(chats.last?.message ?? "Say Hi 👋")
+                    .font(AppFont.manrope(14))
+                    .foregroundColor(.black.opacity(0.6))
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 6) {
+                Text("05:00 PM")
+                    .font(AppFont.manrope(12))
+                    .foregroundColor(.black.opacity(0.5))
+
+                if (chats.unseen_message_count ?? 0) > 0 {
+                    Text("\(chats.unseen_message_count ?? 0)")
+                        .font(AppFont.manropeSemiBold(12))
+                        .frame(width: 22, height: 22)
+                        .background(Color.yellow)
+                        .foregroundColor(.black)
+                        .clipShape(Circle())
+                }
             }
         }
+        .padding(.horizontal)
+        .padding(.vertical, 14)
+    }
+}
+struct UserRowView: View {
+    let users: Users
+
+    var body: some View {
+        HStack(spacing: 14) {
+
+            Image("profile")
+                .resizable()
+                .scaledToFill()
+                .frame(width: 52, height: 52)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.white, lineWidth: 3))
+
+            Text(users.first_name ?? "")
+                .font(AppFont.manropeSemiBold(16))
+                .foregroundColor(.black)
+
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 14)
     }
 }

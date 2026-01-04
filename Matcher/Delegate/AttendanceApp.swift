@@ -41,6 +41,7 @@ class AppRouter: ObservableObject {
     @Published var receiverId: Int = 0
     @Published var userImg: String = ""
     @Published var userName: String = ""
+    @Published var isTabBarHidden: Bool = false
 }
 struct MainView: View {
     @EnvironmentObject var router: AppRouter
@@ -54,12 +55,16 @@ struct MainView: View {
                 ChatListView().tag(2)
                 ProfileView().tag(3)
             }
-            CustomTabBar(selectedIndex: $selectedIndex)
-                .background(Color.clear) 
-                .padding(.horizontal, 10)
-                .padding(.bottom, 10)
-               
-        }.onAppear {
+            if !router.isTabBarHidden {
+                CustomTabBar(selectedIndex: $selectedIndex)
+                    .padding(.horizontal, 10)
+                    .padding(.bottom, 10)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut, value: router.isTabBarHidden)
+        .ignoresSafeArea()
+        .onAppear {
             currentPage = 0
         }
         .onChange(of: selectedIndex) {
@@ -67,7 +72,6 @@ struct MainView: View {
                 currentPage = 0
             }
         }
-        .ignoresSafeArea()
     }
 }
 struct CustomTabBar: View {

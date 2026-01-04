@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ChatView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var router: AppRouter
     @StateObject private var socketManager: SocketService
     @StateObject private var Chats = ChatHistoryModel()
     @ObservedObject private var keyboard = KeyboardResponder()
@@ -32,109 +33,95 @@ struct ChatView: View {
         _socketManager = StateObject(wrappedValue: SocketService(senderId: senderId, receiverId: receiverId, chatId: chatId))
     }
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Button(action: {
-                    let msg: [String: Any] = [
-                        "userId": "\(senderId)\(receiverId)",
-                        "sender_id": "\(senderId)",
-                        "receiver_id": "\(receiverId)"
-                    ]
-                    socketManager.destroy(msg: msg)
-                    dismiss()
-                }) {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(Color("blackColour"))
-                        .font(.title2)
-                }
-                AsyncImage(url: URL(string: UserImg)) { image in
-                    image.resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 40, height: 40)
-                        .clipShape(Circle())
-                } placeholder: {
-                    Circle().fill(Color.gray.opacity(0.3)).frame(width: 40, height: 40)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    if socketManager.isOtherUserTyping {
-                        HStack {
+        ZStack {
+            LinearGradient(
+                colors: [.splashTop, .splashBottom],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+            VStack(spacing: 0) {
+                HStack {
+                    Button(action: {
+                        let msg: [String: Any] = [
+                            "userId": "\(senderId)\(receiverId)",
+                            "sender_id": "\(senderId)",
+                            "receiver_id": "\(receiverId)"
+                        ]
+                        socketManager.destroy(msg: msg)
+                        dismiss()
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(Color("blackColour"))
+                            .font(.title2)
+                    }
+                    AsyncImage(url: URL(string: UserImg)) { image in
+                        image.resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 40, height: 40)
+                            .clipShape(Circle())
+                    } placeholder: {
+                        Circle().fill(Color.gray.opacity(0.3)).frame(width: 40, height: 40)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        if socketManager.isOtherUserTyping {
+                            HStack {
+                                Text(userName).font(.headline)
+                                Text("is typing...")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                Spacer()
+                            }
+                            .transition(.opacity)
+                        }else{
                             Text(userName).font(.headline)
-                            Text("is typing...")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                            Spacer()
                         }
-                        .transition(.opacity)
-                    }else{
-                        Text(userName).font(.headline)
+                        OnlineStatusView(isOnline: socketManager.isOtherUserOnline)
                     }
-                    OnlineStatusView(isOnline: socketManager.isOtherUserOnline)
+                    Spacer()
                 }
-                Spacer()
-            }
-            .padding()
-            .background(Color.white)
-            .shadow(color: Color.black.opacity(0.05), radius: 2, y: 2)
-             ScrollViewReader { scrollViewProxy in
-                ScrollView {
-                    LazyVStack {
-                        ForEach(combinedMessages, id: \.id) { message in
-                            ChatBubble(
-                                message: message,
-                                isCurrentUser: message.sentby == senderId,
-                                UserImg: UserImg,
-                                isSeen: message.isSeen
-                            )
-                            .id(message.id)
+                .padding()
+                ScrollViewReader { scrollViewProxy in
+                    ScrollView {
+                        LazyVStack {
+                            ForEach(combinedMessages, id: \.id) { message in
+                                ChatBubble(
+                                    message: message,
+                                    isCurrentUser: message.sentby == senderId,
+                                    UserImg: UserImg,
+                                    isSeen: message.isSeen
+                                )
+                                .id(message.id)
+                            }
                         }
                     }
-                }
-                .onChange(of: combinedMessages.count) { _, _ in
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    .onChange(of: combinedMessages.count) { _, _ in
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                            scrollToLast(scrollViewProxy: scrollViewProxy)
+                        }
+                    }
+                    .onAppear {
+                        Chats.fetchChatHistory(chatId: "\(chatId)")
                         scrollToLast(scrollViewProxy: scrollViewProxy)
                     }
                 }
-                .onAppear {
-                    Chats.fetchChatHistory(chatId: "\(chatId)")
-                    scrollToLast(scrollViewProxy: scrollViewProxy)
-                }
-            }
-            HStack(spacing: 10) {
-                Button {
-                    showEmojiPicker = true
-                } label: {
-                    Image(systemName: "face.smiling")
-                        .font(.system(size: 22))
-                        .foregroundColor(.gray)
-                }
-                TextField("Message", text: $messageText)
-                    .padding(10)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(20)
-                    .onChange(of: messageText) {
-                        print("Entered text: \(messageText)")
-                        userStartedTyping()
-                }
-                if messageText.isEmpty {
-                    Button {
+                ChatInputBar(
+                    messageText: $messageText,
+                    onSend: {
+                        sendMessage()
+                    },
+                    onMicTap: {
+//                   startRecording()
+                    },
+                    onAttachmentTap: {
                         showImagePicker = true
-                    } label: {
-                        Image(systemName: "camera.fill").foregroundColor(.gray)
                     }
-                }
-                Button(action: sendMessage) {
-                    Image(systemName: messageText.isEmpty ? "mic.fill" : "paperplane.fill")
-                        .foregroundColor(.white)
-                        .padding(10)
-                        .background(messageText.isEmpty ? Color.gray : Color.blue)
-                        .clipShape(Circle())
-                }
+                )
+                .padding(.horizontal)
+                .padding(.top, 8)
+                .padding(.bottom, keyboard.currentHeight == 0 ? 30 : keyboard.currentHeight)
+                .animation(.easeOut(duration: 0.25), value: keyboard.currentHeight)
             }
-            .padding(.horizontal)
-            .padding(.top, 8)
-            .padding(.bottom, keyboard.currentHeight == 0 ? 30 : keyboard.currentHeight)
-            .animation(.easeOut(duration: 0.25), value: keyboard.currentHeight)
-            .background(Color.white)
         }
         .edgesIgnoringSafeArea(.bottom)
         .toolbar(.hidden, for: .navigationBar)
@@ -199,10 +186,56 @@ struct ChatView: View {
             socketManager.joinRoom(name: "\(senderId)\(receiverId)")
             socketManager.goOnline()
             startTimer()
+            router.isTabBarHidden = true
         }
         .onDisappear {
             stopTimer()
             socketManager.goOffline()
+            router.isTabBarHidden = false
+        }
+    }
+    struct ChatInputBar: View {
+        @Binding var messageText: String
+        var onSend: () -> Void
+        var onMicTap: () -> Void
+        var onAttachmentTap: () -> Void
+        var body: some View {
+            HStack(spacing: 4) {
+                HStack(spacing: 4) {
+                    ZStack(alignment: .leading) {
+                        if messageText.isEmpty {
+                            Text("Type here...")
+                                .foregroundColor(.white.opacity(0.6))
+                                .padding(.leading, 16)
+                        }
+
+                        TextField("", text: $messageText)
+                            .foregroundColor(.white)
+                            .accentColor(.yellow)
+                            .padding(.leading, 12)
+                    }
+                    Button(action: onAttachmentTap) {
+                        Image(systemName: "paperclip")
+                            .foregroundColor(.white.opacity(0.8))
+                            .padding(.trailing, 12)
+                    }
+                }
+                .frame(height: 48)
+                .background(Color.black)
+                .cornerRadius(24)
+                Button {
+                    messageText.isEmpty ? onMicTap() : onSend()
+                } label: {
+                    Image(systemName: messageText.isEmpty ? "mic.fill" : "paperplane.fill")
+                        .foregroundColor(.black)
+                        .frame(width: 48, height: 48)
+                        .background(Color.yellow)
+                        .clipShape(Circle())
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 5)
+            .background(Color.clear)
         }
     }
     func sendImageMessage(image: UIImage) {
@@ -339,31 +372,19 @@ struct ChatBubble: View {
                     seenView()
                 }
             } else {
-                HStack(alignment: .bottom, spacing: 8) {
-                    AsyncImage(url: URL(string: UserImg)) { image in
-                        image.resizable()
-                            .scaledToFill()
-                            .frame(width: 30, height: 30)
-                            .clipShape(Circle())
-                    } placeholder: {
-                        Circle()
-                            .fill(Color.gray)
-                            .frame(width: 30, height: 30)
-                    }
-                    
                     VStack(alignment: .leading, spacing: 4) {
                         contentView()
-                            .background(Color.white)
+                            .background(AppColors.primaryYellow)
                             .cornerRadius(16)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16)
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                    .stroke(AppColors.primaryYellow.opacity(0.3), lineWidth: 1)
                             )
                             .frame(maxWidth: UIScreen.main.bounds.width * 0.7, alignment: .leading)
                     }
                     Spacer()
-                }
-            }
+                
+              }
         }
         .padding(.horizontal)
         .padding(.vertical, 4)
@@ -400,6 +421,7 @@ struct ChatBubble: View {
         } else {
             Text(message.message ?? "")
                 .padding(10)
+                .font(AppFont.manropeSemiBold(14))
                 .foregroundColor(.black)
         }
     }
