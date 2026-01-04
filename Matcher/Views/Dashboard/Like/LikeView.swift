@@ -132,12 +132,13 @@ struct ProfileCardView: View {
                         .resizable()
                         .scaledToFill()
                 } else if let url = photoURL, !url.isEmpty {
-                    Image("profile")
+                    Image("")
                         .resizable()
                         .scaledToFill()
                         .onAppear {
                             loader.load(from: url)
                         }
+                    ProgressView()
                 } else {
                     Image("profile")
                         .resizable()

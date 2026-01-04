@@ -358,8 +358,8 @@ class ChatsModel: ObservableObject {
                 switch result {
                 case .success(let response):
                     print("Chat: \(response)")
-                    self.chats = response.data.data
-                    self.users = response.Users ?? []
+                    self.chats = response.data
+                    self.users = response.users ?? []
                 case .failure(let error):
                     print("Error fetching deductions: \(error.localizedDescription)")
                 }
@@ -512,8 +512,8 @@ class ChatHistoryModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                    print("Attandance: \(response)")
-                    self.messages = response.data 
+                    print("chats: \(response)")
+                    self.messages = response.data
                 case .failure(let error):
                     print("Error fetching deductions: \(error.localizedDescription)")
                 }

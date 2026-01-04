@@ -60,6 +60,7 @@ class UserAuth: ObservableObject {
         KeychainHelper.shared.delete(forKey: "gender")
         KeychainHelper.shared.delete(forKey: "steps")
         KeychainHelper.shared.delete(forKey: "space")
+        KeychainHelper.shared.delete(forKey: "userId")
         self.steps = false
         self.space = false
         self.isLoggedIn = false

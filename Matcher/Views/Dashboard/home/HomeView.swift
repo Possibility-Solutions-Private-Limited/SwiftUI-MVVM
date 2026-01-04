@@ -59,14 +59,18 @@ struct HomeView: View {
                                 if profiles.isEmpty {
                                     NoRoomsView()
                                 }else{
-                                    ForEach(profiles) { profiles in
+                                    ForEach(profiles.indices.reversed(), id: \.self) { index in
+                                        let profile = profiles[index]
                                         SwipeCard(
-                                            profiles: profiles,
-                                            maxHeight: geo.size.height * 2
+                                            profiles: profile,
+                                            maxHeight: geo.size.height * 2,
+                                            isActive: index == 0
                                         ) {
-                                            removeProfile(profiles)
+                                            removeProfile(profile)
                                         }
-                                    }
+                                        .id(profile.id)
+                                        .zIndex(Double(profiles.count - index))
+                                     }
                                 }
                             }
                           .padding(.horizontal)
@@ -217,6 +221,7 @@ struct HomeView: View {
     struct SwipeCard: View {
         let profiles: Profiles
         let maxHeight: CGFloat
+        let isActive: Bool
         let onRemove: () -> Void
         @State private var currentImageIndex: Int = 0
         private let sliderHeight: CGFloat = 420
@@ -339,8 +344,15 @@ struct HomeView: View {
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(Color.white, lineWidth: 3)
                 )
-                .onAppear { startAutoSlide() }
-                .onDisappear { stopAutoSlide() }
+                .task(id: isActive) {
+                    if isActive {
+                        stopAutoSlide()
+                        currentImageIndex = 0
+                        startAutoSlide()
+                    } else {
+                        stopAutoSlide()
+                    }
+                }
                 .allowsHitTesting(false)
                 VStack {
                     HStack(spacing: 6) {
@@ -400,13 +412,12 @@ struct HomeView: View {
             }
         }
         private func startAutoSlide() {
-            stopAutoSlide()
+            guard slideTimer == nil else { return }
             slideTimer = Timer.scheduledTimer(withTimeInterval: autoSlideTime, repeats: true) { _ in
                 let count = profiles.photos?.count ?? 1
-                if count > 1 {
-                    withAnimation(.easeInOut(duration: 0.8)) {
-                        currentImageIndex = (currentImageIndex + 1) % count
-                    }
+                guard count > 1 else { return }
+                withAnimation(.easeInOut(duration: 0.8)) {
+                    currentImageIndex = (currentImageIndex + 1) % count
                 }
             }
         }
