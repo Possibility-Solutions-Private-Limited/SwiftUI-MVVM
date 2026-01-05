@@ -1,75 +1,82 @@
 import SwiftUI
 import MapKit
-struct TappableMapView: UIViewRepresentable {
-    @Binding var region: MKCoordinateRegion
-    @Binding var selectedCoordinate: CLLocationCoordinate2D
-    class Coordinator: NSObject, MKMapViewDelegate {
-        var parent: TappableMapView
-        init(parent: TappableMapView) {
-            self.parent = parent
-        }
-        @objc func handleTap(_ gesture: UITapGestureRecognizer) {
-            guard let mapView = gesture.view as? MKMapView else { return }
-            let point = gesture.location(in: mapView)
-            let coord = mapView.convert(point, toCoordinateFrom: mapView)
-            parent.selectedCoordinate = coord
-            withAnimation(.easeInOut(duration: 0.5)) {
-                parent.region.center = coord
-                parent.region.span = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-            }
-            KeychainHelper.shared.save("\(coord.latitude)", forKey: "saved_latitude")
-            KeychainHelper.shared.save("\(coord.longitude)", forKey: "saved_longitude")
-        }
-    }
-    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
-    func makeUIView(context: Context) -> MKMapView {
-        let mapView = MKMapView()
-        mapView.delegate = context.coordinator
-        mapView.setRegion(region, animated: true)
-        let tapGesture = UITapGestureRecognizer(target: context.coordinator,
-                                                action: #selector(Coordinator.handleTap(_:)))
-        mapView.addGestureRecognizer(tapGesture)
-        return mapView
-    }
-    func updateUIView(_ uiView: MKMapView, context: Context) {
-        uiView.removeAnnotations(uiView.annotations)
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = selectedCoordinate
-        uiView.addAnnotation(annotation)
-        uiView.setRegion(region, animated: true)
-    }
+import CoreLocation
+struct ProfileAnnotation: Identifiable {
+    let id: Int
+    let profile: Profiles
+    let coordinate: CLLocationCoordinate2D
 }
 struct MapView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var userAuth: UserAuth
     @EnvironmentObject var router: AppRouter
     @State private var showNotifications = false
-    @State private var region: MKCoordinateRegion
-    @State private var selectedCoordinate: CLLocationCoordinate2D
     @State private var activeIndex: Int = 0
+    @State private var mapPosition: MapCameraPosition
+    @StateObject private var locationManager = LocationPermissionManager()
+    @State private var hasCenteredOnUser = false
     let profiles: [Profiles]
+    let annotations: [ProfileAnnotation]
     init(profiles: [Profiles]) {
         self.profiles = profiles
-        let savedLat = Double(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "") ?? 28.6139
-        let savedLong = Double(KeychainHelper.shared.get(forKey: "saved_longitude") ?? "") ?? 77.2090
-        let coord = CLLocationCoordinate2D(latitude: savedLat, longitude: savedLong)
-        _region = State(initialValue: MKCoordinateRegion(
-            center: coord,
-            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        let lat = Double(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "") ?? 28.6139
+        let long = Double(KeychainHelper.shared.get(forKey: "saved_longitude") ?? "") ?? 77.2090
+        let defaultCoord = CLLocationCoordinate2D(latitude: lat, longitude: long)
+        _mapPosition = State(initialValue: .region(
+            MKCoordinateRegion(
+                center: defaultCoord,
+                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+            )
         ))
-        _selectedCoordinate = State(initialValue: coord)
+        self.annotations = profiles.enumerated().compactMap { index, profile in
+            guard
+                let latStr = profile.lat,
+                let longStr = profile.long,
+                let lat = Double(latStr),
+                let long = Double(longStr)
+            else { return nil }
+
+            return ProfileAnnotation(
+                id: index,
+                profile: profile,
+                coordinate: CLLocationCoordinate2D(latitude: lat, longitude: long)
+            )
+        }
+    }
+    private func zoom(to coordinate: CLLocationCoordinate2D) {
+        withAnimation(.easeInOut(duration: 0.6)) {
+            mapPosition = .region(
+                MKCoordinateRegion(
+                    center: coordinate,
+                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                )
+            )
+        }
     }
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [.splashTop, .splashBottom],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            LinearGradient(colors: [.splashTop, .splashBottom],
+                           startPoint: .top,
+                           endPoint: .bottom)
+                .ignoresSafeArea()
             ZStack(alignment: .top) {
-                TappableMapView(region: $region, selectedCoordinate: $selectedCoordinate)
-                    .ignoresSafeArea()
+                Map(position: $mapPosition, interactionModes: .all) {
+                    UserAnnotation()
+                    ForEach(annotations) { item in
+                        Annotation("", coordinate: item.coordinate) {
+                            pinView(item)
+                        }
+                    }
+                }
+                .mapControls {
+                    MapUserLocationButton()
+                }
+                .ignoresSafeArea()
+                .onReceive(locationManager.$userLocation) { location in
+                    guard let loc = location, !hasCenteredOnUser else { return }
+                    hasCenteredOnUser = true
+                    zoom(to: loc.coordinate)
+                }
                 VStack(spacing: 12) {
                     header
                     searchBar
@@ -80,11 +87,65 @@ struct MapView: View {
                     bottomProfileCards
                 }
             }
-         }
+        }
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .onAppear { router.isTabBarHidden = true }
         .onDisappear { router.isTabBarHidden = false }
+    }
+    private func pinView(_ item: ProfileAnnotation) -> some View {
+        Button {
+            activeIndex = item.id
+        } label: {
+            VStack(spacing: 4) {
+                if activeIndex == item.id {
+                    VStack(spacing: 0) {
+                        Text(item.profile.first_name ?? "")
+                            .font(AppFont.manropeMedium(11))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.yellow)
+                            .cornerRadius(10)
+                        Triangle()
+                            .fill(Color.yellow)
+                            .frame(width: 12, height: 6)
+                    }
+                }
+                if let photo = item.profile.photos?.first,
+                   let urlStr = photo.file,
+                   let url = URL(string: urlStr) {
+                    AsyncImage(url: url) { image in
+                        image.resizable().scaledToFill()
+                    } placeholder: {
+                        Color.gray.opacity(0.2)
+                    }
+                    .frame(width: 42, height: 42)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle().stroke(
+                            activeIndex == item.id ? .yellow : .white,
+                            lineWidth: 3
+                        )
+                    )
+                    .shadow(radius: 4)
+                } else {
+                    Circle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 42, height: 42)
+                }
+            }
+        }
+    }
+    struct Triangle: Shape {
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+            path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.closeSubpath()
+            return path
+        }
     }
     private var header: some View {
         HStack {
@@ -94,11 +155,12 @@ struct MapView: View {
                     .frame(width: 44, height: 44)
                     .overlay(Image(systemName: "chevron.left").foregroundColor(.black))
             }
+
             Spacer()
             HStack(spacing: 6) {
                 Image("location")
                 Text(KeychainHelper.shared.get(forKey: "address") ?? "")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(AppFont.manropeMedium(13))
                     .foregroundColor(.black)
             }
             Spacer()
@@ -114,10 +176,11 @@ struct MapView: View {
     private var searchBar: some View {
         HStack(spacing: 12) {
             HStack {
-                Image(systemName: "magnifyingglass").foregroundColor(.gray)
-                Text("Search Location").foregroundColor(.gray)
+                Image(systemName: "magnifyingglass")
+                Text("Search Location")
                 Spacer()
             }
+            .foregroundColor(.gray)
             .padding()
             .background(Color.white)
             .cornerRadius(12)
@@ -251,5 +314,3 @@ struct MapView: View {
         }
     }
 }
-
-

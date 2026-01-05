@@ -180,6 +180,8 @@ class LocationPermissionManager: NSObject, ObservableObject, CLLocationManagerDe
     @Published var country: String = ""
     @Published var postalCode: String = ""
     @Published var isLocationReady: Bool = false
+    @Published var userLocation: CLLocation?
+
     override init() {
         super.init()
         manager.delegate = self
@@ -200,6 +202,7 @@ class LocationPermissionManager: NSObject, ObservableObject, CLLocationManagerDe
         KeychainHelper.shared.save(shortLat, forKey: "saved_latitude")
         KeychainHelper.shared.save(shortLong, forKey: "saved_longitude")
         reverseGeocode(location: loc)
+        userLocation = loc
         manager.stopUpdatingLocation()
     }
     private func reverseGeocode(location: CLLocation) {
