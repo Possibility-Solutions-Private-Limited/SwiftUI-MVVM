@@ -39,96 +39,98 @@ struct HomeView: View {
     @State private var showNotifications = false
     //========
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                LinearGradient(
-                    colors: [.splashTop, .splashBottom],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-                VStack {
-                    if userAuth.steps {
-                        if userAuth.space {
-                            header
-                            Text("Nearby Rooms & Roommates")
-                            .font(AppFont.manropeExtraBold(18))
-                            searchBar
-                            ZStack {
-                                if profiles.isEmpty {
-                                    NoRoomsView()
-                                }else{
-                                    ForEach(profiles.indices.reversed(), id: \.self) { index in
-                                        let profile = profiles[index]
-                                        SwipeCard(
-                                            profiles: profile,
-                                            maxHeight: geo.size.height * 2,
-                                            isActive: index == 0
-                                        ) {
-                                            removeProfile(profile)
-                                        }
-                                        .id(profile.id)
-                                        .zIndex(Double(profiles.count - index))
-                                     }
-                                }
-                            }
-                          .padding(.horizontal)
-                         }else{
-                            SpaceView(
-                                showFinalStep: $showFinalStep,
-                                viewModel: viewModel,
-                                selections: selections,
-                                onNext: next
-                            )
-                        }
-                    }else{
-                        if showFinalStep == 1 {
-                            FinalStepView(
-                                showFinalStep: $showFinalStep,
-                                viewModel: viewModel,
-                                selections: selections,
-                                onNext: next
-                            )
-                        } else if showFinalStep == 2 {
-                            GenderStepView(
-                                showFinalStep: $showFinalStep,
-                                viewModel: viewModel,
-                                selections: selections,
-                                onNext: next
-                            )
-                        } else if showFinalStep == 3 {
-                            SpaceView(
-                                showFinalStep: $showFinalStep,
-                                viewModel: viewModel,
-                                selections: selections,
-                                onNext: next
-                            )
-                        } else {
-                            header
-                            title
-                            ZStack {
-                                ForEach(cards) { card in
-                                    let index = cards.firstIndex { $0.id == card.id } ?? 0
-                                    ProfileSwipeCard(
-                                        viewModel: viewModel,
-                                        selections: selections,
-                                        step: card.step,
-                                        currentStep: displayStep(for: card.step),
-                                        totalSteps: totalSteps,
-                                        maxHeight: geo.size.height * 0.7
-                                    ) {
-                                        withAnimation(.spring()) {
-                                            cards.removeAll { $0.id == card.id }
-                                            if cards.isEmpty {
-                                                showFinalStep = 1
+        NavigationStack {
+            GeometryReader { geo in
+                ZStack {
+                    LinearGradient(
+                        colors: [.splashTop, .splashBottom],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .ignoresSafeArea()
+                    VStack {
+                        if userAuth.steps {
+                            if userAuth.space {
+                                header
+                                Text("Nearby Rooms & Roommates")
+                                    .font(AppFont.manropeExtraBold(18))
+                                searchBar
+                                ZStack {
+                                    if profiles.isEmpty {
+                                        NoRoomsView()
+                                    }else{
+                                        ForEach(profiles.indices.reversed(), id: \.self) { index in
+                                            let profile = profiles[index]
+                                            SwipeCard(
+                                                profiles: profile,
+                                                maxHeight: geo.size.height * 2,
+                                                isActive: index == 0
+                                            ) {
+                                                removeProfile(profile)
                                             }
+                                            .id(profile.id)
+                                            .zIndex(Double(profiles.count - index))
                                         }
                                     }
-                                    .offset(y: CGFloat(index) * 7)
                                 }
+                                .padding(.horizontal)
+                            }else{
+                                SpaceView(
+                                    showFinalStep: $showFinalStep,
+                                    viewModel: viewModel,
+                                    selections: selections,
+                                    onNext: next
+                                )
                             }
-                            .padding(.horizontal)
-                            Spacer(minLength: 5)
+                        }else{
+                            if showFinalStep == 1 {
+                                FinalStepView(
+                                    showFinalStep: $showFinalStep,
+                                    viewModel: viewModel,
+                                    selections: selections,
+                                    onNext: next
+                                )
+                            } else if showFinalStep == 2 {
+                                GenderStepView(
+                                    showFinalStep: $showFinalStep,
+                                    viewModel: viewModel,
+                                    selections: selections,
+                                    onNext: next
+                                )
+                            } else if showFinalStep == 3 {
+                                SpaceView(
+                                    showFinalStep: $showFinalStep,
+                                    viewModel: viewModel,
+                                    selections: selections,
+                                    onNext: next
+                                )
+                            } else {
+                                header
+                                title
+                                ZStack {
+                                    ForEach(cards) { card in
+                                        let index = cards.firstIndex { $0.id == card.id } ?? 0
+                                        ProfileSwipeCard(
+                                            viewModel: viewModel,
+                                            selections: selections,
+                                            step: card.step,
+                                            currentStep: displayStep(for: card.step),
+                                            totalSteps: totalSteps,
+                                            maxHeight: geo.size.height * 0.7
+                                        ) {
+                                            withAnimation(.spring()) {
+                                                cards.removeAll { $0.id == card.id }
+                                                if cards.isEmpty {
+                                                    showFinalStep = 1
+                                                }
+                                            }
+                                        }
+                                        .offset(y: CGFloat(index) * 7)
+                                    }
+                                }
+                                .padding(.horizontal)
+                                Spacer(minLength: 5)
+                            }
                         }
                     }
                 }
@@ -1108,9 +1110,10 @@ struct HomeView: View {
                    RoundedRectangle(cornerRadius: 10)
                   .stroke(Color.gray.opacity(0.25), lineWidth: 1)
                 )
-            Button {
-            } label: {
-                Image("map")
+                NavigationLink {
+                    MapView(profiles: profiles)
+                } label: {
+                    Image("map")
              }
          }
         .padding(.horizontal, 20)

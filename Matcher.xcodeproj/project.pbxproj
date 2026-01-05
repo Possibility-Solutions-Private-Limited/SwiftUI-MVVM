@@ -61,6 +61,7 @@
 		5DE234952F0658AF0044B82B /* Interaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DE234942F0658A10044B82B /* Interaction.swift */; };
 		5DE61E152F07BC57006FFD10 /* NotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DE61E142F07BC4B006FFD10 /* NotificationView.swift */; };
 		5DE61E172F07D10F006FFD10 /* NotificationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DE61E162F07D10B006FFD10 /* NotificationModel.swift */; };
+		5DEBC0262F0B9AD300CEC5FE /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DEBC0252F0B9ACC00CEC5FE /* MapView.swift */; };
 		5DFDE8C32EEBD7A9004CD35B /* IQKeyboardManagerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 5DFDE8C22EEBD7A9004CD35B /* IQKeyboardManagerSwift */; };
 		5DFDE8C62EEBD8DF004CD35B /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 5DFDE8C52EEBD8DF004CD35B /* SDWebImage */; };
 		5DFDE8C82EEBD8DF004CD35B /* SDWebImageMapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5DFDE8C72EEBD8DF004CD35B /* SDWebImageMapKit */; };
@@ -128,6 +129,7 @@
 		5DE234942F0658A10044B82B /* Interaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interaction.swift; sourceTree = "<group>"; };
 		5DE61E142F07BC4B006FFD10 /* NotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationView.swift; sourceTree = "<group>"; };
 		5DE61E162F07D10B006FFD10 /* NotificationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationModel.swift; sourceTree = "<group>"; };
+		5DEBC0252F0B9ACC00CEC5FE /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
 		5DFE0D822EFFD7FF000C27EF /* DashboardResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardResponse.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -182,6 +184,7 @@
 			isa = PBXGroup;
 			children = (
 				5D9AB2762DB8EDC800E3480F /* HomeView.swift */,
+				5DEBC0252F0B9ACC00CEC5FE /* MapView.swift */,
 			);
 			path = home;
 			sourceTree = "<group>";
@@ -475,6 +478,7 @@
 				5DD4E4EF2DBBBA29008F48B4 /* SocketService.swift in Sources */,
 				5DE61E152F07BC57006FFD10 /* NotificationView.swift in Sources */,
 				5D0EF5622DBA65C000CF3F6C /* SplashView.swift in Sources */,
+				5DEBC0262F0B9AD300CEC5FE /* MapView.swift in Sources */,
 				5DACB5122F02E5E4002299C0 /* CustomModel.swift in Sources */,
 				5D9AB2682DB8ED8C00E3480F /* AttendanceApp.swift in Sources */,
 				5D5056612EF3D3930013453F /* LikeView.swift in Sources */,
