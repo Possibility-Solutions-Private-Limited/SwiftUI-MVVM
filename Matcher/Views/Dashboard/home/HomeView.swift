@@ -25,7 +25,6 @@ struct HomeView: View {
         Card(step: 0)
     ]
     //filter=============
-    @StateObject private var locationManager = LocationPermissionManager()
     @State private var showFilters = false
     @State private var savedFilters: FiltersData? = nil
     @State private var genderId: Int = 0
@@ -136,14 +135,10 @@ struct HomeView: View {
             }
         }
         .onAppear {
-            if viewModel.genders.isEmpty {
-                viewModel.fetchBasicData {
-                    if userAuth.steps && userAuth.space {
-                        loadSavedFilters()
-                        loadDashboardAPI()
-                    }
-                }
-            } else {
+            viewModel.fetchBasicData(param: [
+                "lat": "\(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "")",
+                "long": "\(KeychainHelper.shared.get(forKey: "saved_longitude") ?? "")",
+                ]) {
                 if userAuth.steps && userAuth.space {
                     loadSavedFilters()
                     loadDashboardAPI()
@@ -167,8 +162,8 @@ struct HomeView: View {
     private func loadDashboardAPI() {
         dashboardView.loadDashboard(params: [
             "page": currentPage,   
-            "lat": locationManager.latitude,
-            "long": locationManager.longitude,
+            "lat": "\(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "")",
+            "long": "\(KeychainHelper.shared.get(forKey: "saved_longitude") ?? "")",
             "age": Int(age),
             "distance": Int(distanceMax),
             "want_to_live_with": Int(genderId),
@@ -1089,8 +1084,8 @@ struct HomeView: View {
                         FiltersSheetView(viewModel: viewModel) { filter in
                             dashboardView.loadDashboard(params: [
                                 "page": currentPage,
-                                "lat": locationManager.latitude,
-                                "long": locationManager.longitude,
+                                "lat": "\(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "")",
+                                "long": "\(KeychainHelper.shared.get(forKey: "saved_longitude") ?? "")",
                                 "age":Int(filter.age),
                                 "distance":Int(filter.distanceMax),
                                 "want_to_live_with": Int(filter.genderId),
@@ -2765,8 +2760,8 @@ struct SpaceView: View {
             "furnish_type": selectedFurnishing?.id ?? 0,
             "amenities": Array(selectedAmenities),
             "location": savedAddress,
-            "lat": locationManager.latitude,
-            "long": locationManager.longitude,
+            "lat": "\(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "")",
+            "long": "\(KeychainHelper.shared.get(forKey: "saved_longitude") ?? "")",
             "want_to_live_with": selectedGender?.id ?? 0
         ]
         let amenities = Array(selectedAmenities)

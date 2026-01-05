@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUICore
 class LoginModel: ObservableObject {
     func LoginAPI(param: [String: Any], completion: @escaping (UserModel?) -> Void) {
         print(param)
@@ -235,13 +236,13 @@ class BasicModel: ObservableObject {
     @Published var partyPreferences: [OptionItem] = []
     @Published var errorMessage: String = ""
 
-    func fetchBasicData(completion: @escaping () -> Void) {
+    func fetchBasicData(param: [String: Any],completion: @escaping () -> Void) {
+        print("param",param)
         NetworkManager.shared.makeRequest(
             endpoint: APIConstants.Endpoints.BasicData,
             method: "GET",
-            parameters: nil
+            parameters: param,
         ) { (result: Result<BasicDataModel, Error>) in
-            
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
@@ -252,13 +253,10 @@ class BasicModel: ObservableObject {
                     self.genders = data.gender
                     self.professionalFields = data.professionalField
                     self.partyPreferences = data.intoParty
-                    print("✅ Basic Data Loaded Successfully")
-                    completion()   // 🔥 IMPORTANT
-                    
+                    completion()
                 case .failure(let error):
                     self.errorMessage = error.localizedDescription
-                    print("❌ Error fetching basic data:", error.localizedDescription)
-                    completion()   // 🔥 STILL CALL to allow next flow
+                    completion()
                 }
             }
         }

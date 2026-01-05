@@ -205,6 +205,9 @@ struct ProfilePicView: View {
         let params: [String: Any] = [
             "gender": gender.lowercased(),
             "dob": dob,
+            "location": "\(KeychainHelper.shared.get(forKey: "saved_address") ?? "")",
+            "lat": "\(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "")",
+            "long": "\(KeychainHelper.shared.get(forKey: "saved_longitude") ?? "")",
         ]
         PROFILE.SignUpWithImages(images: imgs, params: params) { response in
             guard let response else {
@@ -225,6 +228,7 @@ struct ProfilePicView: View {
             KeychainHelper.shared.save(data?.email ?? "", forKey: "email")
             KeychainHelper.shared.save(data?.mobile ?? "", forKey: "mobile")
             KeychainHelper.shared.save(data?.gender ?? "", forKey: "gender")
+            KeychainHelper.shared.saveInt(data?.id ?? 0, forKey: "userId")
             if let imageFile = data?.photos?.first?.file, !imageFile.isEmpty {
                 KeychainHelper.shared.save(imageFile, forKey: "image")
                 print("imageFile",imageFile)

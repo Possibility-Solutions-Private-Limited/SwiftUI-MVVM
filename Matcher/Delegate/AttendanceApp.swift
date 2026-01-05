@@ -12,6 +12,7 @@ struct AttendanceApp: App {
     @StateObject private var router = AppRouter()
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var location = LocationPermissionManager()
+
     var body: some Scene {
         WindowGroup {
             SplashView()
@@ -168,7 +169,6 @@ struct FloatingTabBarShape: Shape {
     }
 }
 class LocationPermissionManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-
     private let manager = CLLocationManager()
     private let geocoder = CLGeocoder()
     private var locationCaptured = false
@@ -179,6 +179,7 @@ class LocationPermissionManager: NSObject, ObservableObject, CLLocationManagerDe
     @Published var state: String = ""
     @Published var country: String = ""
     @Published var postalCode: String = ""
+    @Published var isLocationReady: Bool = false
     override init() {
         super.init()
         manager.delegate = self
@@ -191,6 +192,7 @@ class LocationPermissionManager: NSObject, ObservableObject, CLLocationManagerDe
         guard loc.horizontalAccuracy > 0 && loc.horizontalAccuracy <= 100 else { return }
         guard !locationCaptured else { return }
         locationCaptured = true
+        isLocationReady = true
         latitude = loc.coordinate.latitude
         longitude = loc.coordinate.longitude
         let shortLat = String(format: "%.6f", latitude)
@@ -200,7 +202,6 @@ class LocationPermissionManager: NSObject, ObservableObject, CLLocationManagerDe
         reverseGeocode(location: loc)
         manager.stopUpdatingLocation()
     }
-
     private func reverseGeocode(location: CLLocation) {
         geocoder.reverseGeocodeLocation(location) { placemarks, error in
             guard let place = placemarks?.first, error == nil else { return }
