@@ -6,6 +6,21 @@ struct ProfileAnnotation: Identifiable {
     let profile: Profiles
     let coordinate: CLLocationCoordinate2D
 }
+final class LocationSearchManager: NSObject, ObservableObject, MKLocalSearchCompleterDelegate {
+    @Published var results: [MKLocalSearchCompletion] = []
+    private let completer = MKLocalSearchCompleter()
+    override init() {
+        super.init()
+        completer.delegate = self
+        completer.resultTypes = [.address, .pointOfInterest]
+    }
+    func updateQuery(_ text: String) {
+        completer.queryFragment = text
+    }
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        results = completer.results
+    }
+}
 struct MapView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var userAuth: UserAuth
@@ -17,6 +32,9 @@ struct MapView: View {
     @State private var hasCenteredOnUser = false
     let profiles: [Profiles]
     let annotations: [ProfileAnnotation]
+    @StateObject private var searchManager = LocationSearchManager()
+    @State private var searchText = ""
+    @State private var showSearchResults = true
     init(profiles: [Profiles]) {
         self.profiles = profiles
         let lat = Double(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "") ?? 28.6139
@@ -86,6 +104,8 @@ struct MapView: View {
                     Spacer()
                     bottomProfileCards
                 }
+                .padding(.bottom, 16)
+                .ignoresSafeArea(.keyboard, edges: .bottom)
             }
         }
         .toolbar(.hidden, for: .navigationBar)
@@ -174,22 +194,78 @@ struct MapView: View {
         .padding(.horizontal)
     }
     private var searchBar: some View {
-        HStack(spacing: 12) {
-            HStack {
-                Image(systemName: "magnifyingglass")
-                Text("Search Location")
-                Spacer()
+        ZStack(alignment: .top) {
+            HStack(spacing: 12) {
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                    TextField("Search Location", text: $searchText)
+                        .onChange(of: searchText) {
+                            searchManager.updateQuery(searchText)
+                            showSearchResults = showSearchResults
+                        }
+                    Spacer()
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(12)
+
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.yellow)
+                    .frame(width: 44, height: 44)
+                    .overlay(Image(systemName: "map").foregroundColor(.black))
             }
-            .foregroundColor(.gray)
-            .padding()
-            .background(Color.white)
-            .cornerRadius(12)
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.yellow)
-                .frame(width: 44, height: 44)
-                .overlay(Image(systemName: "map").foregroundColor(.black))
+            .padding(.horizontal)
+            if showSearchResults && !searchManager.results.isEmpty {
+                ZStack {
+                    LinearGradient(
+                        colors: [.splashTop, .splashBottom],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .cornerRadius(20)
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            ForEach(Array(searchManager.results.enumerated()), id: \.offset) { _, item in
+                                Button {
+                                    selectLocation(item)
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(item.title)
+                                                .font(AppFont.manropeBold(16))
+                                                .foregroundColor(.black)
+                                        Text(item.subtitle)
+                                                .font(AppFont.manropeMedium(12))
+                                                .foregroundColor(.gray)
+                                     }
+                                    .padding()
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Color.clear)
+                                }
+                                .buttonStyle(.plain)
+                                Divider()
+                            }
+                        }
+                    }
+                    .scrollIndicators(.hidden)
+                }
+                .frame(maxHeight: 400)
+                .padding(.horizontal)
+                .offset(y: 60)
+                .shadow(radius: 10)
+             }
         }
-        .padding(.horizontal)
+    }
+    private func selectLocation(_ completion: MKLocalSearchCompletion) {
+        searchText = completion.title
+        withAnimation {
+            showSearchResults = false
+        }
+        let request = MKLocalSearch.Request(completion: completion)
+        let search = MKLocalSearch(request: request)
+        search.start { response, _ in
+            guard let coordinate = response?.mapItems.first?.placemark.coordinate else { return }
+            zoom(to: coordinate)
+        }
     }
     private var bottomProfileCards: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -257,9 +333,9 @@ struct MapView: View {
                             .padding(.vertical, 6)
                             .background(Color.yellow)
                             .cornerRadius(10)
-                    }
-                }
-            }
+                       }
+                  }
+             }
             .padding()
             .frame(width: UIScreen.main.bounds.width - 72, height: 200)
             .background(Color.white)
@@ -314,3 +390,4 @@ struct MapView: View {
         }
     }
 }
+
