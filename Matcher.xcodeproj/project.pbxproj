@@ -53,6 +53,12 @@
 		5D9AB2882DB8F79500E3480F /* APIConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9AB2872DB8F79500E3480F /* APIConstants.swift */; };
 		5D9AB28C2DB9126000E3480F /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9AB28B2DB9126000E3480F /* UserModel.swift */; };
 		5D9AB28F2DB91B8800E3480F /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9AB28E2DB91B8800E3480F /* KeychainHelper.swift */; };
+		5D9C05E02F0CC5A9006741D9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05DF2F0CC5A7006741D9 /* SettingsView.swift */; };
+		5D9C05E22F0CD840006741D9 /* NotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05E12F0CD83E006741D9 /* NotificationSettingsView.swift */; };
+		5D9C05E42F0CDD0D006741D9 /* HelpSupportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05E32F0CDD0C006741D9 /* HelpSupportView.swift */; };
+		5D9C05E62F0CDD1A006741D9 /* FAQView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05E52F0CDD19006741D9 /* FAQView.swift */; };
+		5D9C05E82F0CDD22006741D9 /* PrivacyPolicyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05E72F0CDD21006741D9 /* PrivacyPolicyView.swift */; };
+		5D9C05EA2F0CDD2B006741D9 /* TermsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05E92F0CDD29006741D9 /* TermsView.swift */; };
 		5D9EB8312DF7FBC80064B056 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9EB8302DF7FBC80064B056 /* ImagePicker.swift */; };
 		5DACB5122F02E5E4002299C0 /* CustomModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DACB5112F02E5D9002299C0 /* CustomModel.swift */; };
 		5DBF0E972DBB8B010028D953 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5DBF0E962DBB8B010028D953 /* GoogleService-Info.plist */; };
@@ -119,6 +125,12 @@
 		5D9AB2872DB8F79500E3480F /* APIConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConstants.swift; sourceTree = "<group>"; };
 		5D9AB28B2DB9126000E3480F /* UserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModel.swift; sourceTree = "<group>"; };
 		5D9AB28E2DB91B8800E3480F /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		5D9C05DF2F0CC5A7006741D9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		5D9C05E12F0CD83E006741D9 /* NotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsView.swift; sourceTree = "<group>"; };
+		5D9C05E32F0CDD0C006741D9 /* HelpSupportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpSupportView.swift; sourceTree = "<group>"; };
+		5D9C05E52F0CDD19006741D9 /* FAQView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FAQView.swift; sourceTree = "<group>"; };
+		5D9C05E72F0CDD21006741D9 /* PrivacyPolicyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPolicyView.swift; sourceTree = "<group>"; };
+		5D9C05E92F0CDD29006741D9 /* TermsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermsView.swift; sourceTree = "<group>"; };
 		5D9EB8302DF7FBC80064B056 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		5DACB5112F02E5D9002299C0 /* CustomModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomModel.swift; sourceTree = "<group>"; };
 		5DBF0E962DBB8B010028D953 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -205,6 +217,12 @@
 			isa = PBXGroup;
 			children = (
 				5D9AB2752DB8EDC800E3480F /* ProfileView.swift */,
+				5D9C05DF2F0CC5A7006741D9 /* SettingsView.swift */,
+				5D9C05E12F0CD83E006741D9 /* NotificationSettingsView.swift */,
+				5D9C05E32F0CDD0C006741D9 /* HelpSupportView.swift */,
+				5D9C05E52F0CDD19006741D9 /* FAQView.swift */,
+				5D9C05E72F0CDD21006741D9 /* PrivacyPolicyView.swift */,
+				5D9C05E92F0CDD29006741D9 /* TermsView.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -456,9 +474,12 @@
 				5D271C812EF26D1B00FAC268 /* ChangePasswordView.swift in Sources */,
 				5D43316C2DE43A290016B700 /* ChatListView.swift in Sources */,
 				5D9AB2882DB8F79500E3480F /* APIConstants.swift in Sources */,
+				5D9C05E62F0CDD1A006741D9 /* FAQView.swift in Sources */,
 				5D9AB27F2DB8EDC900E3480F /* ViewModel.swift in Sources */,
+				5D9C05E42F0CDD0D006741D9 /* HelpSupportView.swift in Sources */,
 				5D67B7532EEFC330008E794D /* ValidationHelper.swift in Sources */,
 				5D0EF55C2DBA549B00CF3F6C /* ForgotView.swift in Sources */,
+				5D9C05E02F0CC5A9006741D9 /* SettingsView.swift in Sources */,
 				5D9AB2862DB8F2E400E3480F /* NetworkManager.swift in Sources */,
 				5D04CB452EEC3C1A00FB6A21 /* VerifyOTPView.swift in Sources */,
 				5D14990D2EF969B900C5021A /* BasicDataModel.swift in Sources */,
@@ -481,7 +502,10 @@
 				5DEBC0262F0B9AD300CEC5FE /* MapView.swift in Sources */,
 				5DACB5122F02E5E4002299C0 /* CustomModel.swift in Sources */,
 				5D9AB2682DB8ED8C00E3480F /* AttendanceApp.swift in Sources */,
+				5D9C05E82F0CDD22006741D9 /* PrivacyPolicyView.swift in Sources */,
 				5D5056612EF3D3930013453F /* LikeView.swift in Sources */,
+				5D9C05E22F0CD840006741D9 /* NotificationSettingsView.swift in Sources */,
+				5D9C05EA2F0CDD2B006741D9 /* TermsView.swift in Sources */,
 				5DE61E172F07D10F006FFD10 /* NotificationModel.swift in Sources */,
 				5D4331722DE48F120016B700 /* MessageModel.swift in Sources */,
 				5D08E91E2EFC27CD0052B4B4 /* SpaceModel.swift in Sources */,

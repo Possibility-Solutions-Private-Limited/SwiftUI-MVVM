@@ -7,19 +7,21 @@ struct ProfileView: View {
     @State private var user: User?
     @State private var currentImageIndex: Int = 0
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                LinearGradient(colors: [.splashTop, .splashBottom], startPoint: .top, endPoint: .bottom)
-                    .ignoresSafeArea()
-                VStack {
-                    header
-                    if let user {
-                        SwipeCard(
-                            user: user,
-                            maxHeight: geo.size.height * 2
-                        )
+        NavigationStack {
+            GeometryReader { geo in
+                ZStack {
+                    LinearGradient(colors: [.splashTop, .splashBottom], startPoint: .top, endPoint: .bottom)
+                        .ignoresSafeArea()
+                    VStack {
+                        header
+                        if let user {
+                            SwipeCard(
+                                user: user,
+                                maxHeight: geo.size.height * 2
+                            )
+                        }
+                        Spacer(minLength: 10)
                     }
-                    Spacer(minLength: 10)
                 }
             }
         }
@@ -33,8 +35,8 @@ struct ProfileView: View {
     }
     var header: some View {
         HStack {
-            Button {
-                userAuth.logout()
+            NavigationLink {
+                SettingsView()
             } label: {
                 Image("setting")
             }
