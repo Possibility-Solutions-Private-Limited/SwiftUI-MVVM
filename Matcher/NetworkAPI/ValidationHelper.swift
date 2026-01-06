@@ -1,6 +1,6 @@
 import Foundation
 import SwiftUI
-
+import WebKit
 final class ValidationHelper: ObservableObject {
     // MARK: - Toast State
     @Published var showToast: Bool = false
@@ -374,5 +374,143 @@ class ImageCache {
     func get(forKey key: String) -> UIImage? { cache.object(forKey: key as NSString) }
     func set(_ image: UIImage, forKey key: String) { cache.setObject(image, forKey: key as NSString) }
 }
+struct HTMLWebView: UIViewRepresentable {
+    let htmlString: String
+    @Binding var dynamicHeight: CGFloat
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        webView.navigationDelegate = context.coordinator
+        webView.isOpaque = false
+        webView.backgroundColor = .clear
+        webView.scrollView.isScrollEnabled = false
+        webView.scrollView.backgroundColor = .clear
+        return webView
+    }
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        let html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {
+                font-family: -apple-system;
+                font-size: 14px;
+                color: #000000;
+                line-height: 1.6;
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+        </head>
+        <body>
+        \(htmlString)
+        </body>
+        </html>
+        """
+        webView.loadHTMLString(html, baseURL: nil)
+    }
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    class Coordinator: NSObject, WKNavigationDelegate {
+        var parent: HTMLWebView
+        init(_ parent: HTMLWebView) {
+            self.parent = parent
+        }
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            webView.evaluateJavaScript("document.body.scrollHeight") { height, _ in
+                if let height = height as? CGFloat {
+                    DispatchQueue.main.async {
+                        self.parent.dynamicHeight = height
+                    }
+                }
+            }
+        }
+    }
+}
+struct DeleteAccountSheetView: View {
+    @Binding var isPresented: Bool
+    var onDelete: () -> Void
+    var body: some View {
+        VStack(spacing: 20) {
+            Capsule()
+                .fill(Color.gray.opacity(0.4))
+                .frame(width: 40, height: 5)
+                .padding(.top, 10)
+            Image(systemName: "trash.fill")
+                .font(.system(size: 30))
+                .foregroundColor(.yellow)
+                .padding()
+                .background(
+                    Circle()
+                        .fill(Color.yellow.opacity(0.2))
+                )
+            Text("Are you sure you want to delete your account?")
+                .font(AppFont.manropeSemiBold(14))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            Button(action: {
+                isPresented = false
+                onDelete()
+            }) {
+                Text("Delete Account")
+                    .font(AppFont.manropeSemiBold(15))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.black)
+                    .cornerRadius(12)
+            }
+            .padding(.horizontal)
+        }
+        .padding(.bottom, 20)
+        .background(Color.white)
+        .cornerRadius(24)
+        .padding(.horizontal)
+    }
+}
 
+
+struct LogoutSheetView: View {
+    @Binding var isPresented: Bool
+    var onDelete: () -> Void
+    var body: some View {
+        VStack(spacing: 20) {
+            Capsule()
+                .fill(Color.gray.opacity(0.4))
+                .frame(width: 40, height: 5)
+                .padding(.top, 10)
+            Image(systemName: "arrow.backward.circle.fill")
+                .font(.system(size: 30))
+                .foregroundColor(.yellow)
+                .padding()
+                .background(
+                    Circle()
+                        .fill(Color.yellow.opacity(0.2))
+                )
+            Text("Are you sure you want to logout?")
+                .font(AppFont.manropeSemiBold(14))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            Button(action: {
+                isPresented = false
+                onDelete()
+            }) {
+                Text("Logout")
+                    .font(AppFont.manropeSemiBold(15))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.black)
+                    .cornerRadius(12)
+            }
+            .padding(.horizontal)
+        }
+        .padding(.bottom, 20)
+        .background(Color.white)
+        .cornerRadius(24)
+        .padding(.horizontal)
+    }
+}
 

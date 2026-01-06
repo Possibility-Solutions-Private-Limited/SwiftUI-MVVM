@@ -4,6 +4,12 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var router: AppRouter
     @EnvironmentObject var userAuth: UserAuth
+    @State private var showDeleteSheet = false
+    @StateObject private var DELETE = deleteAccountModel()
+    
+    @State private var showLogoutSheet = false
+    @StateObject private var LOGOUT = LogoutModel()
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -22,8 +28,88 @@ struct SettingsView: View {
                 }
                 .padding(.horizontal)
                 .padding(.top, 20)
-               }
-         }
+                if showDeleteSheet {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            showDeleteSheet = false
+                        }
+                }
+                ZStack {
+                    if showDeleteSheet {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+                            .onTapGesture {
+                                withAnimation {
+                                    showDeleteSheet = false
+                                }
+                            }
+                            .transition(.opacity)
+                            .zIndex(5)
+                    }
+                    if showDeleteSheet {
+                        DeleteAccountSheetView(
+                            isPresented: $showDeleteSheet,
+                            onDelete: {
+                                DELETE.deleteAccount() { response in
+                                    if let response = response {
+                                        if response.success {
+                                            router.isTabBarHidden = false
+                                            userAuth.logout()
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                        .transition(.move(edge: .bottom))
+                        .zIndex(10)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showDeleteSheet)
+                    }
+                }
+                if showLogoutSheet {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            showLogoutSheet = false
+                        }
+                }
+                ZStack {
+                    if showLogoutSheet {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+                            .onTapGesture {
+                                withAnimation {
+                                    showLogoutSheet = false
+                                }
+                            }
+                            .transition(.opacity)
+                            .zIndex(5)
+                    }
+                    if showLogoutSheet {
+                        LogoutSheetView(
+                            isPresented: $showLogoutSheet,
+                            onDelete: {
+                                LOGOUT.LogoutAPI() { response in
+                                    if let response = response {
+                                        if response.success {
+                                            router.isTabBarHidden = false
+                                            userAuth.logout()
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                        .transition(.move(edge: .bottom))
+                        .zIndex(10)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showLogoutSheet)
+                    }
+                }
+            }
+            .animation(.easeInOut, value: showDeleteSheet)
+            .animation(.easeInOut, value: showLogoutSheet)
+        }
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
@@ -89,7 +175,7 @@ struct SettingsView: View {
             Divider()
                 .background(AppColors.borderGray)
             Button {
-                userAuth.logout()
+                showLogoutSheet = true
             } label: {
                 HStack {
                     Text("Log out")
@@ -173,22 +259,29 @@ struct SettingsView: View {
             .padding(.leading, 48)
     }
     private var deleteAccountButton: some View {
-        Button {
-        } label: {
-            HStack {
-                Text("Delete Account")
-                       .font(AppFont.manropeSemiBold(16))
-                       .frame(maxWidth: .infinity, alignment: .center)
-                Image(systemName: "chevron.right")
+        ZStack {
+            Button {
+                showDeleteSheet = true
+            } label: {
+                HStack {
+                    Text("Delete Account")
+                        .font(AppFont.manropeSemiBold(16))
+                        .frame(maxWidth: .infinity, alignment: .center)
+
+                    Image(systemName: "chevron.right")
+                }
+                .foregroundColor(AppColors.backgroundWhite)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(AppColors.Black)
+                )
             }
-            .foregroundColor(AppColors.backgroundWhite)
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(AppColors.Black)
-            )
+            .padding(.bottom, 20)
         }
-        .padding(.bottom, 20)
     }
 }
+
+
+            

@@ -215,6 +215,52 @@ class ChangeForgotModel: ObservableObject {
         }
     }
 }
+class deleteAccountModel: ObservableObject {
+    func deleteAccount(completion: @escaping (CustomModel?) -> Void) {
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.Delete,
+            method: "POST",
+            parameters: nil
+        ) { (result: Result<CustomModel, Error>) in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                print("Delete Success: \(response)")
+                if response.success {
+                    completion(response)
+                } else {
+                    completion(response)
+                }
+                case .failure(_):
+                    completion(nil)
+                }
+            }
+        }
+    }
+}
+class LogoutModel: ObservableObject {
+    func LogoutAPI(completion: @escaping (CustomModel?) -> Void) {
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.Logout,
+            method: "POST",
+            parameters: nil
+        ) { (result: Result<CustomModel, Error>) in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                print("Logout Success: \(response)")
+                if response.success {
+                    completion(response)
+                } else {
+                    completion(response)
+                }
+                case .failure(_):
+                    completion(nil)
+                }
+            }
+        }
+    }
+}
 final class UserSelections: ObservableObject {
     @Published var selectedRole = ""
     @Published var selectedCategory: Int?
@@ -511,6 +557,67 @@ class ChatHistoryModel: ObservableObject {
                 case .success(let response):
                     print("chats: \(response)")
                     self.messages = response.data
+                case .failure(let error):
+                    print("Error fetching deductions: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+}
+class faqModel: ObservableObject {
+    @Published var faqs: [FAQ] = []
+    func fetchFAQ() {
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.faqs, method: "GET",
+            parameters: nil
+        ) { (result: Result<FAQModel, Error>) in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    print("FAQs: \(response)")
+                    self.faqs = response.data
+                case .failure(let error):
+                    print("Error fetching deductions: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+}
+class PrivacyModel: ObservableObject {
+    @Published var privacyHTML: String = ""
+    func fetchPrivacy() {
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.Privacy, method: "GET",
+            parameters: nil
+        ) { (result: Result<privacyModel, Error>) in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    print("Privacy: \(response)")
+                    DispatchQueue.main.async {
+                        self.privacyHTML = response.data?.privacyPolicy ?? ""
+                    }
+                case .failure(let error):
+                    print("Error fetching deductions: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+}
+class TermsModel: ObservableObject {
+    @Published var termsHTML: String = ""
+    func fetchTerms() {
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.Terms, method: "GET",
+            parameters: nil
+        ) { (result: Result<termModel, Error>) in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    print("Privacy: \(response)")
+                    DispatchQueue.main.async {
+                        self.termsHTML = response.data?.termPolicy ?? ""
+                    }
                 case .failure(let error):
                     print("Error fetching deductions: \(error.localizedDescription)")
                 }

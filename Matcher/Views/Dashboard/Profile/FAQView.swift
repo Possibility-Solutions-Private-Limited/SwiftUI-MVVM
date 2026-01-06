@@ -1,27 +1,10 @@
 import SwiftUI
 
-struct FAQ: Identifiable {
-    let id = UUID()
-    let question: String
-    let answer: String
-}
 struct FAQView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var router: AppRouter
-    @State private var faqs: [FAQ] = [
-        FAQ(question: "What Does Lorem Mean?",
-            answer: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipisici Elit…’ (Complete Text) Is Dummy Text That Is Not Meant To Mean Anything. It Is Used As A Placeholder In Magazine Layouts, For Example, In Order To Give An Impression Of The Finished Document."),
-        FAQ(question: "Why Is My Verification Failing?", answer: "1"),
-        FAQ(question: "My App Is Running Slow. What Can I Do?", answer: "2"),
-        FAQ(question: "How Do I Report Someone?", answer: "3"),
-        FAQ(question: "How Do I Recover A Deleted Chat?", answer: "4"),
-        FAQ(question: "How Do I Enable Dark Mode?", answer: "5"),
-        FAQ(question: "Can I Use The App On Multiple Devices?", answer: "6"),
-        FAQ(question: "How Do I Update The App?", answer: "7"),
-        FAQ(question: "Why Can’t I Upload Images?", answer: "8"),
-        FAQ(question: "How Do I Delete My Account?", answer: "9")
-    ]
-    @State private var expandedFAQ: UUID?
+    @StateObject private var FAQ = faqModel()
+    @State private var expandedFAQ: Int?
     var body: some View {
         ZStack {
             LinearGradient(
@@ -34,7 +17,7 @@ struct FAQView: View {
                 headerView
                 ScrollView {
                     VStack(spacing: 0) {
-                        ForEach(faqs) { faq in
+                        ForEach(FAQ.faqs) { faq in
                             VStack(spacing: 0) {
                                 Button(action: {
                                     withAnimation(.easeInOut) {
@@ -76,6 +59,7 @@ struct FAQView: View {
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
             router.isTabBarHidden = true
+            FAQ.fetchFAQ()
         }
     }
     private var headerView: some View {

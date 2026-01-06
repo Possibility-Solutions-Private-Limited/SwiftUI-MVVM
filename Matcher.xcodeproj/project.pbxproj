@@ -60,6 +60,9 @@
 		5D9C05E82F0CDD22006741D9 /* PrivacyPolicyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05E72F0CDD21006741D9 /* PrivacyPolicyView.swift */; };
 		5D9C05EA2F0CDD2B006741D9 /* TermsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05E92F0CDD29006741D9 /* TermsView.swift */; };
 		5D9C05EC2F0CF4DA006741D9 /* NotificationSettingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05EB2F0CF4C7006741D9 /* NotificationSettingModel.swift */; };
+		5D9C05EE2F0D0711006741D9 /* FAQModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05ED2F0D0707006741D9 /* FAQModel.swift */; };
+		5D9C05F02F0D0B59006741D9 /* privacyModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05EF2F0D0B38006741D9 /* privacyModel.swift */; };
+		5D9C05F22F0D13E5006741D9 /* termModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05F12F0D13DB006741D9 /* termModel.swift */; };
 		5D9EB8312DF7FBC80064B056 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9EB8302DF7FBC80064B056 /* ImagePicker.swift */; };
 		5DACB5122F02E5E4002299C0 /* CustomModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DACB5112F02E5D9002299C0 /* CustomModel.swift */; };
 		5DBF0E972DBB8B010028D953 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5DBF0E962DBB8B010028D953 /* GoogleService-Info.plist */; };
@@ -133,6 +136,9 @@
 		5D9C05E72F0CDD21006741D9 /* PrivacyPolicyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPolicyView.swift; sourceTree = "<group>"; };
 		5D9C05E92F0CDD29006741D9 /* TermsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermsView.swift; sourceTree = "<group>"; };
 		5D9C05EB2F0CF4C7006741D9 /* NotificationSettingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingModel.swift; sourceTree = "<group>"; };
+		5D9C05ED2F0D0707006741D9 /* FAQModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FAQModel.swift; sourceTree = "<group>"; };
+		5D9C05EF2F0D0B38006741D9 /* privacyModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = privacyModel.swift; sourceTree = "<group>"; };
+		5D9C05F12F0D13DB006741D9 /* termModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = termModel.swift; sourceTree = "<group>"; };
 		5D9EB8302DF7FBC80064B056 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		5DACB5112F02E5D9002299C0 /* CustomModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomModel.swift; sourceTree = "<group>"; };
 		5DBF0E962DBB8B010028D953 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -342,7 +348,10 @@
 				5D9AB28B2DB9126000E3480F /* UserModel.swift */,
 				5DACB5112F02E5D9002299C0 /* CustomModel.swift */,
 				5D9C05EB2F0CF4C7006741D9 /* NotificationSettingModel.swift */,
+				5D9C05EF2F0D0B38006741D9 /* privacyModel.swift */,
+				5D9C05F12F0D13DB006741D9 /* termModel.swift */,
 				5DE61E162F07D10B006FFD10 /* NotificationModel.swift */,
+				5D9C05ED2F0D0707006741D9 /* FAQModel.swift */,
 				5DE234942F0658A10044B82B /* Interaction.swift */,
 				5DFE0D822EFFD7FF000C27EF /* DashboardResponse.swift */,
 				5D14990C2EF969B900C5021A /* BasicDataModel.swift */,
@@ -483,6 +492,7 @@
 				5D67B7532EEFC330008E794D /* ValidationHelper.swift in Sources */,
 				5D0EF55C2DBA549B00CF3F6C /* ForgotView.swift in Sources */,
 				5D9C05E02F0CC5A9006741D9 /* SettingsView.swift in Sources */,
+				5D9C05F22F0D13E5006741D9 /* termModel.swift in Sources */,
 				5D9AB2862DB8F2E400E3480F /* NetworkManager.swift in Sources */,
 				5D04CB452EEC3C1A00FB6A21 /* VerifyOTPView.swift in Sources */,
 				5D14990D2EF969B900C5021A /* BasicDataModel.swift in Sources */,
@@ -512,11 +522,13 @@
 				5D9C05EA2F0CDD2B006741D9 /* TermsView.swift in Sources */,
 				5DE61E172F07D10F006FFD10 /* NotificationModel.swift in Sources */,
 				5D4331722DE48F120016B700 /* MessageModel.swift in Sources */,
+				5D9C05EE2F0D0711006741D9 /* FAQModel.swift in Sources */,
 				5D08E91E2EFC27CD0052B4B4 /* SpaceModel.swift in Sources */,
 				5D67B7552EEFC70A008E794D /* YourselfView.swift in Sources */,
 				5D9AB28C2DB9126000E3480F /* UserModel.swift in Sources */,
 				5D2C95EB2DF6AA750087D69C /* KeyboardResponder.swift in Sources */,
 				5D0EF55E2DBA63D600CF3F6C /* Constants.swift in Sources */,
+				5D9C05F02F0D0B59006741D9 /* privacyModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

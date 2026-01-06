@@ -21,7 +21,7 @@ struct HelpSupportView: View {
                 ScrollView {
                     VStack(spacing: 24) {
                         Text("Explain your problem")
-                            .font(.system(size: 22, weight: .semibold))
+                            .font(AppFont.manropeBold(16))
                             .foregroundColor(.black)
                             .padding(.top, 40)
                         textEditorView
@@ -70,11 +70,13 @@ struct HelpSupportView: View {
                 Text("type here...")
                     .foregroundColor(.gray)
                     .padding(.top, 14)
+                    .font(AppFont.manrope(14))
                     .padding(.leading, 12)
             }
             TextEditor(text: $message)
                 .focused($isEditorFocused)
                 .padding(8)
+                .font(AppFont.manrope(14))
                 .scrollContentBackground(.hidden)
                 .toolbar {
                     ToolbarItemGroup(placement: .keyboard) {

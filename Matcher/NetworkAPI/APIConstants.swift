@@ -20,6 +20,8 @@ struct APIConstants {
         static let StepTwo = "profile/step/2"
         static let AddRoom = "profile/add-room"
         static let Profile = "profile"
+        static let Delete = "delete"
+        static let Logout = "logout"
         static let sendOTP = "send-otp"
         static let verifyForgotOTP = "verify-forgot-otp"
         static let ChangePassword = "change-password"
@@ -34,7 +36,7 @@ struct APIConstants {
         static let notificationSettings = "notification/settings"
         static let helpSupport = "help-support"
         static let faqs = "faqs"
-        static let termsConditions = "terms-conditions"
-        static let privacyPolicy = "privacy-policy"
+        static let Terms = "terms-conditions"
+        static let Privacy = "privacy-policy"
     }
 }

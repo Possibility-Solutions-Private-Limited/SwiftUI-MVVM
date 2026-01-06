@@ -3,7 +3,8 @@ import SwiftUI
 struct PrivacyPolicyView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var router: AppRouter
-    
+    @StateObject private var privacyVM = PrivacyModel()
+    @State private var webHeight: CGFloat = 1
     var body: some View {
         ZStack {
             LinearGradient(
@@ -12,34 +13,20 @@ struct PrivacyPolicyView: View {
                 endPoint: .bottom
             )
             .ignoresSafeArea()
-            VStack(spacing: 24) {
+            VStack(spacing: 16) {
                 headerView
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Heading")
-                            .font(AppFont.manropeSemiBold(16))
-                            .foregroundColor(.black)
-                        
-                        Text(loremText)
-                            .foregroundColor(.black)
-                            .font(AppFont.manropeMedium(13))
-                            .lineSpacing(5)
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 16)
-                }
-                Button(action: {
-                    print("Accept tapped")
-                }) {
-                    Text("Accept")
-                        .font(AppFont.manropeSemiBold(14))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.black)
-                        .cornerRadius(12)
+                    if !privacyVM.privacyHTML.isEmpty {
+                        HTMLWebView(
+                            htmlString: privacyVM.privacyHTML,
+                            dynamicHeight: $webHeight
+                        )
+                        .frame(height: webHeight)
                         .padding(.horizontal)
-                        .padding(.bottom, 16)
+                    } else {
+                        ProgressView()
+                            .padding(.top, 40)
+                    }
                 }
             }
             .padding(.top, 20)
@@ -48,13 +35,12 @@ struct PrivacyPolicyView: View {
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
             router.isTabBarHidden = true
+            privacyVM.fetchPrivacy()
         }
     }
     private var headerView: some View {
         HStack {
-            Button {
-                dismiss()
-            } label: {
+            Button { dismiss() } label: {
                 Circle()
                     .fill(AppColors.primaryYellow)
                     .frame(width: 50, height: 50)
@@ -68,24 +54,11 @@ struct PrivacyPolicyView: View {
                     )
             }
             Spacer()
-            Text("FAQs")
+            Text("Privacy Policy")
                 .font(AppFont.manropeSemiBold(16))
             Spacer()
             Spacer()
         }
         .padding(.horizontal, 20)
     }
-    var loremText: String {
-        """
-        It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.
-
-        It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.
-
-        It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.
-
-        It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.
-        """
-    }
-    
 }
-
