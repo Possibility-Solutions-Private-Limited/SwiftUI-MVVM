@@ -45,7 +45,6 @@ struct FAQView: View {
                                         .padding([.horizontal, .bottom])
                                         .transition(.opacity.combined(with: .move(edge: .top)))
                                 }
-                                
                                 Divider()
                                     .background(Color.black.opacity(0.8))
                             }

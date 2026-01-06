@@ -63,6 +63,7 @@
 		5D9C05EE2F0D0711006741D9 /* FAQModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05ED2F0D0707006741D9 /* FAQModel.swift */; };
 		5D9C05F02F0D0B59006741D9 /* privacyModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05EF2F0D0B38006741D9 /* privacyModel.swift */; };
 		5D9C05F22F0D13E5006741D9 /* termModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05F12F0D13DB006741D9 /* termModel.swift */; };
+		5D9C05F62F0D2811006741D9 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05F52F0D280C006741D9 /* EditProfileView.swift */; };
 		5D9EB8312DF7FBC80064B056 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9EB8302DF7FBC80064B056 /* ImagePicker.swift */; };
 		5DACB5122F02E5E4002299C0 /* CustomModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DACB5112F02E5D9002299C0 /* CustomModel.swift */; };
 		5DBF0E972DBB8B010028D953 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5DBF0E962DBB8B010028D953 /* GoogleService-Info.plist */; };
@@ -139,6 +140,7 @@
 		5D9C05ED2F0D0707006741D9 /* FAQModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FAQModel.swift; sourceTree = "<group>"; };
 		5D9C05EF2F0D0B38006741D9 /* privacyModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = privacyModel.swift; sourceTree = "<group>"; };
 		5D9C05F12F0D13DB006741D9 /* termModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = termModel.swift; sourceTree = "<group>"; };
+		5D9C05F52F0D280C006741D9 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
 		5D9EB8302DF7FBC80064B056 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		5DACB5112F02E5D9002299C0 /* CustomModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomModel.swift; sourceTree = "<group>"; };
 		5DBF0E962DBB8B010028D953 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -225,12 +227,8 @@
 			isa = PBXGroup;
 			children = (
 				5D9AB2752DB8EDC800E3480F /* ProfileView.swift */,
-				5D9C05DF2F0CC5A7006741D9 /* SettingsView.swift */,
-				5D9C05E12F0CD83E006741D9 /* NotificationSettingsView.swift */,
-				5D9C05E32F0CDD0C006741D9 /* HelpSupportView.swift */,
-				5D9C05E52F0CDD19006741D9 /* FAQView.swift */,
-				5D9C05E72F0CDD21006741D9 /* PrivacyPolicyView.swift */,
-				5D9C05E92F0CDD29006741D9 /* TermsView.swift */,
+				5D9C05F42F0D2717006741D9 /* Edits */,
+				5D9C05F32F0D26F6006741D9 /* Settings */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -371,6 +369,27 @@
 			path = KeychainHelper;
 			sourceTree = "<group>";
 		};
+		5D9C05F32F0D26F6006741D9 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				5D9C05DF2F0CC5A7006741D9 /* SettingsView.swift */,
+				5D9C05E12F0CD83E006741D9 /* NotificationSettingsView.swift */,
+				5D9C05E32F0CDD0C006741D9 /* HelpSupportView.swift */,
+				5D9C05E52F0CDD19006741D9 /* FAQView.swift */,
+				5D9C05E72F0CDD21006741D9 /* PrivacyPolicyView.swift */,
+				5D9C05E92F0CDD29006741D9 /* TermsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		5D9C05F42F0D2717006741D9 /* Edits */ = {
+			isa = PBXGroup;
+			children = (
+				5D9C05F52F0D280C006741D9 /* EditProfileView.swift */,
+			);
+			path = Edits;
+			sourceTree = "<group>";
+		};
 		5DE61E132F07BC2D006FFD10 /* Notification */ = {
 			isa = PBXGroup;
 			children = (
@@ -501,6 +520,7 @@
 				5D2FAF7C2EF1930200A9A402 /* ForgotOTPView.swift in Sources */,
 				5D04CB432EEC38F900FB6A21 /* ProfilePicView.swift in Sources */,
 				5D9EB8312DF7FBC80064B056 /* ImagePicker.swift in Sources */,
+				5D9C05F62F0D2811006741D9 /* EditProfileView.swift in Sources */,
 				5D0EF5562DB9FF8400CF3F6C /* UserAuth.swift in Sources */,
 				5D43316E2DE43B910016B700 /* ChatModel.swift in Sources */,
 				5D4053562ED98BF4003B0C11 /* Toast+SwiftUI.swift in Sources */,

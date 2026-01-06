@@ -31,7 +31,7 @@ struct HelpSupportView: View {
                 }
             }
             .padding(.top, 20)
-        }
+         }
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .onAppear {

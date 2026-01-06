@@ -6,10 +6,8 @@ struct SettingsView: View {
     @EnvironmentObject var userAuth: UserAuth
     @State private var showDeleteSheet = false
     @StateObject private var DELETE = deleteAccountModel()
-    
     @State private var showLogoutSheet = false
     @StateObject private var LOGOUT = LogoutModel()
-    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -201,7 +199,7 @@ struct SettingsView: View {
                 .font(AppFont.manropeSemiBold(18))
                 .foregroundColor(AppColors.Black)
                 .padding(.top,20)
-            VStack(spacing: 0) {
+             VStack(spacing: 0) {
                 settingsRow(icon: "notify", title: "Notification Settings")
                 divider
                 settingsRow(icon: "helps", title: "Help And Supports")

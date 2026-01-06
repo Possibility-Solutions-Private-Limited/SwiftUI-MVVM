@@ -44,10 +44,14 @@ struct ProfileView: View {
             Text("Profile").font(AppFont.manropeSemiBold(16))
             Spacer()
             HStack {
-                Image("edit")
-                Text("Edit")
-                    .font(AppFont.manropeSemiBold(16))
-                    .foregroundColor(AppColors.primaryYellow)
+                NavigationLink {
+                    EditProfileView()
+                } label: {
+                    Image("edit")
+                    Text("Edit")
+                        .font(AppFont.manropeSemiBold(16))
+                        .foregroundColor(AppColors.primaryYellow)
+                }
             }
         }
         .padding(.horizontal)
