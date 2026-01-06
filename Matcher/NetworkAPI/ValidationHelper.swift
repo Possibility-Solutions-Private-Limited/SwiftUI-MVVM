@@ -97,6 +97,8 @@ struct ValidationMessages {
     static let lastNameEmpty = "Please enter your last name."
     static let confirmPasswordEmpty = "Please confirm your password."
     static let passwordMismatch = "Passwords do not match."
+    static let helpEmpty = "Please enter message"
+
 }
 extension Color {
     static let splashTop = Color(hex: "#F4F4F4")

@@ -499,7 +499,6 @@ class NotificationsModel: ObservableObject {
         fetchNotification(page: currentPage)
     }
 }
-
 class ChatHistoryModel: ObservableObject {
     @Published var messages: [Message] = []
     func fetchChatHistory(chatId: String) {
@@ -519,4 +518,49 @@ class ChatHistoryModel: ObservableObject {
         }
     }
 }
-
+class HelpModel: ObservableObject {
+    func HelpAPI(param: [String: Any], completion: @escaping (CustomModel?) -> Void) {
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.helpSupport,
+            method: "POST",
+            parameters: param
+        ) { (result: Result<CustomModel, Error>) in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                print("HELP Success: \(response)")
+                if response.success {
+                    completion(response)
+                } else {
+                    completion(response)
+                }
+                case .failure(_):
+                    completion(nil)
+                }
+            }
+        }
+    }
+}
+class NofificationSettingModel: ObservableObject {
+    func NofificationSettingAPI(param: [String: Any], completion: @escaping (NotificationSettingModel?) -> Void) {
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.notificationSettings,
+            method: "POST",
+            parameters: param
+        ) { (result: Result<NotificationSettingModel, Error>) in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                print("HELP Success: \(response)")
+                if response.success {
+                    completion(response)
+                } else {
+                    completion(response)
+                }
+                case .failure(_):
+                    completion(nil)
+                }
+            }
+        }
+    }
+}

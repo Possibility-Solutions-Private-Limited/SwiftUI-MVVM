@@ -31,5 +31,10 @@ struct APIConstants {
         static let interaction = "interaction"
         static let notification = "notification"
         static let notificationDelete = "notification/delete"
+        static let notificationSettings = "notification/settings"
+        static let helpSupport = "help-support"
+        static let faqs = "faqs"
+        static let termsConditions = "terms-conditions"
+        static let privacyPolicy = "privacy-policy"
     }
 }

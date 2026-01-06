@@ -22,8 +22,8 @@ struct SettingsView: View {
                 }
                 .padding(.horizontal)
                 .padding(.top, 20)
-            }
-        }
+               }
+         }
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
@@ -167,7 +167,6 @@ struct SettingsView: View {
             EmptyView()
         }
     }
-
     private var divider: some View {
         Divider()
             .background(AppColors.borderGray)

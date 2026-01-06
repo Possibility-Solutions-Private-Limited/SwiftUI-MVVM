@@ -59,6 +59,7 @@
 		5D9C05E62F0CDD1A006741D9 /* FAQView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05E52F0CDD19006741D9 /* FAQView.swift */; };
 		5D9C05E82F0CDD22006741D9 /* PrivacyPolicyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05E72F0CDD21006741D9 /* PrivacyPolicyView.swift */; };
 		5D9C05EA2F0CDD2B006741D9 /* TermsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05E92F0CDD29006741D9 /* TermsView.swift */; };
+		5D9C05EC2F0CF4DA006741D9 /* NotificationSettingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9C05EB2F0CF4C7006741D9 /* NotificationSettingModel.swift */; };
 		5D9EB8312DF7FBC80064B056 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9EB8302DF7FBC80064B056 /* ImagePicker.swift */; };
 		5DACB5122F02E5E4002299C0 /* CustomModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DACB5112F02E5D9002299C0 /* CustomModel.swift */; };
 		5DBF0E972DBB8B010028D953 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5DBF0E962DBB8B010028D953 /* GoogleService-Info.plist */; };
@@ -131,6 +132,7 @@
 		5D9C05E52F0CDD19006741D9 /* FAQView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FAQView.swift; sourceTree = "<group>"; };
 		5D9C05E72F0CDD21006741D9 /* PrivacyPolicyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPolicyView.swift; sourceTree = "<group>"; };
 		5D9C05E92F0CDD29006741D9 /* TermsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermsView.swift; sourceTree = "<group>"; };
+		5D9C05EB2F0CF4C7006741D9 /* NotificationSettingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingModel.swift; sourceTree = "<group>"; };
 		5D9EB8302DF7FBC80064B056 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		5DACB5112F02E5D9002299C0 /* CustomModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomModel.swift; sourceTree = "<group>"; };
 		5DBF0E962DBB8B010028D953 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -339,6 +341,7 @@
 			children = (
 				5D9AB28B2DB9126000E3480F /* UserModel.swift */,
 				5DACB5112F02E5D9002299C0 /* CustomModel.swift */,
+				5D9C05EB2F0CF4C7006741D9 /* NotificationSettingModel.swift */,
 				5DE61E162F07D10B006FFD10 /* NotificationModel.swift */,
 				5DE234942F0658A10044B82B /* Interaction.swift */,
 				5DFE0D822EFFD7FF000C27EF /* DashboardResponse.swift */,
@@ -484,6 +487,7 @@
 				5D04CB452EEC3C1A00FB6A21 /* VerifyOTPView.swift in Sources */,
 				5D14990D2EF969B900C5021A /* BasicDataModel.swift in Sources */,
 				5D9AB27E2DB8EDC900E3480F /* HomeView.swift in Sources */,
+				5D9C05EC2F0CF4DA006741D9 /* NotificationSettingModel.swift in Sources */,
 				5D2FAF7C2EF1930200A9A402 /* ForgotOTPView.swift in Sources */,
 				5D04CB432EEC38F900FB6A21 /* ProfilePicView.swift in Sources */,
 				5D9EB8312DF7FBC80064B056 /* ImagePicker.swift in Sources */,

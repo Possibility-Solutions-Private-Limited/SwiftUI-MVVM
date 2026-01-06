@@ -5,7 +5,9 @@ struct HelpSupportView: View {
     @EnvironmentObject var router: AppRouter
     @State private var message: String = ""
     @FocusState private var isEditorFocused: Bool
-
+    @StateObject private var validator = ValidationHelper()
+    @StateObject private var HELP = HelpModel()
+    @State private var isUploading = false
     var body: some View {
         ZStack {
             LinearGradient(
@@ -35,6 +37,7 @@ struct HelpSupportView: View {
         .onAppear {
             router.isTabBarHidden = true
         }
+        .toast(message: validator.validationMessage, isPresented: $validator.showToast)
     }
     private var headerView: some View {
         HStack {
@@ -73,6 +76,15 @@ struct HelpSupportView: View {
                 .focused($isEditorFocused)
                 .padding(8)
                 .scrollContentBackground(.hidden)
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            isEditorFocused = false
+                        }
+                        .foregroundColor(.black)
+                    }
+                }
         }
         .background(Color.white)
         .cornerRadius(12)
@@ -83,16 +95,56 @@ struct HelpSupportView: View {
         )
     }
     private var submitButton: some View {
-        Button {
-        } label: {
-            Text("Submit")
-                .font(AppFont.manropeSemiBold(14))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Color.black)
-                .cornerRadius(14)
+        Button(action: Helps) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(AppColors.Black)
+                    .frame(height: 50)
+                HStack(spacing: 8) {
+                    if isUploading {
+                        ProgressView()
+                            .progressViewStyle(
+                                CircularProgressViewStyle(tint: .black)
+                            )
+                    }
+                    Text("Submit")
+                        .font(AppFont.manropeMedium(16))
+                        .foregroundColor(.white)
+                }
+            }
         }
-        .padding(.top, 20)
+        .frame(maxWidth: .infinity)
+        .padding(.top, 10)
+        .allowsHitTesting(!isUploading)
+        .opacity(isUploading ? 0.7 : 1)
+    }
+    func Helps() {
+        if message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                validator.showValidation(ValidationMessages.helpEmpty)
+                return
+        }
+        isUploading = true
+        let param: [String: Any] = [
+            "problem": message
+        ]
+        HELP.HelpAPI(param: param) { response in
+            if let response = response {
+                if response.success {
+                    validator.showValidation(response.message ?? "")
+                    validator.showToast = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        dismiss()
+                    }
+                } else {
+                    validator.showValidation(response.message ?? "")
+                    validator.showToast = true
+                    isUploading = false
+                }
+            } else {
+                validator.showValidation("Something went wrong")
+                validator.showToast = true
+                isUploading = false
+            }
+        }
     }
 }

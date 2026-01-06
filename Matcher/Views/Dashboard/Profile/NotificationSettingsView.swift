@@ -3,11 +3,11 @@ import SwiftUI
 struct NotificationSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var router: AppRouter
-    @State private var allNotifications = true
-    @State private var chatAlerts = true
-    @State private var likesNotifications = true
-    @State private var messageNotifications = true
-
+    @State private var allNotifications = false
+    @State private var chatAlerts = false
+    @State private var likesNotifications = false
+    @State private var messageNotifications = false
+    @StateObject private var NofificationSetting = NofificationSettingModel()
     var body: some View {
         ZStack {
             LinearGradient(
@@ -23,22 +23,26 @@ struct NotificationSettingsView: View {
                         sectionHeader("All Notifications")
                         toggleRow(
                             title: "Turn On All Notifications",
-                            isOn: $allNotifications
+                            isOn: $allNotifications,
+                            key: "all_notifications"
                         )
                         sectionHeader("Chat Notifications")
                         toggleRow(
                             title: "Turn On Chat Alerts",
-                            isOn: $chatAlerts
+                            isOn: $chatAlerts,
+                            key: "chat_alerts"
                         )
                         sectionHeader("Likes Notifications")
                         toggleRow(
                             title: "Get Notified When Someone Likes Your Post",
-                            isOn: $likesNotifications
+                            isOn: $likesNotifications,
+                            key: "post_likes"
                         )
                         sectionHeader("Message Notifications")
                         toggleRow(
                             title: "Receive Alerts For New Messages",
-                            isOn: $messageNotifications
+                            isOn: $messageNotifications,
+                            key: "new_message_alerts"
                         )
                     }
                 }
@@ -49,8 +53,23 @@ struct NotificationSettingsView: View {
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
             router.isTabBarHidden = true
+            NotificationSetting(key: "", value: false)
         }
-        
+    }
+    func NotificationSetting(key: String, value: Bool) {
+        let param: [String: Any] = [
+                key: value
+        ]
+        NofificationSetting.NofificationSettingAPI(param: param) { response in
+            if let response = response {
+                if response.success {
+                    allNotifications = response.data?.all_notifications ?? false
+                    chatAlerts = response.data?.chat_alerts ?? false
+                    likesNotifications = response.data?.post_likes ?? false
+                    messageNotifications = response.data?.new_message_alerts ?? false
+                }
+            }
+        }
     }
     private var headerView: some View {
         HStack {
@@ -89,7 +108,11 @@ struct NotificationSettingsView: View {
         .padding(.vertical, 10)
         .background(AppColors.ExtralightGray.opacity(0.6))
     }
-    private func toggleRow(title: String, isOn: Binding<Bool>) -> some View {
+    private func toggleRow(
+        title: String,
+        isOn: Binding<Bool>,
+        key: String
+    ) -> some View {
         HStack {
             Text(title)
                 .font(AppFont.manropeSemiBold(15))
@@ -101,6 +124,9 @@ struct NotificationSettingsView: View {
                 .toggleStyle(
                     SwitchToggleStyle(tint: AppColors.primaryYellow)
                 )
+                .onChange(of: isOn.wrappedValue) { _, newValue in
+                    NotificationSetting(key: key, value: newValue)
+                }
         }
         .padding(.horizontal)
         .padding(.vertical, 20)

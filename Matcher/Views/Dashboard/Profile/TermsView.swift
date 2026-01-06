@@ -28,8 +28,6 @@ struct TermsView: View {
                     .padding(.horizontal)
                     .padding(.top, 16)
                 }
-                
-                // Accept Button
                 Button(action: {
                     print("Accept tapped")
                 }) {
