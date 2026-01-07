@@ -40,7 +40,7 @@ struct EditProfileView: View {
                         .onChange(of: selectedPhotoBig) { _, newValue in
                             loadImage(newValue, to: 0)
                         }
-                        .padding(.top, 30)
+                        .padding(.top, 20)
                         GeometryReader { geo in
                             let spacing: CGFloat = 16
                             let size = (geo.size.width - (spacing * 2)) / 3
@@ -62,19 +62,16 @@ struct EditProfileView: View {
                                     image: img3,
                                     index: 3,
                                     size: size
-                                )
-                            }
-                        }
+                                  )
+                             }
+                         }
                         .frame(height: 120)
                         .padding(.top, 20)
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Location")
-                                .font(AppFont.manropeSemiBold(16))
+                                .font(AppFont.manropeSemiBold(18))
                             HStack {
-                                Text(
-                                    KeychainHelper.shared.get(forKey: "saved_address")
-                                    ?? "123 Maple Street, New York, NY"
-                                )
+                                Text(user?.rooms?.first?.location ?? "")
                                 .font(AppFont.manropeMedium(14))
                                 .foregroundColor(.black)
                                 Spacer()
@@ -94,26 +91,24 @@ struct EditProfileView: View {
                                     .stroke(Color.black, lineWidth: 1)
                             )
                         }
-                        .padding(.top, 30)
-                        VStack(alignment: .leading, spacing: 14) {
+                        .padding(.top,20)
+                        VStack(alignment: .leading, spacing: 10) {
                             Text("About you")
-                                .font(AppFont.manropeSemiBold(16))
-                            LazyVGrid(
-                                columns: [GridItem(.adaptive(minimum: 130))],
-                                spacing: 12
-                            ) {
-                                aboutChip("Working")
-                                aboutChip("Science & Research")
-                                aboutChip("Night-shift")
-                                aboutChip("Non-veg")
-                                aboutChip("No-smoking")
-                                aboutChip("Drinking")
-                            }
+                                .font(AppFont.manropeSemiBold(18))
+                                .foregroundColor(.black)
+                            AboutChipView()
                         }
-                        .padding(.top, 24)
-                        VStack(alignment: .leading, spacing: 12) {
+                        .padding(.top,20)
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Party Preferences")
+                                .font(AppFont.manropeSemiBold(18))
+                                .foregroundColor(.black)
+                            PreferenceChipView()
+                        }
+                        .padding(.top,20)
+                        VStack(alignment: .leading, spacing: 10) {
                             Text("About yourself")
-                                .font(AppFont.manropeSemiBold(16))
+                                .font(AppFont.manropeSemiBold(18))
                             ZStack(alignment: .topLeading) {
                                 if aboutYourselfText.isEmpty {
                                     Text("type here...")
@@ -126,6 +121,18 @@ struct EditProfileView: View {
                                     .font(AppFont.manropeMedium(14))
                                     .padding(10)
                                     .scrollContentBackground(.hidden)
+                                    .keyboardType(.default)
+                                    .toolbar {
+                                        ToolbarItemGroup(placement: .keyboard) {
+                                            Spacer()
+                                            Button("Done") {
+                                                UIApplication.shared.sendAction(
+                                                    #selector(UIResponder.resignFirstResponder),
+                                                    to: nil, from: nil, for: nil
+                                                )
+                                            }
+                                        }
+                                    }
                             }
                             .frame(height: 160)
                             .background(Color.white)
@@ -135,7 +142,7 @@ struct EditProfileView: View {
                                     .stroke(Color.black, lineWidth: 1)
                             )
                         }
-                        .padding(.top, 24)
+                        .padding(.top,20)
                         Button(action: uploadImages) {
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(AppColors.Black)
@@ -150,20 +157,21 @@ struct EditProfileView: View {
                                     }
                                 }
                         }
-                        .padding(.top, 24)
+                        .padding(.top, 40)
                         .padding(.bottom, 30)
                         .disabled(isUploading)
                         .opacity(isUploading ? 0.7 : 1)
                     }
                     .padding(.horizontal)
-                }
-            }
-        }
+                  }
+              }
+         }
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
             router.isTabBarHidden = true
             loadUserPhotos()
+            aboutYourselfText = user?.rooms?.first?.location ?? ""
         }
     }
     private func loadUserPhotos() {
@@ -219,25 +227,70 @@ struct EditProfileView: View {
             Spacer()
         }
     }
-    func aboutChip(_ text: String) -> some View {
-        HStack(spacing: 8) {
-            Text(text)
-                .font(AppFont.manropeMedium(14))
-            Image("drop")
-                .frame(width: 22, height: 22)
-                .background(Color.black)
-                .cornerRadius(6)
+    struct AboutChipView: View {
+        private let about = [
+            "Working",
+            "Science & Research",
+            "Night-shift",
+            "Non-veg",
+            "No-smoking",
+            "Drinking"
+        ]
+        var body: some View {
+            VStack(alignment: .leading, spacing: 0) {
+                FlowLayout(spacing: 10) {
+                    ForEach(about, id: \.self) { item in
+                        aboutItem(item)
+                    }
+                }
+                .padding(.horizontal)
+            }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.yellow.opacity(0.25))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.black, lineWidth: 1)
-        )
+        func aboutItem(_ text: String) -> some View {
+            HStack(spacing: 8) {
+                Text(text)
+                    .font(AppFont.manropeMedium(14))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                Image("drops")
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.black, lineWidth: 1)
+            )
+        }
+    }
+    struct PreferenceChipView: View {
+        private let preference = [
+            "Not Party person",
+        ]
+        var body: some View {
+            VStack(alignment: .leading, spacing: 0) {
+                FlowLayout(spacing: 10) {
+                    ForEach(preference, id: \.self) { item in
+                        preferenceItem(item)
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+        func preferenceItem(_ text: String) -> some View {
+            HStack(spacing: 8) {
+                Text(text)
+                    .font(AppFont.manropeMedium(14))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                Image("drops")
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.black, lineWidth: 1)
+            )
+        }
     }
     private func photoPickerBox(
         selection: Binding<PhotosPickerItem?>,
