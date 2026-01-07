@@ -245,11 +245,33 @@ struct EditProfileView: View {
         index: Int,
         size: CGFloat
     ) -> some View {
-        PhotosPicker(selection: selection, matching: .images) {
-            smallDashedBox(image: image, size: size)
-        }
-        .onChange(of: selection.wrappedValue) { _, newValue in
-            loadImage(newValue, to: index)
+        ZStack(alignment: .topTrailing) {
+            PhotosPicker(selection: selection, matching: .images) {
+                smallDashedBox(image: image, size: size)
+            }
+            .onChange(of: selection.wrappedValue) { _, newValue in
+                loadImage(newValue, to: index)
+            }
+            if let _ = image {
+                Button(action: {
+                    switch index {
+                    case 1:
+                        img1 = nil
+                        selectedPhoto1 = nil
+                    case 2:
+                        img2 = nil
+                        selectedPhoto2 = nil
+                    case 3:
+                        img3 = nil
+                        selectedPhoto3 = nil
+                    default:
+                        break
+                    }
+                }) {
+                  Image("crossing")
+                }
+                .offset(x: 10, y: -20)
+            }
         }
     }
     func bigDashedBox(
