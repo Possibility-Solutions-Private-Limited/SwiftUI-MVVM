@@ -95,6 +95,29 @@ class ProfileModel: ObservableObject {
         }
     }
 }
+class UpdateProfileModel: ObservableObject {
+    func UpdateProfile(images: [MultipartImage],params: [String: Any],completion: @escaping (UserModel?) -> Void) {
+        NetworkManager.shared.uploadMultipart(
+            endpoint: APIConstants.Endpoints.Update,
+            parameters: params,
+            images: images
+        ) { (result: Result<UserModel, Error>) in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                print("UpdateProfile Success: \(response)")
+                if response.success {
+                    completion(response)
+                } else {
+                    completion(response)
+                }
+                case .failure(_):
+                    completion(nil)
+                }
+            }
+        }
+    }
+}
 class GetProfileModel: ObservableObject {
     func GetProfileAPI(param: [String: Any], completion: @escaping (UserModel?) -> Void) {
         NetworkManager.shared.makeRequest(

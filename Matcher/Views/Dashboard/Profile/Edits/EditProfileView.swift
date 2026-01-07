@@ -16,7 +16,9 @@ struct EditProfileView: View {
     @State private var isUploading = false
     @State private var aboutYourselfText: String = ""
     @StateObject private var validator = ValidationHelper()
-    @StateObject private var PROFILE = ProfileModel()
+    @StateObject private var PROFILE = UpdateProfileModel()
+    @StateObject private var viewModel = BasicModel()
+    @StateObject private var selections = UserSelections()
     let user: User?
     var body: some View {
         NavigationStack {
@@ -29,8 +31,8 @@ struct EditProfileView: View {
                 .ignoresSafeArea()
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
-                        headerView
-                            .padding(.top, 10)
+                         headerView
+                        .padding(.top, 10)
                         PhotosPicker(selection: $selectedPhotoBig, matching: .images) {
                             bigDashedBox(image: mainImage) {
                                 mainImage = nil
@@ -96,7 +98,11 @@ struct EditProfileView: View {
                             Text("About you")
                                 .font(AppFont.manropeSemiBold(18))
                                 .foregroundColor(.black)
-                            AboutChipView()
+                            AboutChipView(
+                                viewModel: viewModel,
+                                user:user,
+                                selections: selections
+                            )
                         }
                         .padding(.top,20)
                         VStack(alignment: .leading, spacing: 10) {
@@ -169,9 +175,14 @@ struct EditProfileView: View {
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
-            router.isTabBarHidden = true
-            loadUserPhotos()
-            aboutYourselfText = user?.rooms?.first?.location ?? ""
+            viewModel.fetchBasicData(param: [
+                "lat": "\(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "")",
+                "long": "\(KeychainHelper.shared.get(forKey: "saved_longitude") ?? "")",
+                ]) {
+                router.isTabBarHidden = true
+                loadUserPhotos()
+                aboutYourselfText = user?.rooms?.first?.location ?? ""
+            }
         }
     }
     private func loadUserPhotos() {
@@ -227,31 +238,86 @@ struct EditProfileView: View {
             Spacer()
         }
     }
+    enum AboutSheetType: Identifiable {
+        case working(String)
+        case science(String)
+        case nightShift(String)
+        case nonVeg(String)
+        case noSmoking(String)
+        case drinking(String)
+        var id: String { value }
+        var value: String {
+            switch self {
+            case .working(let v),
+                 .science(let v),
+                 .nightShift(let v),
+                 .nonVeg(let v),
+                 .noSmoking(let v),
+                 .drinking(let v):
+                return v
+            }
+        }
+    }
+    func title(for sheet: AboutSheetType) -> String {
+        switch sheet {
+        case .noSmoking(let value):
+            return "Smoking: \(value)"
+        case .drinking(let value):
+            return "Drinking: \(value)"
+        default:
+            return sheet.value.capitalized
+        }
+    }
     struct AboutChipView: View {
-        private let about = [
-            "Working",
-            "Science & Research",
-            "Night-shift",
-            "Non-veg",
-            "No-smoking",
-            "Drinking"
-        ]
+        private var about: [String] {
+            let describe = user?.profile?.describeYouBest ?? ""
+            let field = user?.profile?.professionalFieldData?.title ?? ""
+            let shift = user?.profile?.workShift ?? ""
+            let food = user?.profile?.foodPreference ?? ""
+            let smoking = "Smoking: " + (user?.profile?.smoking ?? "")
+            let drinking = "Drinking: " + (user?.profile?.drinking ?? "")
+            return [
+                describe,
+                field,
+                shift,
+                food,
+                smoking,
+                drinking
+            ].map { $0.trimmingCharacters(in: .whitespacesAndNewlines).capitalized }
+        }
+        @State private var activeSheet: AboutSheetType?
+        @ObservedObject var viewModel: BasicModel
+        let user: User?
+        @ObservedObject var selections: UserSelections
         var body: some View {
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading) {
                 FlowLayout(spacing: 10) {
                     ForEach(about, id: \.self) { item in
                         aboutItem(item)
+                        .onTapGesture {
+                         activeSheet = sheetType(for: item)
+                        }
                     }
                 }
                 .padding(.horizontal)
             }
+            .sheet(item: $activeSheet) { sheet in
+                sheetView(for: sheet)
+            }
+            .onAppear {
+                self.selections.selectedRole = user?.profile?.describeYouBest?.capitalized ?? ""
+                self.selections.selectedCategory = user?.profile?.professionalField
+                self.selections.selectedShift = user?.profile?.workShift?.capitalized ?? ""
+                self.selections.selectedFood = user?.profile?.foodPreference?.capitalized ?? ""
+                self.selections.selectedSmoke = user?.profile?.smoking?.capitalized ?? ""
+                self.selections.selectedDrink = user?.profile?.drinking?.capitalized ?? ""
+            }
         }
-        func aboutItem(_ text: String) -> some View {
+        private func aboutItem(_ text: String) -> some View {
             HStack(spacing: 8) {
                 Text(text)
                     .font(AppFont.manropeMedium(14))
                     .lineLimit(1)
-                    .truncationMode(.tail)
                 Image("drops")
             }
             .padding(.horizontal, 10)
@@ -260,6 +326,482 @@ struct EditProfileView: View {
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(Color.black, lineWidth: 1)
             )
+        }
+        private func sheetType(for item: String) -> AboutSheetType {
+            let normalizedItem = item
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            var map: [String: (String) -> AboutSheetType] = [:]
+            if let v = user?.profile?.describeYouBest {
+                map[v.lowercased()] = AboutSheetType.working
+            }
+            if let v = user?.profile?.professionalFieldData?.title {
+                map[v.lowercased()] = AboutSheetType.science
+            }
+            if let v = user?.profile?.workShift {
+                map[v.lowercased()] = AboutSheetType.nightShift
+            }
+            if let v = user?.profile?.foodPreference {
+                map[v.lowercased()] = AboutSheetType.nonVeg
+            }
+            if let v = user?.profile?.smoking {
+                map["Smoking: \(v)".lowercased()] = AboutSheetType.noSmoking
+            }
+            if let v = user?.profile?.drinking {
+                map["Drinking: \(v)".lowercased()] = AboutSheetType.drinking
+            }
+            return map[normalizedItem]?(item) ?? .drinking(item)
+        }
+        @ViewBuilder
+        private func sheetView(for sheet: AboutSheetType) -> some View {
+            switch sheet {
+            case .working:
+                StepOneView(
+                    viewModel: viewModel,
+                    selections: selections
+                )
+            case .science:
+                StepTwoView(
+                    viewModel: viewModel,
+                    selections: selections
+                )
+            case .nightShift:
+                StepThreeView(
+                    viewModel: viewModel,
+                    selections: selections
+                )
+            case .nonVeg:
+                StepFourView(
+                    viewModel: viewModel,
+                    selections: selections
+                )
+            case .noSmoking:
+                StepSixView(
+                    viewModel: viewModel,
+                    selections: selections
+                )
+            case .drinking:
+                StepSevenView(
+                    viewModel: viewModel,
+                    selections: selections
+                 )
+             }
+        }
+    }
+    struct StepOneView: View {
+        @ObservedObject var viewModel: BasicModel
+        @ObservedObject var selections: UserSelections
+        @Environment(\.dismiss) private var dismiss
+        var body: some View {
+            VStack(spacing: 24) {
+                Text("What best describes you?")
+                    .font(AppFont.manropeBold(18))
+                    .foregroundColor(AppColors.Black)
+                    .padding(.top, 40)
+                HStack(spacing: 16) {
+                    roleCard(
+                        title: "Student",
+                        icon: "book"
+                    )
+                    roleCard(
+                        title: "Working",
+                        icon: "work"
+                     )
+                }
+                Spacer()
+                nextButton
+            }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 28)
+                    .fill(Color.white)
+            )
+        }
+        func roleCard(title: String, icon: String) -> some View {
+            Button {
+                selections.selectedRole = title
+            } label: {
+                VStack(spacing: 14) {
+                    Image(icon)
+                        .font(.system(size: 34, weight: .regular))
+                        .foregroundColor(AppColors.Black)
+
+                    Text(title)
+                        .font(AppFont.manropeSemiBold(16))
+                        .foregroundColor(AppColors.Black)
+                }
+                .frame(maxWidth: .infinity, minHeight: 140)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(
+                            selections.selectedRole == title
+                            ? AppColors.primaryYellow
+                            : AppColors.lightGray
+                        )
+                   )
+              }
+        }
+        var nextButton: some View {
+            Button(action: {
+                dismiss()
+            }) {
+                Text("Update")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selections.selectedRole.isEmpty
+                        ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+             )
+            .disabled(selections.selectedRole.isEmpty)
+            .padding(.bottom, 8)
+        }
+    }
+    struct StepTwoView: View {
+        @ObservedObject var viewModel: BasicModel
+        @ObservedObject var selections: UserSelections
+        @Environment(\.dismiss) private var dismiss
+        private var fields: [OptionItem] {
+            viewModel.professionalFields
+        }
+        var body: some View {
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(spacing: 28) {
+                        Text("What’s Your Professional Field?")
+                            .font(AppFont.manropeBold(16))
+                            .padding(.top, 50)
+                        FlowLayout(spacing: 10) {
+                            ForEach(fields) { field in
+                                CategoryButton(field)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                nextButton
+                    .padding(.horizontal)
+                    .padding(.vertical, 20)
+            }
+        }
+        private func CategoryButton(_ field: OptionItem) -> some View {
+            Button {
+                selections.selectedCategory = field.id
+            } label: {
+                Text(field.title)
+                    .font(AppFont.manropeMedium(13))
+                    .foregroundColor(AppColors.Black)
+                    .padding(.horizontal, 12)
+                    .frame(height: 36)
+                    .background(
+                        selections.selectedCategory == field.id
+                            ? AppColors.primaryYellow
+                            : AppColors.lightGray
+                    )
+                    .cornerRadius(10)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(AppColors.ExtralightGray, lineWidth: 1)
+                    )
+              }
+        }
+        private var nextButton: some View {
+            Button(action: {
+                dismiss()
+            }) {
+                Text("Update")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selections.selectedCategory == nil ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+            )
+            .disabled(selections.selectedCategory == nil)
+            .padding(.bottom, 8)
+        }
+    }
+    struct StepThreeView: View {
+        @ObservedObject var viewModel: BasicModel
+        @ObservedObject var selections: UserSelections
+        @Environment(\.dismiss) private var dismiss
+        var body: some View {
+            VStack(spacing: 24) {
+                Text("What’s your work shift?")
+                    .font(AppFont.manropeBold(18))
+                    .foregroundColor(AppColors.Black)
+                    .padding(.top, 40)
+                HStack(spacing: 16) {
+                    shiftCard(title: "Day", icon: "day")
+                    shiftCard(title: "Night", icon: "night")
+                }
+                Spacer()
+                nextButton
+            }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 28)
+                    .fill(Color.white)
+            )
+        }
+        func shiftCard(title: String, icon: String) -> some View {
+            Button {
+                selections.selectedShift = title
+            } label: {
+                VStack(spacing: 14) {
+                    Image(icon)
+                        .font(.system(size: 34, weight: .regular))
+                        .foregroundColor(AppColors.Black)
+                    Text(title)
+                        .font(AppFont.manropeSemiBold(16))
+                        .foregroundColor(AppColors.Black)
+                }
+                .frame(maxWidth: .infinity, minHeight: 140)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(
+                            selections.selectedShift == title
+                            ? AppColors.primaryYellow
+                            : AppColors.lightGray
+                        )
+                  )
+             }
+        }
+        var nextButton: some View {
+            Button(action: {
+                dismiss()
+            }) {
+                Text("Update")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selections.selectedShift.isEmpty
+                        ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+            )
+            .disabled(selections.selectedShift.isEmpty)
+            .padding(.bottom, 8)
+        }
+    }
+    struct StepFourView: View {
+        @ObservedObject var viewModel: BasicModel
+        @ObservedObject var selections: UserSelections
+        @Environment(\.dismiss) private var dismiss
+        var body: some View {
+            VStack(spacing: 24) {
+                Text("Your Food Preference ?")
+                    .font(AppFont.manropeBold(18))
+                    .foregroundColor(AppColors.Black)
+                    .padding(.top, 40)
+                HStack(spacing: 16) {
+                    foodCard(title: "Veg", icon: "veg")
+                    foodCard(title: "Non-Veg", icon: "nonveg")
+                }
+                Spacer()
+                nextButton
+            }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 28)
+                    .fill(Color.white)
+            )
+        }
+        func foodCard(title: String, icon: String) -> some View {
+            Button {
+                selections.selectedFood = title
+            } label: {
+                VStack(spacing: 14) {
+                    Image(icon)
+                        .font(.system(size: 34, weight: .regular))
+                        .foregroundColor(AppColors.Black)
+                    Text(title)
+                        .font(AppFont.manropeSemiBold(16))
+                        .foregroundColor(AppColors.Black)
+                }
+                .frame(maxWidth: .infinity, minHeight: 140)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(
+                            selections.selectedFood == title
+                            ? AppColors.primaryYellow
+                            : AppColors.lightGray
+                        )
+                  )
+            }
+        }
+        var nextButton: some View {
+            Button(action: {
+                dismiss()
+            }) {
+                Text("Update")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selections.selectedFood.isEmpty
+                        ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+            )
+            .disabled(selections.selectedFood.isEmpty)
+            .padding(.bottom, 8)
+        }
+    }
+    struct StepSixView: View {
+        @ObservedObject var viewModel: BasicModel
+        @ObservedObject var selections: UserSelections
+        @Environment(\.dismiss) private var dismiss
+        var body: some View {
+            VStack(spacing: 24) {
+                Text("Do You Smoke?")
+                    .font(AppFont.manropeBold(18))
+                    .foregroundColor(AppColors.Black)
+                    .padding(.top, 40)
+                HStack(spacing: 16) {
+                    foodCard(title: "Yes", icon: "yes")
+                    foodCard(title: "No", icon: "no")
+                }
+                Spacer()
+                nextButton
+            }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 28)
+                    .fill(Color.white)
+            )
+        }
+        func foodCard(title: String, icon: String) -> some View {
+            Button {
+                selections.selectedSmoke = title
+            } label: {
+                VStack(spacing: 14) {
+                    Image(icon)
+                        .font(.system(size: 34, weight: .regular))
+                        .foregroundColor(AppColors.Black)
+                    Text(title)
+                        .font(AppFont.manropeSemiBold(16))
+                        .foregroundColor(AppColors.Black)
+                }
+                .frame(maxWidth: .infinity, minHeight: 140)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(
+                            selections.selectedSmoke == title
+                            ? AppColors.primaryYellow
+                            : AppColors.lightGray
+                        )
+                  )
+             }
+        }
+        var nextButton: some View {
+            Button(action: {
+                dismiss()
+            }) {
+                Text("Update")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selections.selectedSmoke.isEmpty
+                        ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+             )
+            .disabled(selections.selectedSmoke.isEmpty)
+            .padding(.bottom, 8)
+        }
+    }
+    struct StepSevenView: View {
+        @ObservedObject var viewModel: BasicModel
+        @ObservedObject var selections: UserSelections
+        @Environment(\.dismiss) private var dismiss
+        var body: some View {
+            VStack(spacing: 24) {
+                Text("Do You Drink?")
+                    .font(AppFont.manropeBold(18))
+                    .foregroundColor(AppColors.Black)
+                    .padding(.top, 40)
+                HStack(spacing: 16) {
+                    drinkCard(title: "Yes", icon: "drinkyes")
+                    drinkCard(title: "No", icon: "drinkno")
+                }
+                Spacer()
+                nextButton
+            }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 28)
+                    .fill(Color.white)
+             )
+        }
+        func drinkCard(title: String, icon: String) -> some View {
+            Button {
+                selections.selectedDrink = title
+            } label: {
+                VStack(spacing: 14) {
+                    Image(icon)
+                        .font(.system(size: 34, weight: .regular))
+                        .foregroundColor(AppColors.Black)
+                    Text(title)
+                        .font(AppFont.manropeSemiBold(16))
+                        .foregroundColor(AppColors.Black)
+                }
+                .frame(maxWidth: .infinity, minHeight: 140)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(
+                            selections.selectedDrink == title
+                            ? AppColors.primaryYellow
+                            : AppColors.lightGray
+                        )
+                  )
+             }
+        }
+        var nextButton: some View {
+            Button(action: {
+                dismiss()
+            }) {
+                Text("Update")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selections.selectedDrink.isEmpty
+                        ? Color.black.opacity(0.3)
+                        : Color.black
+                     )
+             )
+            .disabled(selections.selectedDrink.isEmpty)
+            .padding(.bottom, 8)
         }
     }
     struct PreferenceChipView: View {
@@ -289,7 +831,7 @@ struct EditProfileView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(Color.black, lineWidth: 1)
-            )
+             )
         }
     }
     private func photoPickerBox(
@@ -423,14 +965,24 @@ struct EditProfileView: View {
             MultipartImage(key: "photos[]", filename: "img2.jpg", data: img2.jpegData(compressionQuality: 0.8)),
             MultipartImage(key: "photos[]", filename: "img3.jpg", data: img3.jpegData(compressionQuality: 0.8))
         ]
-        print(imgs)
+        let professionalFieldValue: Int? = selections.selectedRole.lowercased() == "student" ? nil : selections.selectedCategory
         let params: [String: Any] = [
-            "location": KeychainHelper.shared.get(forKey: "saved_address") ?? "",
-            "lat": KeychainHelper.shared.get(forKey: "saved_latitude") ?? "",
-            "long": KeychainHelper.shared.get(forKey: "saved_longitude") ?? ""
+            "describe_you_best": selections.selectedRole.lowercased(),
+            "professional_field": professionalFieldValue ?? "",
+            "work_shift":selections.selectedShift.lowercased(),
+            "food_preference":selections.selectedFood.lowercased(),
+            "into_parties":user?.profile?.intoPartiesData?.id ?? 0,
+            "smoking":selections.selectedSmoke.lowercased(),
+            "drinking":selections.selectedDrink.lowercased(),
+            "about_yourself":user?.profile?.aboutYourself ?? "",
+            "do_you_have_room":user?.profile?.doYouHaveRoom ?? "",
+            "want_live_with":user?.profile?.wantLiveWith ?? "",
         ]
-        PROFILE.SignUpWithImages(images: imgs, params: params) { _ in
+        print(params)
+        PROFILE.UpdateProfile(images: imgs, params: params) { _ in
             isUploading = false
+            router.isTabBarHidden = false
+            dismiss()
         }
     }
 }
