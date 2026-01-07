@@ -45,7 +45,7 @@ struct ProfileView: View {
             Spacer()
             HStack {
                 NavigationLink {
-                    EditProfileView()
+                    EditProfileView(user: user)
                 } label: {
                     Image("edit")
                     Text("Edit")

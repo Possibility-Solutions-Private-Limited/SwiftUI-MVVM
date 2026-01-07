@@ -4,6 +4,7 @@ import PhotosUI
 struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var router: AppRouter
+    @EnvironmentObject var userAuth: UserAuth
     @State private var selectedPhotoBig: PhotosPickerItem?
     @State private var selectedPhoto1: PhotosPickerItem?
     @State private var selectedPhoto2: PhotosPickerItem?
@@ -13,144 +14,188 @@ struct EditProfileView: View {
     @State private var img2: UIImage?
     @State private var img3: UIImage?
     @State private var isUploading = false
-    @StateObject private var validator = ValidationHelper()
-    @EnvironmentObject var userAuth: UserAuth
-    @StateObject private var model = LoginModel()
-    @StateObject private var PROFILE = ProfileModel()
     @State private var aboutYourselfText: String = ""
+    @StateObject private var validator = ValidationHelper()
+    @StateObject private var PROFILE = ProfileModel()
+    let user: User?
     var body: some View {
         NavigationStack {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    ScrollView(showsIndicators: false) {
-                        VStack(spacing: 0) {
-                            PhotosPicker(selection: $selectedPhotoBig, matching: .images) {
-                                bigDashedBox(image: mainImage)
+            ZStack {
+                LinearGradient(
+                    colors: [.splashTop, .splashBottom],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        headerView
+                            .padding(.top, 10)
+                        PhotosPicker(selection: $selectedPhotoBig, matching: .images) {
+                            bigDashedBox(image: mainImage) {
+                                mainImage = nil
+                                selectedPhotoBig = nil
                             }
-                            .onChange(of: selectedPhotoBig) { _, newValue in
-                                loadImage(newValue, to: 0)
-                            }
-                            .padding(.top, 30)
-                            HStack(spacing: 20) {
-                                photoPickerBox(selection: $selectedPhoto1, image: img1, index: 1)
-                                photoPickerBox(selection: $selectedPhoto2, image: img2, index: 2)
-                                photoPickerBox(selection: $selectedPhoto3, image: img3, index: 3)
-                            }
-                            .padding(.top, 22)
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text("Location")
-                                    .font(AppFont.manropeSemiBold(16))
-                                HStack {
-                                    Text(
-                                        KeychainHelper.shared.get(forKey: "saved_address")
-                                        ?? "123 Maple Street, New York, NY"
-                                    )
-                                    .font(AppFont.manropeMedium(14))
-                                    .foregroundColor(.black)
-                                    Spacer()
-                                    Image(systemName: "pencil")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.white)
-                                        .frame(width: 32, height: 32)
-                                        .background(Color.black)
-                                        .cornerRadius(8)
-                                }
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 12)
-                                .background(Color.white)
-                                .cornerRadius(14)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 14)
-                                        .stroke(Color.black, lineWidth: 1)
-                                )
-                            }
-                            .padding(.top, 30)
-                            VStack(alignment: .leading, spacing: 14) {
-                                Text("About you")
-                                    .font(AppFont.manropeSemiBold(16))
-                                LazyVGrid(
-                                    columns: [GridItem(.adaptive(minimum: 130))],
-                                    spacing: 12
-                                ) {
-                                    aboutChip("Working")
-                                    aboutChip("Science & Research")
-                                    aboutChip("Night-shift")
-                                    aboutChip("Non-veg")
-                                    aboutChip("No-smoking")
-                                    aboutChip("Drinking")
-                                }
-                            }
-                            .padding(.top, 24)
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Party Preferences")
-                                    .font(AppFont.manropeSemiBold(16))
-
-                                aboutChip("Not Party person")
-                            }
-                            .padding(.top, 24)
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("About yourself")
-                                    .font(AppFont.manropeSemiBold(16))
-                                ZStack(alignment: .topLeading) {
-                                    if aboutYourselfText.isEmpty {
-                                        Text("type here...")
-                                            .font(AppFont.manropeMedium(14))
-                                            .foregroundColor(.gray)
-                                            .padding(.top, 12)
-                                            .padding(.leading, 12)
-                                    }
-                                    TextEditor(text: $aboutYourselfText)
-                                        .font(AppFont.manropeMedium(14))
-                                        .padding(10)
-                                        .scrollContentBackground(.hidden)
-                                }
-                                .frame(height: 160)
-                                .background(Color.white)
-                                .cornerRadius(16)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .stroke(Color.black, lineWidth: 1)
-                                )
-                            }
-                            .padding(.top, 24)
-                            Button(action: uploadImages) {
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(AppColors.Black)
-                                    .frame(height: 50)
-                                    .overlay {
-                                        HStack(spacing: 8) {
-                                            if isUploading {
-                                                ProgressView()
-                                                    .tint(.white)
-                                            }
-                                            Text("Update")
-                                                .font(AppFont.manropeMedium(16))
-                                                .foregroundColor(.white)
-                                        }
-                                    }
-                            }
-                            .padding(.top, 24)
-                            .allowsHitTesting(!isUploading)
-                            .opacity(isUploading ? 0.7 : 1)
                         }
-                        .padding(.horizontal)
-                        .padding(.bottom, 10)
+                        .onChange(of: selectedPhotoBig) { _, newValue in
+                            loadImage(newValue, to: 0)
+                        }
+                        .padding(.top, 30)
+                        GeometryReader { geo in
+                            let spacing: CGFloat = 16
+                            let size = (geo.size.width - (spacing * 2)) / 3
+                            HStack(spacing: spacing) {
+                                photoPickerBox(
+                                    selection: $selectedPhoto1,
+                                    image: img1,
+                                    index: 1,
+                                    size: size
+                                )
+                                photoPickerBox(
+                                    selection: $selectedPhoto2,
+                                    image: img2,
+                                    index: 2,
+                                    size: size
+                                )
+                                photoPickerBox(
+                                    selection: $selectedPhoto3,
+                                    image: img3,
+                                    index: 3,
+                                    size: size
+                                )
+                            }
+                        }
+                        .frame(height: 120)
+                        .padding(.top, 20)
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Location")
+                                .font(AppFont.manropeSemiBold(16))
+                            HStack {
+                                Text(
+                                    KeychainHelper.shared.get(forKey: "saved_address")
+                                    ?? "123 Maple Street, New York, NY"
+                                )
+                                .font(AppFont.manropeMedium(14))
+                                .foregroundColor(.black)
+                                Spacer()
+                                Image("drop")
+                                    .frame(width: 32, height: 32)
+                                    .background(Color.black)
+                                    .cornerRadius(8)
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(Color.white)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(Color.black, lineWidth: 1)
+                            )
+                        }
+                        .padding(.top, 30)
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("About you")
+                                .font(AppFont.manropeSemiBold(16))
+                            LazyVGrid(
+                                columns: [GridItem(.adaptive(minimum: 130))],
+                                spacing: 12
+                            ) {
+                                aboutChip("Working")
+                                aboutChip("Science & Research")
+                                aboutChip("Night-shift")
+                                aboutChip("Non-veg")
+                                aboutChip("No-smoking")
+                                aboutChip("Drinking")
+                            }
+                        }
+                        .padding(.top, 24)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("About yourself")
+                                .font(AppFont.manropeSemiBold(16))
+                            ZStack(alignment: .topLeading) {
+                                if aboutYourselfText.isEmpty {
+                                    Text("type here...")
+                                        .font(AppFont.manropeMedium(14))
+                                        .foregroundColor(.gray)
+                                        .padding(.top, 12)
+                                        .padding(.leading, 12)
+                                }
+                                TextEditor(text: $aboutYourselfText)
+                                    .font(AppFont.manropeMedium(14))
+                                    .padding(10)
+                                    .scrollContentBackground(.hidden)
+                            }
+                            .frame(height: 160)
+                            .background(Color.white)
+                            .cornerRadius(16)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.black, lineWidth: 1)
+                            )
+                        }
+                        .padding(.top, 24)
+                        Button(action: uploadImages) {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(AppColors.Black)
+                                .frame(height: 50)
+                                .overlay {
+                                    if isUploading {
+                                        ProgressView().tint(.white)
+                                    } else {
+                                        Text("Update")
+                                            .font(AppFont.manropeMedium(16))
+                                            .foregroundColor(.white)
+                                    }
+                                }
+                        }
+                        .padding(.top, 24)
+                        .padding(.bottom, 30)
+                        .disabled(isUploading)
+                        .opacity(isUploading ? 0.7 : 1)
                     }
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 10)
-            }
-            .safeAreaInset(edge: .top) {
-                headerView
                     .padding(.horizontal)
-                    .padding(.top, 8)
-                    .background(Color.white)
+                }
             }
         }
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .onAppear {
             router.isTabBarHidden = true
+            loadUserPhotos()
+        }
+    }
+    private func loadUserPhotos() {
+        guard let photos = user?.photos else { return }
+        if photos.indices.contains(0) {
+            loadImageFromURL(photos[0].file ?? "") { mainImage = $0 }
+        }
+        if photos.indices.contains(1) {
+            loadImageFromURL(photos[1].file  ?? "") { img1 = $0 }
+        }
+        if photos.indices.contains(2) {
+            loadImageFromURL(photos[2].file  ?? "") { img2 = $0 }
+        }
+        if photos.indices.contains(3) {
+            loadImageFromURL(photos[3].file  ?? "") { img3 = $0 }
+        }
+    }
+    private func loadImageFromURL(
+        _ urlString: String,
+        completion: @escaping (UIImage?) -> Void
+    ) {
+        guard let url = URL(string: urlString) else {
+            completion(nil)
+            return
+        }
+        Task {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                completion(UIImage(data: data))
+            } catch {
+                completion(nil)
+            }
         }
     }
     private var headerView: some View {
@@ -163,94 +208,107 @@ struct EditProfileView: View {
                     .fill(AppColors.primaryYellow)
                     .frame(width: 50, height: 50)
                     .overlay(
-                        Circle()
-                            .stroke(Color.white, lineWidth: 3)
-                    )
-                    .overlay(
                         Image(systemName: "arrow.left")
-                            .foregroundColor(AppColors.Black)
+                            .foregroundColor(.black)
                     )
             }
             Spacer()
-            HStack(spacing: 5) {
-                Text("Edit Profile").font(AppFont.manropeSemiBold(16))
-            }
+            Text("Edit Profile")
+                .font(AppFont.manropeSemiBold(16))
             Spacer()
             Spacer()
         }
     }
     func aboutChip(_ text: String) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             Text(text)
                 .font(AppFont.manropeMedium(14))
-                .foregroundColor(.black)
-            Image(systemName: "pencil")
-                .font(.system(size: 12))
-                .foregroundColor(.black)
+            Image("drop")
+                .frame(width: 22, height: 22)
+                .background(Color.black)
+                .cornerRadius(6)
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 8)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.yellow.opacity(0.25))
+        )
         .overlay(
             RoundedRectangle(cornerRadius: 14)
                 .stroke(Color.black, lineWidth: 1)
         )
     }
-    private func progressBar(width: CGFloat, active: Bool = false) -> some View {
-        RoundedRectangle(cornerRadius: 3)
-            .fill(active ? Color.yellow : Color.gray.opacity(0.2))
-            .frame(width: width, height: 4)
-    }
     private func photoPickerBox(
         selection: Binding<PhotosPickerItem?>,
         image: UIImage?,
-        index: Int
+        index: Int,
+        size: CGFloat
     ) -> some View {
         PhotosPicker(selection: selection, matching: .images) {
-            smallDashedBox(image: image)
+            smallDashedBox(image: image, size: size)
         }
         .onChange(of: selection.wrappedValue) { _, newValue in
             loadImage(newValue, to: index)
         }
     }
-    func bigDashedBox(image: UIImage?) -> some View {
-        ZStack {
+    func bigDashedBox(
+        image: UIImage?,
+        onRemove: @escaping () -> Void
+    ) -> some View {
+        ZStack(alignment: .topTrailing) {
             RoundedRectangle(cornerRadius: 20)
                 .stroke(style: StrokeStyle(lineWidth: 2, dash: [6]))
                 .foregroundColor(.black)
-                .frame(height: 300)
+                .frame(height: 200)
                 .background(
                     RoundedRectangle(cornerRadius: 20)
                         .fill(Color.yellow.opacity(0.12))
-                )
+            )
             if let img = image {
                 Image(uiImage: img)
                     .resizable()
                     .scaledToFill()
-                    .frame(height: 300)
+                    .frame(height: 200)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
-            } else {
-                plusCircle(size: 65, iconSize: 22)
+            }
+            if image == nil {
+                HStack {
+                    Spacer()
+                    VStack {
+                        Spacer()
+                        plusCircle(size: 65, iconSize: 22)
+                        Spacer()
+                    }
+                    Spacer()
+                }
+            }
+            if image != nil {
+                Button(action: onRemove) {
+                    Image("crossing")
+                }
+                .offset(x: 10, y: -20)
             }
         }
     }
-    func smallDashedBox(image: UIImage?) -> some View {
+    func smallDashedBox(image: UIImage?, size: CGFloat) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 16)
                 .stroke(style: StrokeStyle(lineWidth: 2, dash: [6]))
                 .foregroundColor(.black)
-                .frame(width: 100, height: 100)
+                .frame(width: size, height: size)
                 .background(
                     RoundedRectangle(cornerRadius: 16)
                         .fill(Color.yellow.opacity(0.12))
-                )
-            if let img = image {
+              )
+              if let img = image {
                 Image(uiImage: img)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 100, height: 100)
+                    .frame(width: size, height: size)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
             } else {
-                plusCircle(size: 45, iconSize: 18)
+                plusCircle(size: size * 0.45, iconSize: size * 0.18)
             }
         }
     }
@@ -261,20 +319,18 @@ struct EditProfileView: View {
             .overlay(
                 Image(systemName: "plus")
                     .font(.system(size: iconSize, weight: .bold))
-                    .foregroundColor(.black)
             )
     }
     func loadImage(_ item: PhotosPickerItem?, to index: Int) {
         guard let item else { return }
         Task {
             if let data = try? await item.loadTransferable(type: Data.self),
-               let uiImage = UIImage(data: data) {
-
+               let img = UIImage(data: data) {
                 switch index {
-                case 0: mainImage = uiImage
-                case 1: img1 = uiImage
-                case 2: img2 = uiImage
-                case 3: img3 = uiImage
+                case 0: mainImage = img
+                case 1: img1 = img
+                case 2: img2 = img
+                case 3: img3 = img
                 default: break
                 }
             }
@@ -292,42 +348,14 @@ struct EditProfileView: View {
             MultipartImage(key: "photos[]", filename: "img2.jpg", data: img2.jpegData(compressionQuality: 0.8)),
             MultipartImage(key: "photos[]", filename: "img3.jpg", data: img3.jpegData(compressionQuality: 0.8))
         ]
+        print(imgs)
         let params: [String: Any] = [
-           
-            "location": "\(KeychainHelper.shared.get(forKey: "saved_address") ?? "")",
-            "lat": "\(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "")",
-            "long": "\(KeychainHelper.shared.get(forKey: "saved_longitude") ?? "")",
+            "location": KeychainHelper.shared.get(forKey: "saved_address") ?? "",
+            "lat": KeychainHelper.shared.get(forKey: "saved_latitude") ?? "",
+            "long": KeychainHelper.shared.get(forKey: "saved_longitude") ?? ""
         ]
-        PROFILE.SignUpWithImages(images: imgs, params: params) { response in
-            guard let response else {
-                validator.showValidation("Something went wrong")
-                validator.showToast = true
-                isUploading = false
-                return
-            }
-            guard response.success == true else {
-                validator.showValidation(response.message ?? "")
-                validator.showToast = true
-                isUploading = false
-                return
-            }
-            let data = response.data
+        PROFILE.SignUpWithImages(images: imgs, params: params) { _ in
             isUploading = false
-            KeychainHelper.shared.save(data?.firstName ?? "", forKey: "first_name")
-            KeychainHelper.shared.save(data?.email ?? "", forKey: "email")
-            KeychainHelper.shared.save(data?.mobile ?? "", forKey: "mobile")
-            KeychainHelper.shared.save(data?.gender ?? "", forKey: "gender")
-            KeychainHelper.shared.saveInt(data?.id ?? 0, forKey: "userId")
-            if let imageFile = data?.photos?.first?.file, !imageFile.isEmpty {
-                KeychainHelper.shared.save(imageFile, forKey: "image")
-                print("imageFile",imageFile)
-                userAuth.image = imageFile
-            }
-            userAuth.firstName = data?.firstName ?? ""
-            userAuth.email = data?.email ?? ""
-            userAuth.mobile = data?.mobile ?? ""
-            userAuth.gender = data?.gender ?? ""
-            userAuth.login(email: userAuth.email, password: userAuth.mobile)
         }
     }
 }
