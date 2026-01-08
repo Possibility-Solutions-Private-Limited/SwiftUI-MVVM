@@ -287,6 +287,7 @@ class LogoutModel: ObservableObject {
 final class UserSelections: ObservableObject {
     @Published var selectedRole = ""
     @Published var selectedCategory: Int?
+    @Published var selectedCategoryStr = ""
     @Published var selectedShift = ""
     @Published var selectedFood = ""
     @Published var selectedParties: Int?

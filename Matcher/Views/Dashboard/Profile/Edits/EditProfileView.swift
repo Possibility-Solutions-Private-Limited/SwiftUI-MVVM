@@ -245,7 +245,7 @@ struct EditProfileView: View {
         case nonVeg(String)
         case noSmoking(String)
         case drinking(String)
-        var id: String { value }
+        var id: String { "\(String(describing: self))-\(value)" }
         var value: String {
             switch self {
             case .working(let v),
@@ -265,38 +265,47 @@ struct EditProfileView: View {
         case .drinking(let value):
             return "Drinking: \(value)"
         default:
-            return sheet.value.capitalized
+            return sheet.value
         }
     }
     struct AboutChipView: View {
-        private var about: [String] {
-            let describe = user?.profile?.describeYouBest ?? ""
-            let field = user?.profile?.professionalFieldData?.title ?? ""
-            let shift = user?.profile?.workShift ?? ""
-            let food = user?.profile?.foodPreference ?? ""
-            let smoking = "Smoking: " + (user?.profile?.smoking ?? "")
-            let drinking = "Drinking: " + (user?.profile?.drinking ?? "")
-            return [
-                describe,
-                field,
-                shift,
-                food,
-                smoking,
-                drinking
-            ].map { $0.trimmingCharacters(in: .whitespacesAndNewlines).capitalized }
-        }
         @State private var activeSheet: AboutSheetType?
         @ObservedObject var viewModel: BasicModel
         let user: User?
         @ObservedObject var selections: UserSelections
+        private var about: [String] {
+            var items: [String] = []
+            if !selections.selectedRole.isEmpty {
+                items.append(selections.selectedRole)
+            }
+            if selections.selectedRole.lowercased() == "working" {
+                let cat = selections.selectedCategoryStr.isEmpty ? "Select Category" : selections.selectedCategoryStr
+                items.append(cat)
+            }
+            if !selections.selectedShift.isEmpty {
+                items.append(selections.selectedShift)
+            }
+            if !selections.selectedFood.isEmpty {
+                items.append(selections.selectedFood)
+            }
+            if !selections.selectedSmoke.isEmpty {
+                items.append("Smoking: \(selections.selectedSmoke)")
+            }
+            if !selections.selectedDrink.isEmpty {
+                items.append("Drinking: \(selections.selectedDrink)")
+            }
+            return items
+        }
         var body: some View {
             VStack(alignment: .leading) {
                 FlowLayout(spacing: 10) {
                     ForEach(about, id: \.self) { item in
                         aboutItem(item)
-                        .onTapGesture {
-                         activeSheet = sheetType(for: item)
-                        }
+                            .onTapGesture {
+                                if let sheet = sheetType(for: item) {
+                                    activeSheet = sheet
+                                }
+                            }
                     }
                 }
                 .padding(.horizontal)
@@ -305,12 +314,13 @@ struct EditProfileView: View {
                 sheetView(for: sheet)
             }
             .onAppear {
-                self.selections.selectedRole = user?.profile?.describeYouBest?.capitalized ?? ""
-                self.selections.selectedCategory = user?.profile?.professionalField
-                self.selections.selectedShift = user?.profile?.workShift?.capitalized ?? ""
-                self.selections.selectedFood = user?.profile?.foodPreference?.capitalized ?? ""
-                self.selections.selectedSmoke = user?.profile?.smoking?.capitalized ?? ""
-                self.selections.selectedDrink = user?.profile?.drinking?.capitalized ?? ""
+                selections.selectedRole = user?.profile?.describeYouBest?.capitalized ?? ""
+                selections.selectedCategory = user?.profile?.professionalField
+                selections.selectedCategoryStr = user?.profile?.professionalFieldData?.title?.capitalized ?? ""
+                selections.selectedShift = user?.profile?.workShift?.capitalized ?? ""
+                selections.selectedFood = user?.profile?.foodPreference?.capitalized ?? ""
+                selections.selectedSmoke = user?.profile?.smoking?.capitalized ?? ""
+                selections.selectedDrink = user?.profile?.drinking?.capitalized ?? ""
             }
         }
         private func aboutItem(_ text: String) -> some View {
@@ -327,65 +337,46 @@ struct EditProfileView: View {
                     .stroke(Color.black, lineWidth: 1)
             )
         }
-        private func sheetType(for item: String) -> AboutSheetType {
+        private func sheetType(for item: String) -> AboutSheetType? {
             let normalizedItem = item
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .lowercased()
-            var map: [String: (String) -> AboutSheetType] = [:]
-            if let v = user?.profile?.describeYouBest {
-                map[v.lowercased()] = AboutSheetType.working
+            if normalizedItem == selections.selectedRole.lowercased() {
+                return .working(item)
             }
-            if let v = user?.profile?.professionalFieldData?.title {
-                map[v.lowercased()] = AboutSheetType.science
+            if normalizedItem == selections.selectedCategoryStr.lowercased() {
+                return .science(item)
             }
-            if let v = user?.profile?.workShift {
-                map[v.lowercased()] = AboutSheetType.nightShift
+            if normalizedItem == selections.selectedShift.lowercased() {
+                return .nightShift(item)
             }
-            if let v = user?.profile?.foodPreference {
-                map[v.lowercased()] = AboutSheetType.nonVeg
+            if normalizedItem == selections.selectedFood.lowercased() {
+                return .nonVeg(item)
             }
-            if let v = user?.profile?.smoking {
-                map["Smoking: \(v)".lowercased()] = AboutSheetType.noSmoking
+            if normalizedItem == "smoking: \(selections.selectedSmoke)".lowercased() {
+                return .noSmoking(selections.selectedSmoke)
             }
-            if let v = user?.profile?.drinking {
-                map["Drinking: \(v)".lowercased()] = AboutSheetType.drinking
+            if normalizedItem == "drinking: \(selections.selectedDrink)".lowercased() {
+                return .drinking(selections.selectedDrink)
             }
-            return map[normalizedItem]?(item) ?? .drinking(item)
+            return nil
         }
         @ViewBuilder
         private func sheetView(for sheet: AboutSheetType) -> some View {
             switch sheet {
             case .working:
-                StepOneView(
-                    viewModel: viewModel,
-                    selections: selections
-                )
+                StepOneView(viewModel: viewModel, selections: selections)
             case .science:
-                StepTwoView(
-                    viewModel: viewModel,
-                    selections: selections
-                )
+                StepTwoView(viewModel: viewModel, selections: selections)
             case .nightShift:
-                StepThreeView(
-                    viewModel: viewModel,
-                    selections: selections
-                )
+                StepThreeView(viewModel: viewModel, selections: selections)
             case .nonVeg:
-                StepFourView(
-                    viewModel: viewModel,
-                    selections: selections
-                )
+                StepFourView(viewModel: viewModel, selections: selections)
             case .noSmoking:
-                StepSixView(
-                    viewModel: viewModel,
-                    selections: selections
-                )
+                StepSixView(viewModel: viewModel, selections: selections)
             case .drinking:
-                StepSevenView(
-                    viewModel: viewModel,
-                    selections: selections
-                 )
-             }
+                StepSevenView(viewModel: viewModel, selections: selections)
+            }
         }
     }
     struct StepOneView: View {
@@ -420,6 +411,9 @@ struct EditProfileView: View {
         func roleCard(title: String, icon: String) -> some View {
             Button {
                 selections.selectedRole = title
+                if selections.selectedRole.lowercased() == "working" {
+                    selections.selectedCategoryStr = "Select Category"
+                }
             } label: {
                 VStack(spacing: 14) {
                     Image(icon)
@@ -493,6 +487,7 @@ struct EditProfileView: View {
         private func CategoryButton(_ field: OptionItem) -> some View {
             Button {
                 selections.selectedCategory = field.id
+                selections.selectedCategoryStr = field.title.capitalized
             } label: {
                 Text(field.title)
                     .font(AppFont.manropeMedium(13))
