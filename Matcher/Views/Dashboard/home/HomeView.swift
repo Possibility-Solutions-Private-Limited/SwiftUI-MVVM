@@ -284,7 +284,7 @@ struct HomeView: View {
                             WorkShift: profiles.profile?.work_shift ?? "",
                             Drinking: profiles.profile?.drinking ?? ""
                         )
-                        PartyPreferencesView()
+                        PartyPreferencesView(party:profiles.profile?.into_parties_data?.title ?? "")
                         RoomPhotosDisplayView(photos: profiles.rooms?.first?.photos ?? [])
                         RoommatesNeededSection()
                         RoomShortInfoSection(
@@ -503,6 +503,7 @@ struct HomeView: View {
             }
         }
         struct PartyPreferencesView: View {
+            var party: String
             var body: some View {
                 HStack {
                     VStack(alignment: .leading, spacing: 10) {
@@ -511,7 +512,7 @@ struct HomeView: View {
                             .foregroundColor(.black)
                         HStack {
                             Image("sparkles")
-                            Text("Not Party Person")
+                            Text(party)
                                 .font(AppFont.manropeMedium(14))
                         }
                         .foregroundColor(.white)

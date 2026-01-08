@@ -291,6 +291,7 @@ final class UserSelections: ObservableObject {
     @Published var selectedShift = ""
     @Published var selectedFood = ""
     @Published var selectedParties: Int?
+    @Published var selectedPartiesStr = ""
     @Published var selectedSmoke = ""
     @Published var selectedDrink = ""
     @Published var selectedAbout = ""

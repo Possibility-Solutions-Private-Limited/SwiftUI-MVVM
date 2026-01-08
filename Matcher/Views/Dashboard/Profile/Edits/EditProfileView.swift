@@ -139,7 +139,11 @@ struct EditProfileView: View {
                             Text("Party Preferences")
                                 .font(AppFont.manropeSemiBold(18))
                                 .foregroundColor(.black)
-                            PreferenceChipView()
+                            PreferenceChipView(
+                                viewModel: viewModel,
+                                user:user,
+                                selections: selections
+                            )
                         }
                         .padding(.top,20)
                         VStack(alignment: .leading, spacing: 10) {
@@ -204,12 +208,13 @@ struct EditProfileView: View {
          }
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
+        .toast(message: validator.validationMessage, isPresented: $validator.showToast)
         .onAppear {
+            router.isTabBarHidden = true
             viewModel.fetchBasicData(param: [
                 "lat": "\(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "")",
                 "long": "\(KeychainHelper.shared.get(forKey: "saved_longitude") ?? "")",
                 ]) {
-                router.isTabBarHidden = true
                 loadUserPhotos()
                 aboutYourselfText = user?.profile?.aboutYourself ?? ""
                 currentLocation = user?.location ?? ""
@@ -696,6 +701,76 @@ struct EditProfileView: View {
             .padding(.bottom, 8)
         }
     }
+    struct StepFiveView: View {
+        @ObservedObject var viewModel: BasicModel
+        @ObservedObject var selections: UserSelections
+        @Environment(\.dismiss) private var dismiss
+        private var fields: [OptionItem] {
+            viewModel.partyPreferences
+        }
+        var body: some View {
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(spacing: 28) {
+                        Text("Are You Into Parties?")
+                            .font(AppFont.manropeBold(16))
+                            .padding(.top, 50)
+                        FlowLayout(spacing: 10) {
+                            ForEach(fields) { field in
+                                PartyButton(field)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                nextButton
+                    .padding(.horizontal)
+                    .padding(.vertical, 20)
+            }
+        }
+        private func PartyButton(_ field: OptionItem) -> some View {
+            Button {
+                selections.selectedParties = field.id
+                selections.selectedPartiesStr = field.title.capitalized
+            } label: {
+                Text(field.title)
+                    .font(AppFont.manropeMedium(13))
+                    .foregroundColor(AppColors.Black)
+                    .padding(.horizontal, 12)
+                    .frame(height: 36)
+                    .background(
+                        selections.selectedParties == field.id
+                            ? AppColors.primaryYellow
+                            : AppColors.lightGray
+                    )
+                    .cornerRadius(10)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(AppColors.ExtralightGray, lineWidth: 1)
+                    )
+            }
+        }
+        private var nextButton: some View {
+            Button(action: {
+                dismiss()
+            }) {
+                Text("Update")
+                    .font(AppFont.manropeBold(16))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        selections.selectedParties == nil ? Color.black.opacity(0.3)
+                        : Color.black
+                    )
+             )
+            .disabled(selections.selectedParties == nil)
+            .padding(.bottom, 8)
+        }
+    }
     struct StepSixView: View {
         @ObservedObject var viewModel: BasicModel
         @ObservedObject var selections: UserSelections
@@ -833,25 +908,43 @@ struct EditProfileView: View {
         }
     }
     struct PreferenceChipView: View {
-        private let preference = [
-            "Not Party person",
-        ]
+        @State private var showSheet = false
+        @ObservedObject var viewModel: BasicModel
+        let user: User?
+        @ObservedObject var selections: UserSelections
+        private var about: [String] {
+            var items: [String] = []
+            if !selections.selectedPartiesStr.isEmpty {
+                items.append(selections.selectedPartiesStr)
+            }
+            return items
+        }
         var body: some View {
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading) {
                 FlowLayout(spacing: 10) {
-                    ForEach(preference, id: \.self) { item in
-                        preferenceItem(item)
+                    ForEach(about, id: \.self) { item in
+                        aboutItem(item)
+                            .onTapGesture {
+                                showSheet = true
+                            }
                     }
                 }
                 .padding(.horizontal)
             }
+            .sheet(isPresented: $showSheet) {
+                StepFiveView(viewModel: viewModel, selections: selections)
+            }
+            .onAppear {
+                selections.selectedParties = user?.profile?.intoParties
+                selections.selectedPartiesStr =
+                    user?.profile?.intoPartiesData?.title?.capitalized ?? ""
+            }
         }
-        func preferenceItem(_ text: String) -> some View {
+        private func aboutItem(_ text: String) -> some View {
             HStack(spacing: 8) {
                 Text(text)
                     .font(AppFont.manropeMedium(14))
                     .lineLimit(1)
-                    .truncationMode(.tail)
                 Image("drops")
             }
             .padding(.horizontal, 10)
@@ -859,7 +952,7 @@ struct EditProfileView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(Color.black, lineWidth: 1)
-             )
+            )
         }
     }
     private func photoPickerBox(
@@ -986,6 +1079,12 @@ struct EditProfileView: View {
             validator.showValidation("Please select all images")
             return
         }
+        let role = selections.selectedRole.lowercased()
+            let categoryStr = selections.selectedCategoryStr.trimmingCharacters(in: .whitespacesAndNewlines)
+            if role != "student" && categoryStr == "Select Category" {
+                validator.showValidation("Please select category")
+                return
+        }
         isUploading = true
         let imgs: [MultipartImage] = [
             MultipartImage(key: "photos[]", filename: "main.jpg", data: mainImage.jpegData(compressionQuality: 0.8)),
@@ -999,7 +1098,7 @@ struct EditProfileView: View {
             "professional_field": professionalFieldValue ?? "",
             "work_shift":selections.selectedShift.lowercased(),
             "food_preference":selections.selectedFood.lowercased(),
-            "into_parties":user?.profile?.intoPartiesData?.id ?? 0,
+            "into_parties":selections.selectedParties ?? "",
             "smoking":selections.selectedSmoke.lowercased(),
             "drinking":selections.selectedDrink.lowercased(),
             "about_yourself":aboutYourselfText,
