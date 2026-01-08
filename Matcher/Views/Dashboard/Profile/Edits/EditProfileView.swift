@@ -3,7 +3,7 @@ import MapKit
 import CoreLocation
 import PhotosUI
 struct EditProfileView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss) var dismiss
     @EnvironmentObject var router: AppRouter
     @EnvironmentObject var userAuth: UserAuth
     @State private var selectedPhotoBig: PhotosPickerItem?
@@ -25,6 +25,7 @@ struct EditProfileView: View {
     @State private var lat: String = ""
     @State private var long: String = ""
     let user: User?
+    var onUpdate: () -> Void
     var body: some View {
         NavigationStack {
             ZStack {
@@ -211,7 +212,7 @@ struct EditProfileView: View {
                 router.isTabBarHidden = true
                 loadUserPhotos()
                 aboutYourselfText = user?.profile?.aboutYourself ?? ""
-                currentLocation = user?.rooms?.first?.location ?? ""
+                currentLocation = user?.location ?? ""
                 lat = user?.lat ?? ""
                 long = user?.long ?? ""
             }
@@ -1008,10 +1009,14 @@ struct EditProfileView: View {
             "lat": lat,
             "long": long,
         ]
+        print(params)
         PROFILE.UpdateProfile(images: imgs, params: params) { _ in
-            isUploading = false
-            router.isTabBarHidden = false
-            dismiss()
+            DispatchQueue.main.async {
+                isUploading = false
+                router.isTabBarHidden = false
+                onUpdate()
+                dismiss()
+            }
         }
     }
 }

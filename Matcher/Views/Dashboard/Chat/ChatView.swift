@@ -111,7 +111,6 @@ struct ChatView: View {
                         sendMessage()
                     },
                     onMicTap: {
-//                   startRecording()
                     },
                     onAttachmentTap: {
                         showImagePicker = true

@@ -6,6 +6,7 @@ struct ProfileView: View {
     @StateObject private var viewModel = GetProfileModel()
     @State private var user: User?
     @State private var currentImageIndex: Int = 0
+    @State private var shouldReloadProfile = false
     var body: some View {
         NavigationStack {
             GeometryReader { geo in
@@ -22,6 +23,13 @@ struct ProfileView: View {
                         }
                         Spacer(minLength: 10)
                     }
+                }
+            }
+        }
+        .onChange(of: shouldReloadProfile) {
+            viewModel.GetProfileAPI(param: [:]) { response in
+                DispatchQueue.main.async {
+                    self.user = response?.data
                 }
             }
         }
@@ -45,12 +53,19 @@ struct ProfileView: View {
             Spacer()
             HStack {
                 NavigationLink {
-                    EditProfileView(user: user)
+                    EditProfileView(
+                        user: user,
+                        onUpdate: {
+                            shouldReloadProfile.toggle()
+                        }
+                    )
                 } label: {
-                    Image("edit")
-                    Text("Edit")
-                        .font(AppFont.manropeSemiBold(16))
-                        .foregroundColor(AppColors.primaryYellow)
+                    HStack(spacing: 6) {
+                        Image("edit")
+                        Text("Edit")
+                            .font(AppFont.manropeSemiBold(16))
+                            .foregroundColor(AppColors.primaryYellow)
+                    }
                 }
             }
         }
@@ -567,7 +582,7 @@ struct ProfileView: View {
                     .font(AppFont.manropeExtraBold(14))
                     .foregroundColor(.black)
                     .padding(.leading,5)
-                Text("\(user.rooms?.first?.location ?? "")")
+                Text("\(user.location ?? "")")
                     .font(AppFont.manropeMedium(13))
                     .foregroundColor(.black)
                 Spacer()
