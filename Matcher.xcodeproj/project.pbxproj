@@ -43,6 +43,7 @@
 		5D74270B2EF51AF700E60417 /* Manrope-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5D7427042EF51AF700E60417 /* Manrope-Medium.otf */; };
 		5D74270C2EF51AF700E60417 /* Manrope-ExtraLight.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5D7427022EF51AF700E60417 /* Manrope-ExtraLight.otf */; };
 		5D74270D2EF51AF700E60417 /* Manrope-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5D7427032EF51AF700E60417 /* Manrope-Light.otf */; };
+		5D93D72A2F0F8D6200DB4A66 /* EditLocationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D93D7292F0F8D6200DB4A66 /* EditLocationView.swift */; };
 		5D9AB2682DB8ED8C00E3480F /* AttendanceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9AB2672DB8ED8C00E3480F /* AttendanceApp.swift */; };
 		5D9AB26C2DB8ED8D00E3480F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5D9AB26B2DB8ED8D00E3480F /* Assets.xcassets */; };
 		5D9AB27D2DB8EDC900E3480F /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9AB2752DB8EDC800E3480F /* ProfileView.swift */; };
@@ -119,6 +120,7 @@
 		5D7427042EF51AF700E60417 /* Manrope-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope-Medium.otf"; sourceTree = "<group>"; };
 		5D7427052EF51AF700E60417 /* Manrope-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope-Regular.otf"; sourceTree = "<group>"; };
 		5D7427062EF51AF700E60417 /* Manrope-SemiBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope-SemiBold.otf"; sourceTree = "<group>"; };
+		5D93D7292F0F8D6200DB4A66 /* EditLocationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditLocationView.swift; sourceTree = "<group>"; };
 		5D9AB2642DB8ED8C00E3480F /* Matcher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Matcher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5D9AB2672DB8ED8C00E3480F /* AttendanceApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttendanceApp.swift; sourceTree = "<group>"; };
 		5D9AB26B2DB8ED8D00E3480F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -207,6 +209,7 @@
 			children = (
 				5D9AB2762DB8EDC800E3480F /* HomeView.swift */,
 				5DEBC0252F0B9ACC00CEC5FE /* MapView.swift */,
+				5D93D7292F0F8D6200DB4A66 /* EditLocationView.swift */,
 			);
 			path = home;
 			sourceTree = "<group>";
@@ -529,6 +532,7 @@
 				5DD4E4EB2DBBA7FA008F48B4 /* ChatView.swift in Sources */,
 				5D9AB2822DB8EDC900E3480F /* LoginView.swift in Sources */,
 				5DFE0D832EFFD80A000C27EF /* DashboardResponse.swift in Sources */,
+				5D93D72A2F0F8D6200DB4A66 /* EditLocationView.swift in Sources */,
 				5DE234952F0658AF0044B82B /* Interaction.swift in Sources */,
 				5DD4E4EF2DBBBA29008F48B4 /* SocketService.swift in Sources */,
 				5DE61E152F07BC57006FFD10 /* NotificationView.swift in Sources */,

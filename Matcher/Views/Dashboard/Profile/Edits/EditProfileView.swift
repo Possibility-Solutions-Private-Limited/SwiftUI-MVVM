@@ -1,6 +1,7 @@
 import SwiftUI
+import MapKit
+import CoreLocation
 import PhotosUI
-
 struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var router: AppRouter
@@ -14,11 +15,15 @@ struct EditProfileView: View {
     @State private var img2: UIImage?
     @State private var img3: UIImage?
     @State private var isUploading = false
-    @State private var aboutYourselfText: String = ""
+    @State private var aboutYourselfText: String = "" 
     @StateObject private var validator = ValidationHelper()
     @StateObject private var PROFILE = UpdateProfileModel()
     @StateObject private var viewModel = BasicModel()
     @StateObject private var selections = UserSelections()
+    @State private var showLocationSheet = false
+    @State private var currentLocation: String = ""
+    @State private var lat: String = ""
+    @State private var long: String = ""
     let user: User?
     var body: some View {
         NavigationStack {
@@ -73,17 +78,20 @@ struct EditProfileView: View {
                             Text("Location")
                                 .font(AppFont.manropeSemiBold(18))
                             HStack {
-                                Text(user?.rooms?.first?.location ?? "")
-                                .font(AppFont.manropeMedium(14))
-                                .foregroundColor(.black)
+                                Text(currentLocation)
+                                    .font(AppFont.manropeMedium(14))
+                                    .foregroundColor(.black)
                                 Spacer()
                                 Image("drop")
-                                    .frame(width: 32, height: 32)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 22, height: 22)
+                                    .padding(6)
                                     .background(Color.black)
-                                    .cornerRadius(8)
+                                    .cornerRadius(10)
                             }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 12)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 10)
                             .background(
                                 RoundedRectangle(cornerRadius: 14)
                                     .fill(Color.white)
@@ -92,8 +100,29 @@ struct EditProfileView: View {
                                 RoundedRectangle(cornerRadius: 14)
                                     .stroke(Color.black, lineWidth: 1)
                             )
+                            .onTapGesture {
+                                showLocationSheet = true
+                            }
                         }
-                        .padding(.top,20)
+                        .padding(.top, 20)
+                        .sheet(isPresented: $showLocationSheet) {
+                            EditLocationView(
+                                location: currentLocation.isEmpty
+                                ? (user?.rooms?.first?.location ?? "")
+                                : currentLocation
+                            ) { newLocation, latitude, longitude in
+
+                                currentLocation = newLocation
+                                lat = String(latitude)
+                                long = String(longitude)
+
+                                showLocationSheet = false
+
+                                print("New location selected:", newLocation)
+                                print("Lat:", lat)
+                                print("Long:", long)
+                            }
+                        }
                         VStack(alignment: .leading, spacing: 10) {
                             Text("About you")
                                 .font(AppFont.manropeSemiBold(18))
@@ -181,7 +210,10 @@ struct EditProfileView: View {
                 ]) {
                 router.isTabBarHidden = true
                 loadUserPhotos()
-                aboutYourselfText = user?.rooms?.first?.location ?? ""
+                aboutYourselfText = user?.profile?.aboutYourself ?? ""
+                currentLocation = user?.rooms?.first?.location ?? ""
+                lat = user?.lat ?? ""
+                long = user?.long ?? ""
             }
         }
     }
@@ -969,11 +1001,13 @@ struct EditProfileView: View {
             "into_parties":user?.profile?.intoPartiesData?.id ?? 0,
             "smoking":selections.selectedSmoke.lowercased(),
             "drinking":selections.selectedDrink.lowercased(),
-            "about_yourself":user?.profile?.aboutYourself ?? "",
+            "about_yourself":aboutYourselfText,
             "do_you_have_room":user?.profile?.doYouHaveRoom ?? "",
             "want_live_with":user?.profile?.wantLiveWith ?? "",
+            "location": currentLocation,
+            "lat": lat,
+            "long": long,
         ]
-        print(params)
         PROFILE.UpdateProfile(images: imgs, params: params) { _ in
             isUploading = false
             router.isTabBarHidden = false
