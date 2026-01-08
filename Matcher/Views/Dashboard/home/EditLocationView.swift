@@ -54,7 +54,6 @@ struct EditLocationView: View {
                                         Text(item.title)
                                             .font(AppFont.manropeBold(16))
                                             .foregroundColor(.black)
-
                                         Text(item.subtitle)
                                             .font(AppFont.manropeMedium(12))
                                             .foregroundColor(.gray)
@@ -63,11 +62,11 @@ struct EditLocationView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                                 .buttonStyle(.plain)
-
                                 Divider()
                             }
                         }
                     }
+                    .scrollIndicators(.hidden)
                     .padding(.horizontal)
                 }
                 Spacer()
