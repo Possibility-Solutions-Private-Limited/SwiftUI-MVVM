@@ -311,6 +311,7 @@ struct EditProfileView: View {
         @ObservedObject var viewModel: BasicModel
         let user: User?
         @ObservedObject var selections: UserSelections
+        @State private var sheetHeight: CGFloat = 0
         private var about: [String] {
             var items: [String] = []
             if !selections.selectedRole.isEmpty {
@@ -349,7 +350,24 @@ struct EditProfileView: View {
                 .padding(.horizontal)
             }
             .sheet(item: $activeSheet) { sheet in
-                sheetView(for: sheet)
+                ZStack {
+                    Color.clear
+                    sheetView(for: sheet)
+                        .background(
+                            RoundedRectangle(cornerRadius: 40)
+                                .fill(Color.white)
+                        )
+                        .background(
+                            GeometryReader { geo in
+                                Color.clear
+                                    .onAppear {
+                                        sheetHeight = geo.size.height
+                                    }
+                            }
+                        )
+                 }
+                .presentationDetents([.height(max(sheetHeight, 300))])
+                .presentationDragIndicator(.visible)
             }
             .onAppear {
                 selections.selectedRole = user?.profile?.describeYouBest?.capitalized ?? ""
@@ -517,6 +535,8 @@ struct EditProfileView: View {
                     }
                     .padding(.horizontal)
                 }
+                .scrollIndicators(.hidden)
+                .padding(.horizontal)
                 nextButton
                     .padding(.horizontal)
                     .padding(.vertical, 20)
@@ -723,6 +743,8 @@ struct EditProfileView: View {
                     }
                     .padding(.horizontal)
                 }
+                .scrollIndicators(.hidden)
+                .padding(.horizontal)
                 nextButton
                     .padding(.horizontal)
                     .padding(.vertical, 20)
@@ -912,6 +934,7 @@ struct EditProfileView: View {
         @ObservedObject var viewModel: BasicModel
         let user: User?
         @ObservedObject var selections: UserSelections
+        @State private var sheetHeight: CGFloat = 0
         private var about: [String] {
             var items: [String] = []
             if !selections.selectedPartiesStr.isEmpty {
@@ -932,7 +955,24 @@ struct EditProfileView: View {
                 .padding(.horizontal)
             }
             .sheet(isPresented: $showSheet) {
-                StepFiveView(viewModel: viewModel, selections: selections)
+                ZStack {
+                    Color.clear
+                    StepFiveView(viewModel: viewModel, selections: selections)
+                        .background(
+                            RoundedRectangle(cornerRadius: 40)
+                                .fill(Color.white)
+                        )
+                        .background(
+                            GeometryReader { geo in
+                                Color.clear
+                                    .onAppear {
+                                        sheetHeight = geo.size.height
+                                    }
+                              }
+                        )
+                }
+                .presentationDetents([.height(max(sheetHeight, 300))])
+                .presentationDragIndicator(.visible)
             }
             .onAppear {
                 selections.selectedParties = user?.profile?.intoParties
