@@ -52,13 +52,17 @@ struct SettingsView: View {
                                 DELETE.deleteAccount() { response in
                                     if let response = response {
                                         if response.success {
-                                            router.isTabBarHidden = false
-                                            userAuth.logout()
-                                        }
-                                    }
-                                }
-                            }
-                        )
+                                            DispatchQueue.main.async {
+                                                dismiss()
+                                                router.isTabBarHidden = false
+                                                userAuth.logout()
+                                                router.reset()
+                                             }
+                                         }
+                                     }
+                                 }
+                             }
+                         )
                         .frame(maxHeight: .infinity, alignment: .bottom)
                         .transition(.move(edge: .bottom))
                         .zIndex(10)
@@ -91,13 +95,17 @@ struct SettingsView: View {
                                 LOGOUT.LogoutAPI() { response in
                                     if let response = response {
                                         if response.success {
-                                            router.isTabBarHidden = false
-                                            userAuth.logout()
-                                        }
-                                    }
-                                }
-                            }
-                        )
+                                            DispatchQueue.main.async {
+                                                dismiss()
+                                                router.isTabBarHidden = false
+                                                userAuth.logout()
+                                                router.reset()
+                                             }
+                                         }
+                                     }
+                                 }
+                             }
+                         )
                         .frame(maxHeight: .infinity, alignment: .bottom)
                         .transition(.move(edge: .bottom))
                         .zIndex(10)
@@ -276,7 +284,7 @@ struct SettingsView: View {
                         .fill(AppColors.Black)
                 )
             }
-            .padding(.bottom, 20)
+            .padding(.bottom, 10)
         }
     }
 }

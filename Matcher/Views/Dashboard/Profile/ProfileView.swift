@@ -94,7 +94,14 @@ struct ProfileView: View {
                         )
                         PartyPreferencesView(party:user.profile?.intoPartiesData?.title ?? "")
                         RoomPhotosDisplayView(photos: user.rooms?.first?.photos ?? [], user: user,shouldReloadProfile: $shouldReloadProfile)
-                        RoommatesNeededSection()
+                        if let roommates = user.rooms?.first?.roomMateWant,
+                           roommates > 0 {
+                            RoommatesNeededSection(
+                                numberOfRoommates: roommates,
+                                onlyForFemale: user.rooms?.first?.wantToLiveWith?.lowercased() == "female",
+                                roommateImageName: "girls"
+                            )
+                        }
                         RoomShortInfoSection(
                             spaceType: user.rooms?.first?.roomType ?? "",
                             rentSplit: user.rooms?.first?.rentSplit ?? "",
@@ -443,13 +450,12 @@ struct ProfileView: View {
             }
         }
         struct RoommatesNeededSection: View {
-            let roommatesImages: [String] = [
-                "girls",
-                "girls",
-                "girls"
-            ]
-            let numberOfRoommates: Int = 3
-            let onlyForFemale: Bool = true
+            let numberOfRoommates: Int
+            let onlyForFemale: Bool
+            let roommateImageName: String
+            private var displayImagesCount: Int {
+                min(numberOfRoommates, 3)
+            }
             var body: some View {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
@@ -478,15 +484,19 @@ struct ProfileView: View {
                         }
                     }
                     HStack(spacing: -15) {
-                        ForEach(0..<min(roommatesImages.count, 3), id: \.self) { index in
-                            Image(roommatesImages[index])
+                        ForEach(0..<displayImagesCount, id: \.self) { index in
+                            Image(roommateImageName)
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width: 50, height: 50)
                                 .clipShape(Circle())
-                                .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                                .zIndex(Double(roommatesImages.count - index))
+                                .overlay(
+                                    Circle().stroke(Color.white, lineWidth: 2)
+                                )
+                                .zIndex(Double(displayImagesCount - index))
                         }
+
+                        // MARK: - Count Badge
                         Text("\(numberOfRoommates)")
                             .font(AppFont.manropeSemiBold(14))
                             .frame(width: 40, height: 40)

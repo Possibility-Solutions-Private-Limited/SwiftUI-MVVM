@@ -43,6 +43,11 @@ class AppRouter: ObservableObject {
     @Published var userImg: String = ""
     @Published var userName: String = ""
     @Published var isTabBarHidden: Bool = false
+    func reset() {
+        selectedTab = 0
+        navigationPath = NavigationPath()
+        isTabBarHidden = false
+    }
 }
 struct MainView: View {
     @EnvironmentObject var router: AppRouter
