@@ -129,6 +129,7 @@ class NetworkManager {
     ) {
         let url = URL(string: baseURL + endpoint)!
         var request = URLRequest(url: url)
+        print(url)
         request.httpMethod = "POST"
         if let token = KeychainHelper.shared.get(forKey: "access_token") {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")

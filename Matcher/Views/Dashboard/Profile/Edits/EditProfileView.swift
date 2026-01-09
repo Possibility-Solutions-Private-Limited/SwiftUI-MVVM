@@ -1108,7 +1108,6 @@ struct EditProfileView: View {
             "lat": lat,
             "long": long,
         ]
-        print(params)
         PROFILE.UpdateProfile(images: imgs, params: params) { _ in
             DispatchQueue.main.async {
                 isUploading = false

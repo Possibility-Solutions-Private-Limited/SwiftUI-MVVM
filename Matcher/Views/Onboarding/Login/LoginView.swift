@@ -19,6 +19,7 @@ struct LoginView: View {
     @StateObject private var SIGNUP = SignUpModel()
     @StateObject private var SOCIAL = SocialloginModel()
     @EnvironmentObject var userAuth: UserAuth
+    @EnvironmentObject var router: AppRouter
     enum FormField: Hashable {
         case loginEmail, loginPassword
         case signUpFirstName, signUpLastName, signUpEmail, signUpPhone, signUpPassword
@@ -399,6 +400,7 @@ struct LoginView: View {
             }
             let data = response.data
             isUploading = false
+            router.isTabBarHidden = false
             KeychainHelper.shared.save(response.token ?? "", forKey: "access_token")
             KeychainHelper.shared.save(data?.firstName ?? "", forKey: "first_name")
             KeychainHelper.shared.save(data?.email ?? "", forKey: "email")
@@ -477,6 +479,7 @@ struct LoginView: View {
             }
             validator.showValidation(response.message ?? "")
             validator.showToast = true
+            router.isTabBarHidden = false
             if response.success == true {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                     isUploading = false
@@ -547,6 +550,7 @@ struct LoginView: View {
                 return
             }
             let data = response.data
+            router.isTabBarHidden = false
             KeychainHelper.shared.save(response.token ?? "", forKey: "access_token")
             KeychainHelper.shared.save(data?.firstName ?? name ?? "", forKey: "first_name")
             KeychainHelper.shared.save(data?.email ?? email ?? "", forKey: "email")

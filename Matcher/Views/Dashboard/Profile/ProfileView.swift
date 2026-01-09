@@ -18,7 +18,8 @@ struct ProfileView: View {
                         if let user {
                             SwipeCard(
                                 user: user,
-                                maxHeight: geo.size.height * 2
+                                maxHeight: geo.size.height * 2,
+                                shouldReloadProfile:$shouldReloadProfile
                             )
                         }
                         Spacer(minLength: 10)
@@ -78,6 +79,7 @@ struct ProfileView: View {
         private let sliderHeight: CGFloat = 420
         private let autoSlideTime: TimeInterval = 3
         @State private var slideTimer: Timer?
+        @Binding var shouldReloadProfile: Bool
         var body: some View {
             VStack {
                 ScrollView(showsIndicators: false) {
@@ -91,7 +93,7 @@ struct ProfileView: View {
                             Drinking: user.profile?.drinking ?? ""
                         )
                         PartyPreferencesView(party:user.profile?.intoPartiesData?.title ?? "")
-                        RoomPhotosDisplayView(photos: user.rooms?.first?.photos ?? [])
+                        RoomPhotosDisplayView(photos: user.rooms?.first?.photos ?? [], user: user,shouldReloadProfile: $shouldReloadProfile)
                         RoommatesNeededSection()
                         RoomShortInfoSection(
                             spaceType: user.rooms?.first?.roomType ?? "",
@@ -362,11 +364,31 @@ struct ProfileView: View {
         }
         struct RoomPhotosDisplayView: View {
             let photos: [Photos]
+            let user: User
+            @Binding var shouldReloadProfile: Bool
             var body: some View {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Rooms Photo")
-                        .font(AppFont.manropeSemiBold(18))
-                        .foregroundColor(.black)
+                    HStack {
+                        Text("Rooms Photo")
+                            .font(AppFont.manropeSemiBold(18))
+                            .foregroundColor(.black)
+                        Spacer()
+                        NavigationLink {
+                            EditSpaceView(
+                                user: user,
+                                onUpdate: {
+                                    shouldReloadProfile.toggle()
+                                 }
+                             )
+                        } label: {
+                            HStack(spacing: 0) {
+                                Image("edit")
+                                Text("Edit")
+                                    .font(AppFont.manropeSemiBold(16))
+                                    .foregroundColor(AppColors.primaryYellow)
+                            }
+                        }
+                    }
                     HStack(spacing: 5) {
                         photoBox(size: UIScreen.main.bounds.width * 0.42, index: 0)
                         VStack(spacing: 5) {
