@@ -573,6 +573,7 @@ struct ProfileView: View {
                                 }
                             }
                             .padding(.top, 5)
+                            .padding(.bottom, 5)
                             .padding(.horizontal)
                         } else {
                             Text("No amenities available")

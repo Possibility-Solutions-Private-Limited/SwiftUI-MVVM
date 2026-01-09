@@ -23,10 +23,14 @@ struct MapView: View {
     @FocusState private var isSearchFocused: Bool
     @State private var isSearching = false
     @State private var suppressSearchChange = false
-    init(profiles: [Profiles]) {
+    var lat: Double
+    var long: Double
+    var type: Int
+    init(profiles: [Profiles], lat: Double, long: Double,type:Int) {
         self.profiles = profiles
-        let lat = Double(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "") ?? 28.6139
-        let long = Double(KeychainHelper.shared.get(forKey: "saved_longitude") ?? "") ?? 77.2090
+        self.lat = lat
+        self.long = long
+        self.type = type
         let defaultCoord = CLLocationCoordinate2D(latitude: lat, longitude: long)
         _mapPosition = State(initialValue: .region(
             MKCoordinateRegion(

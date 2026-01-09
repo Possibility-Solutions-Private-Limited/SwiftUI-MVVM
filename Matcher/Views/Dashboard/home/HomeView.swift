@@ -721,6 +721,7 @@ struct HomeView: View {
                                 }
                             }
                             .padding(.top, 5)
+                            .padding(.bottom, 5)
                             .padding(.horizontal)
                         } else {
                             Text("No amenities available")
@@ -762,20 +763,31 @@ struct HomeView: View {
                 Text("Location :")
                     .font(AppFont.manropeExtraBold(14))
                     .foregroundColor(.black)
-                    .padding(.leading,5)
+                    .padding(.leading, 5)
+                
                 Text("\(profiles.rooms?.first?.location ?? "")")
                     .font(AppFont.manropeMedium(13))
                     .foregroundColor(.black)
                 Spacer()
-                Image("vack")
-                    .padding()
-                    .background(Color.black)
-                    .cornerRadius(8)
+                NavigationLink {
+                    if let latStr = profiles.rooms?.first?.lat,
+                       let lonStr = profiles.rooms?.first?.long,
+                       let lat = Double(latStr),
+                       let lon = Double(lonStr) {
+                        MapView(profiles: [profiles],lat: lat,long: lon,type:1)
+                    }
+                } label: {
+                    Image("vack")
+                        .padding()
+                        .background(Color.black)
+                        .cornerRadius(8)
+                }
             }
             .padding(5)
             .background(AppColors.primaryYellow)
             .cornerRadius(12)
         }
+
         private func circleButton(icon: String, action: @escaping () -> Void) -> some View {
             Button(action: action) {
                 Image(icon)
@@ -1122,7 +1134,9 @@ struct HomeView: View {
                   .stroke(Color.gray.opacity(0.25), lineWidth: 1)
                 )
                 NavigationLink {
-                    MapView(profiles: profiles)
+                    let lat = Double(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "") ?? 28.6139
+                    let long = Double(KeychainHelper.shared.get(forKey: "saved_longitude") ?? "") ?? 77.2090
+                    MapView(profiles: profiles,lat:lat,long:long,type:0)
                 } label: {
                     Image("map")
              }
