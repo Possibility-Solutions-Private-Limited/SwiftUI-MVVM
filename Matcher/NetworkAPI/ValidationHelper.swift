@@ -1,4 +1,5 @@
 import Foundation
+import MapKit
 import SwiftUI
 import WebKit
 final class ValidationHelper: ObservableObject {
@@ -470,8 +471,6 @@ struct DeleteAccountSheetView: View {
         .padding(.horizontal)
     }
 }
-
-
 struct LogoutSheetView: View {
     @Binding var isPresented: Bool
     var onDelete: () -> Void
@@ -513,4 +512,20 @@ struct LogoutSheetView: View {
         .padding(.horizontal)
     }
 }
-
+final class LocationSearchManager: NSObject, ObservableObject, MKLocalSearchCompleterDelegate {
+    @Published var results: [MKLocalSearchCompletion] = []
+    private let completer = MKLocalSearchCompleter()
+    override init() {
+        super.init()
+        completer.delegate = self
+        completer.resultTypes = [.address, .pointOfInterest]
+    }
+    func updateQuery(_ text: String) {
+        completer.queryFragment = text
+    }
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        DispatchQueue.main.async {
+            self.results = completer.results
+        }
+    }
+}

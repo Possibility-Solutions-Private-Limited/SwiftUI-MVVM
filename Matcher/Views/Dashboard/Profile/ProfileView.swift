@@ -23,10 +23,10 @@ struct ProfileView: View {
                             )
                         }
                         Spacer(minLength: 10)
-                    }
-                }
-            }
-        }
+                     }
+                 }
+             }
+         }
         .onChange(of: shouldReloadProfile) {
             viewModel.GetProfileAPI(param: [:]) { response in
                 DispatchQueue.main.async {

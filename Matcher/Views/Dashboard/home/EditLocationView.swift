@@ -7,7 +7,7 @@ struct EditLocationView: View {
     @StateObject private var searchManager = LocationSearchManager()
     @State private var searchText = ""
     @State private var showSearchResults = true
-    @FocusState private var isFocused: Bool
+    @FocusState private var isSearchFocused: Bool
     init(location: String,onSave: @escaping (_ location: String, _ lat: Double, _ long: Double) -> Void) {
         self._locationText = State(initialValue: location)
         self.onSave = onSave
@@ -27,16 +27,25 @@ struct EditLocationView: View {
                 HStack {
                     Image(systemName: "magnifyingglass")
                     TextField("Search Location", text: $searchText)
-                        .focused($isFocused)
+                        .focused($isSearchFocused)
                         .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                                isFocused = true
-                            }
-                        }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                isSearchFocused = true
+                             }
+                         }
                         .onChange(of: searchText) {
-                            searchManager.updateQuery(searchText)
-                            showSearchResults = showSearchResults
+                            if !searchText.isEmpty {
+                                showSearchResults = true
+                                searchManager.updateQuery(searchText)
+                            } else {
+                                showSearchResults = false
+                            }
+                         }
+                        .onTapGesture {
+                        if !searchText.isEmpty {
+                            showSearchResults = true
                         }
+                    }
                     Spacer()
                 }
                 .padding()
@@ -87,6 +96,10 @@ struct EditLocationView: View {
             let latitude = coordinate.latitude
             let longitude = coordinate.longitude
             locationText = completion.title
+            isSearchFocused = false
+            withAnimation(.easeInOut) {
+                showSearchResults = false
+            }
             onSave(completion.title, latitude, longitude)
             dismiss()
         }

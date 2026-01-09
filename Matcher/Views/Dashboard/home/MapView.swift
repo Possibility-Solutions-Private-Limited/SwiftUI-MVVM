@@ -6,21 +6,6 @@ struct ProfileAnnotation: Identifiable {
     let profile: Profiles
     let coordinate: CLLocationCoordinate2D
 }
-final class LocationSearchManager: NSObject, ObservableObject, MKLocalSearchCompleterDelegate {
-    @Published var results: [MKLocalSearchCompletion] = []
-    private let completer = MKLocalSearchCompleter()
-    override init() {
-        super.init()
-        completer.delegate = self
-        completer.resultTypes = [.address, .pointOfInterest]
-    }
-    func updateQuery(_ text: String) {
-        completer.queryFragment = text
-    }
-    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-        results = completer.results
-    }
-}
 struct MapView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var userAuth: UserAuth
@@ -34,7 +19,10 @@ struct MapView: View {
     let annotations: [ProfileAnnotation]
     @StateObject private var searchManager = LocationSearchManager()
     @State private var searchText = ""
-    @State private var showSearchResults = true
+    @State private var showSearchResults = false
+    @FocusState private var isSearchFocused: Bool
+    @State private var isSearching = false
+    @State private var suppressSearchChange = false
     init(profiles: [Profiles]) {
         self.profiles = profiles
         let lat = Double(KeychainHelper.shared.get(forKey: "saved_latitude") ?? "") ?? 28.6139
@@ -53,7 +41,6 @@ struct MapView: View {
                 let lat = Double(latStr),
                 let long = Double(longStr)
             else { return nil }
-
             return ProfileAnnotation(
                 id: index,
                 profile: profile,
@@ -76,7 +63,7 @@ struct MapView: View {
             LinearGradient(colors: [.splashTop, .splashBottom],
                            startPoint: .top,
                            endPoint: .bottom)
-                .ignoresSafeArea()
+            .ignoresSafeArea()
             ZStack(alignment: .top) {
                 Map(position: $mapPosition, interactionModes: .all) {
                     UserAnnotation()
@@ -169,13 +156,21 @@ struct MapView: View {
     }
     private var header: some View {
         HStack {
-            Button { dismiss() } label: {
+            Button {
+                dismiss()
+            } label: {
                 Circle()
-                    .fill(Color.yellow)
-                    .frame(width: 44, height: 44)
-                    .overlay(Image(systemName: "chevron.left").foregroundColor(.black))
+                    .fill(AppColors.primaryYellow)
+                    .frame(width: 50, height: 50)
+                    .overlay(
+                        Circle()
+                            .stroke(Color.white, lineWidth: 3)
+                    )
+                    .overlay(
+                        Image(systemName: "arrow.left")
+                            .foregroundColor(AppColors.Black)
+                    )
             }
-
             Spacer()
             HStack(spacing: 6) {
                 Image("location")
@@ -195,76 +190,90 @@ struct MapView: View {
     }
     private var searchBar: some View {
         ZStack(alignment: .top) {
-            HStack(spacing: 12) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                    TextField("Search Location", text: $searchText)
-                        .onChange(of: searchText) {
-                            searchManager.updateQuery(searchText)
-                            showSearchResults = showSearchResults
-                        }
-                    Spacer()
-                }
-                .padding()
-                .background(Color.white)
-                .cornerRadius(12)
+            HStack {
+                Image(systemName: "magnifyingglass")
+                TextField("Search Location", text: $searchText)
+                    .focused($isSearchFocused)
+                    .onChange(of: searchText) { _, newValue in
+                        guard isSearchFocused, !suppressSearchChange else { return }
 
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.yellow)
-                    .frame(width: 44, height: 44)
-                    .overlay(Image(systemName: "map").foregroundColor(.black))
+                        if !newValue.isEmpty {
+                            showSearchResults = true
+                            searchManager.updateQuery(newValue)
+                        } else {
+                            showSearchResults = false
+                        }
+                    }
+                    .onTapGesture {
+                        if !searchText.isEmpty {
+                            showSearchResults = true
+                        }
+                    }
+                Spacer()
             }
+            .padding()
+            .background(Color.white)
+            .cornerRadius(12)
             .padding(.horizontal)
             if showSearchResults && !searchManager.results.isEmpty {
-                ZStack {
-                    LinearGradient(
-                        colors: [.splashTop, .splashBottom],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .cornerRadius(20)
-                    ScrollView {
+                ScrollView {
+                    ZStack {
+                        LinearGradient(
+                            colors: [.splashTop, .splashBottom],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .ignoresSafeArea()
                         VStack(spacing: 0) {
-                            ForEach(Array(searchManager.results.enumerated()), id: \.offset) { _, item in
+                            ForEach(searchManager.results, id: \.self) { item in
                                 Button {
                                     selectLocation(item)
                                 } label: {
-                                    VStack(alignment: .leading, spacing: 2) {
+                                    VStack(alignment: .leading, spacing: 4) {
                                         Text(item.title)
-                                                .font(AppFont.manropeBold(16))
-                                                .foregroundColor(.black)
-                                        Text(item.subtitle)
-                                                .font(AppFont.manropeMedium(12))
+                                            .font(.headline)
+                                            .foregroundColor(.black)
+                                        
+                                        if !item.subtitle.isEmpty {
+                                            Text(item.subtitle)
+                                                .font(.subheadline)
                                                 .foregroundColor(.gray)
-                                     }
+                                        }
+                                    }
                                     .padding()
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(Color.clear)
                                 }
                                 .buttonStyle(.plain)
                                 Divider()
-                            }
-                        }
-                    }
-                    .scrollIndicators(.hidden)
-                }
-                .frame(maxHeight: 400)
+                             }
+                         }
+                     }
+                 }
+                .frame(maxHeight: 300)
+                .background(Color.white)
+                .cornerRadius(16)
                 .padding(.horizontal)
                 .offset(y: 60)
-                .shadow(radius: 10)
-             }
+                .shadow(radius: 8)
+            }
         }
     }
     private func selectLocation(_ completion: MKLocalSearchCompletion) {
+        guard !isSearching else { return }
+        isSearching = true
+        suppressSearchChange = true
         searchText = completion.title
-        withAnimation {
-            showSearchResults = false
-        }
+        showSearchResults = false
+        isSearchFocused = false
         let request = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: request)
         search.start { response, _ in
-            guard let coordinate = response?.mapItems.first?.placemark.coordinate else { return }
-            zoom(to: coordinate)
+            DispatchQueue.main.async {
+                self.isSearching = false
+                self.suppressSearchChange = false
+                guard let coordinate = response?.mapItems.first?.placemark.coordinate else { return }
+                zoom(to: coordinate)
+            }
         }
     }
     private var bottomProfileCards: some View {
@@ -292,7 +301,7 @@ struct MapView: View {
                     .frame(width: 130, height: 180)
                     .clipped()
                     .cornerRadius(10)
-                } else {
+                }else{
                     Color.gray.opacity(0.2)
                         .frame(width: 130, height: 180)
                         .cornerRadius(10)
@@ -366,7 +375,7 @@ struct MapView: View {
                 RoundedRectangle(cornerRadius: 5)
                     .stroke(Color.gray.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [6]))
                     .frame(width: width, height: height)
-                if let urlStr, let url = URL(string: urlStr) {
+                 if let urlStr, let url = URL(string: urlStr) {
                     AsyncImage(url: url) { phase in
                         switch phase {
                         case .success(let img):
