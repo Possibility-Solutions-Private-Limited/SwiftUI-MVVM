@@ -82,7 +82,7 @@ class ProfileModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                print("SIGNUP Success: \(response)")
+                print("Profile Success: \(response)")
                 if response.success {
                     completion(response)
                 } else {
@@ -105,7 +105,7 @@ class UpdateProfileModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                print("UpdateProfile Success: \(response)")
+                print("Update Profile Success: \(response)")
                 if response.success {
                     completion(response)
                 } else {
@@ -128,7 +128,7 @@ class GetProfileModel: ObservableObject {
                 DispatchQueue.main.async {
                     switch result {
                     case .success(let response):
-                        print("Profile Success: \(response)")
+                        print("GetProfile Success: \(response)")
                         if response.success {
                             completion(response)
                         } else {
@@ -177,7 +177,7 @@ class ForgotModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                print("SIGNUP Success: \(response)")
+                print("FORGOT Success: \(response)")
                 if response.success {
                     completion(response)
                 } else {
@@ -248,7 +248,7 @@ class deleteAccountModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                print("Delete Success: \(response)")
+                print("Delete Account Success: \(response)")
                 if response.success {
                     completion(response)
                 } else {
@@ -395,7 +395,6 @@ class DashboardViewModel: ObservableObject {
     func loadDashboard(page: Int? = nil, params: [String: Any] = [:]) {
         currentPage = params["page"] as! Int
         let requestParams = params
-        print("requestParams",requestParams)
         NetworkManager.shared.makeRequest(
             endpoint: APIConstants.Endpoints.dashboard,
             method: "GET",
@@ -415,25 +414,65 @@ class DashboardViewModel: ObservableObject {
         }
     }
 }
-class ChatsModel: ObservableObject {
+@MainActor
+final class ChatsModel: ObservableObject {
     @Published var chats: [Chat] = []
-    @Published var users: [Users] = []
-    func fetchChat() {
+    @Published var isLoading = false
+    func fetchChats() {
+        isLoading = true
         NetworkManager.shared.makeRequest(
-            endpoint: APIConstants.Endpoints.chatUser, method: "GET",
+            endpoint: APIConstants.Endpoints.chatUser,
+            method: "GET",
             parameters: nil
         ) { (result: Result<ChatModel, Error>) in
             DispatchQueue.main.async {
-                switch result {
-                case .success(let response):
-                    print("Chat: \(response)")
+                self.isLoading = false
+                if case .success(let response) = result {
                     self.chats = response.data
-                    self.users = response.users ?? []
-                case .failure(let error):
-                    print("Error fetching deductions: \(error.localizedDescription)")
                 }
             }
         }
+    }
+    func updateLastMessageLocally(message: Message,isIncoming: Bool) {
+        guard let index = chats.firstIndex(where: { $0.id == message.chat_id }) else {
+            return
+        }
+        let oldChat = chats[index]
+        let now = ISO8601DateFormatter().string(from: Date())
+        let updatedLastMessage = LastMessage(
+            id: message.id,
+            message: message.message,
+            file: message.file,
+            type: message.type,
+            isSeen: message.isSeen,
+            createdAt: now
+        )
+        let newUnseenCount = isIncoming
+            ? (oldChat.unseen_message_count ?? 0) + 1
+            : 0
+        let updatedChat = Chat(
+            id: oldChat.id,
+            senderDetail: oldChat.senderDetail,
+            receiverDetail: oldChat.receiverDetail,
+            lastMessage: updatedLastMessage,
+            createdAt: now,
+            unseen_message_count: newUnseenCount
+        )
+        chats.remove(at: index)
+        chats.insert(updatedChat, at: 0)
+    }
+    func markChatRead(chatId: Int) {
+        guard let index = chats.firstIndex(where: { $0.id == chatId }) else { return }
+        let chat = chats[index]
+        let updatedChat = Chat(
+            id: chat.id,
+            senderDetail: chat.senderDetail,
+            receiverDetail: chat.receiverDetail,
+            lastMessage: chat.lastMessage,
+            createdAt: chat.createdAt,
+            unseen_message_count: 0
+        )
+        chats[index] = updatedChat
     }
 }
 class likesModel: ObservableObject {
@@ -446,7 +485,7 @@ class likesModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                    print("message: \(String(describing: response.message))")
+                    print("\(response.message ?? "")")
                     self.messages = response.message ?? ""
                 case .failure(let error):
                     print("Error fetching deductions: \(error.localizedDescription)")
@@ -465,7 +504,7 @@ class DislikesModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                    print("message: \(String(describing: response.message))")
+                    print("\(response.message ?? "")")
                     self.messages = response.message ?? ""
                 case .failure(let error):
                     print("Error fetching deductions: \(error.localizedDescription)")
@@ -494,6 +533,7 @@ class InteractionModel: ObservableObject {
                 switch result {
                 case .success(let response):
                     let newUsers = response.data.interacted_user
+                    print("📥 Likes User:", newUsers)
                     if newUsers.isEmpty {
                         self.hasMoreData = false
                     } else {
@@ -532,6 +572,7 @@ class NotificationsModel: ObservableObject {
                 switch result {
                 case .success(let response):
                     let newData = response.data
+                    print("📥 NOTIFICATIONS:", newData)
                     if newData.isEmpty {
                         self.hasMoreData = false
                     } else {
@@ -555,6 +596,7 @@ class NotificationsModel: ObservableObject {
                 self.deletingId = nil
                 switch result {
                 case .success:
+                    print("📥 deleteNotification")
                     self.notificationData.removeAll { $0.id == id }
                 case .failure(let error):
                     print("❌ Delete error:", error.localizedDescription)
@@ -639,7 +681,7 @@ class TermsModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                    print("Privacy: \(response)")
+                    print("TERMS: \(response)")
                     DispatchQueue.main.async {
                         self.termsHTML = response.data?.termPolicy ?? ""
                     }
@@ -683,7 +725,7 @@ class NofificationSettingModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                print("HELP Success: \(response)")
+                print("NOTIFICATION-SETTINGS Success: \(response)")
                 if response.success {
                     completion(response)
                 } else {

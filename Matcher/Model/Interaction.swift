@@ -10,8 +10,15 @@ struct Interaction: Codable {
 struct InteractionData: Codable {
     let interacted_user: [InteractedUser]
 }
-struct InteractedUser: Codable, Identifiable {
+struct InteractedUser: Identifiable, Hashable, Codable {
     var id: Int { intraction_id }
     let intraction_id: Int
     let user: Profiles?
+    static func == (lhs: InteractedUser, rhs: InteractedUser) -> Bool {
+        lhs.id == rhs.id
+    }
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
+

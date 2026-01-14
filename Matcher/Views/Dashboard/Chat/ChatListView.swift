@@ -3,10 +3,8 @@ import SwiftUI
 struct ChatListView: View {
     @State private var showNotifications = false
     @EnvironmentObject var userAuth: UserAuth
-    @StateObject var chatModel = ChatsModel()
+    @StateObject private var chatModel = ChatsModel()
     @State private var selectedChat: Chat?
-    @State private var selectedUser: Users?
-
     var body: some View {
         NavigationStack {
             ZStack {
@@ -18,15 +16,19 @@ struct ChatListView: View {
                 .ignoresSafeArea()
                 VStack(spacing: 0) {
                     header
-                    List {
-                        if !chatModel.chats.isEmpty {
-                            Section {
+                    if chatModel.chats.isEmpty {
+                        NoChatView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        ScrollView {
+                            VStack(spacing: 0) {
                                 ForEach(chatModel.chats, id: \.id) { chat in
                                     Button {
                                         selectedChat = chat
                                     } label: {
                                         VStack(spacing: 0) {
-                                            ChatRowView(chats: chat)
+                                            ChatRowView(chat: chat)
+                                                .environmentObject(chatModel)
                                             Rectangle()
                                                 .fill(Color.gray.opacity(0.3))
                                                 .frame(height: 0.8)
@@ -35,74 +37,36 @@ struct ChatListView: View {
                                         .contentShape(Rectangle())
                                         .background(
                                             selectedChat?.id == chat.id
-                                            ? Color.gray.opacity(0.15)
-                                            : Color.clear
+                                                ? Color.gray.opacity(0.15)
+                                                : Color.clear
                                         )
                                     }
                                     .buttonStyle(.plain)
-                                    .listRowInsets(.init())
-                                    .listRowBackground(Color.clear)
-                                    .listRowSeparator(.hidden)
                                 }
                             }
-                            .listSectionSeparator(.hidden)
-                        }
-                        if !chatModel.users.isEmpty {
-                            Section {
-                                ForEach(chatModel.users, id: \.id) { user in
-                                    Button {
-                                        selectedUser = user
-                                    } label: {
-                                        VStack(spacing: 0) {
-                                            UserRowView(users: user)
-                                            Rectangle()
-                                                .fill(Color.gray.opacity(0.3))
-                                                .frame(height: 0.8)
-                                                .padding(.leading, 20)
-                                        }
-                                    }
-                                    .buttonStyle(.plain)
-                                    .listRowInsets(.init())
-                                    .listRowBackground(Color.clear)
-                                    .listRowSeparator(.hidden)
-                                }
-                            }
-                            .listSectionSeparator(.hidden)
+                            .padding(.bottom, 68)
                         }
                     }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .scrollIndicators(.hidden)
                 }
-                .padding(.bottom, 68)
                 .ignoresSafeArea(.container, edges: .bottom)
                 .toolbar(.hidden, for: .tabBar)
             }
             .onAppear {
-                chatModel.fetchChat()
+                chatModel.fetchChats()
             }
             .navigationDestination(item: $selectedChat) { chat in
-                let currentUserId = KeychainHelper.shared.getInt(forKey: "userId") ?? 0
-                let isSender = chat.senderDetail.id == currentUserId
-                let sender = isSender ? chat.receiverDetail : chat.senderDetail
-                let receiver = isSender ? chat.senderDetail : chat.receiverDetail
+                let loginUserId = KeychainHelper.shared.getInt(forKey: "userId") ?? 0
+                let isCurrent = chat.senderDetail.id == loginUserId
+                let receiver = isCurrent ? chat.receiverDetail : chat.senderDetail
                 ChatView(
-                    senderId: sender.id ?? 0,
+                    senderId: loginUserId,
                     chatId: chat.id,
                     receiverId: receiver.id ?? 0,
-                    UserImg: "",
-                    userName: sender.firstName ?? ""
+                    UserImg: receiver.photos?.first?.file ?? "",
+                    userName: receiver.firstName ?? "",
+                    chat: chat
                 )
-            }
-            .navigationDestination(item: $selectedUser) { user in
-                let currentUserId = KeychainHelper.shared.getInt(forKey: "userId") ?? 0
-                ChatView(
-                    senderId: currentUserId,
-                    chatId: 0,
-                    receiverId: user.id ?? 0,
-                    UserImg: user.photos?.first?.file ?? "",
-                    userName: user.firstName ?? ""
-                )
+                .environmentObject(chatModel)
             }
         }
     }
@@ -116,9 +80,7 @@ struct ChatListView: View {
                             .scaledToFill()
                             .frame(width: 60, height: 60)
                             .clipShape(Circle())
-                            .overlay(
-                                Circle().stroke(Color.white, lineWidth: 3)
-                            )
+                            .overlay(Circle().stroke(Color.white, lineWidth: 3))
                     } else if phase.error != nil {
                         Image("profile")
                             .resizable()
@@ -156,99 +118,120 @@ struct ChatListView: View {
         }
         .padding(.horizontal)
     }
-}
-struct ChatRowView: View {
-    let chats: Chat
-    let currentUserId = KeychainHelper.shared.getInt(forKey: "userId") ?? 0
-    var isCurrentUserSender: Bool {
-        chats.senderDetail.id == currentUserId
+    struct NoChatView: View {
+        var body: some View {
+            VStack(spacing: 0) {
+                Image("no_chat")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
+                Text("No Conversations Yet")
+                    .font(AppFont.manropeBold(18))
+                    .foregroundColor(.black)
+                Text("Start the conversation and make a connection")
+                    .font(AppFont.manrope(12))
+                    .foregroundColor(.black.opacity(0.5))
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .toolbar(.hidden, for: .tabBar)
+        }
     }
-    var userDetail: User? {
-        isCurrentUserSender ? chats.receiverDetail : chats.senderDetail
-    }
-    var body: some View {
-        HStack(spacing: 14) {
-            ZStack(alignment: .bottomTrailing) {
-                if let imageURL = userDetail?.photos?.first?.file,
-                   let url = URL(string: imageURL) {
-                    AsyncImage(url: url) { image in
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    } placeholder: {
-                        ProgressView()
-                    }
-                    .frame(width: 52, height: 52)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                } else {
-                    Image(systemName: "person.crop.circle.fill")
-                        .resizable()
-                        .foregroundColor(.gray)
+    struct ChatRowView: View {
+        @ObservedObject var chat: Chat
+        @EnvironmentObject var chatVM: ChatsModel
+        let currentUserId = KeychainHelper.shared.getInt(forKey: "userId") ?? 0
+        var isCurrentUserSender: Bool {
+            chat.senderDetail.id == currentUserId
+        }
+        var userDetail: User? {
+            isCurrentUserSender ? chat.receiverDetail : chat.senderDetail
+        }
+        var body: some View {
+            HStack(spacing: 14) {
+                ZStack(alignment: .bottomTrailing) {
+                    if let imageURL = userDetail?.photos?.first?.file,
+                       let url = URL(string: imageURL) {
+                        AsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        } placeholder: {
+                            ProgressView()
+                        }
                         .frame(width: 52, height: 52)
                         .clipShape(Circle())
                         .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                 }
-            }
-            VStack(alignment: .leading, spacing: 6) {
-                Text(userDetail?.firstName ?? "")
-                    .font(AppFont.manropeSemiBold(16))
-                    .foregroundColor(.black)
-                Text(chats.lastMessage?.message ?? "Say Hi 👋")
-                    .font(AppFont.manrope(14))
-                    .foregroundColor(.black.opacity(0.6))
-                    .lineLimit(1)
-            }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 6) {
-                Text("05:00 PM")
-                    .font(AppFont.manrope(12))
-                    .foregroundColor(.black.opacity(0.5))
-                 if (chats.unseen_message_count ?? 0) > 0 {
-                    Text("\(chats.unseen_message_count ?? 0)")
-                        .font(AppFont.manropeSemiBold(12))
-                        .frame(width: 22, height: 22)
-                        .background(Color.yellow)
+                    } else {
+                        Image(systemName: "person.crop.circle.fill")
+                            .resizable()
+                            .foregroundColor(.gray)
+                            .frame(width: 52, height: 52)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.white, lineWidth: 3))
+                    }
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(userDetail?.firstName ?? "")
+                        .font(AppFont.manropeSemiBold(16))
                         .foregroundColor(.black)
-                        .clipShape(Circle())
+                    if let lastMessage = chat.lastMessage {
+                        switch lastMessage.type {
+                        case "file":
+                            let filePath = chat.lastMessage?.file ?? ""
+                            let ext = filePath.lowercased()
+                            if ext.hasSuffix(".jpg") || ext.hasSuffix(".jpeg") || ext.hasSuffix(".png") {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "paperclip")
+                                        .font(.system(size: 13))
+                                    Text("File")
+                                        .font(AppFont.manrope(14))
+                                } .foregroundColor(.black.opacity(0.6))
+                            } else if ext.hasSuffix(".m4a") || ext.hasSuffix(".mp3") || ext.hasSuffix(".wav") {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "waveform")
+                                        .font(.system(size: 13))
+                                    Text("Voice message")
+                                        .font(AppFont.manrope(14))
+                                }
+                                .foregroundColor(.black.opacity(0.6))
+                            }
+                        case "audio":
+                            HStack(spacing: 4) {
+                                Image(systemName: "waveform")
+                                    .font(.system(size: 13))
+                                Text("Voice message")
+                                    .font(AppFont.manrope(14))
+                            }
+                            .foregroundColor(.black.opacity(0.6))
+                        default:
+                            Text(lastMessage.message ?? "Say Hi 👋")
+                                .font(AppFont.manrope(14))
+                                .foregroundColor(.black.opacity(0.6))
+                                .lineLimit(1)
+                        }
+                    } else {
+                        Text("Say Hi 👋")
+                            .font(AppFont.manrope(14))
+                            .foregroundColor(.black.opacity(0.6))
+                    }
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 6) {
+                    Text(formattedTimeFromCreatedAt(chat.createdAt))
+                        .font(AppFont.manrope(12))
+                        .foregroundColor(.black.opacity(0.5))
+                    if (chat.unseen_message_count ?? 0) > 0 {
+                        Text("\(chat.unseen_message_count ?? 0)")
+                            .font(AppFont.manropeSemiBold(12))
+                            .frame(width: 22, height: 22)
+                            .background(Color.yellow)
+                            .foregroundColor(.black)
+                            .clipShape(Circle())
+                    }
                 }
             }
+            .padding(.horizontal)
+            .padding(.vertical, 14)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 14)
-    }
-}
-struct UserRowView: View {
-    let users: Users
-    var body: some View {
-        HStack(spacing: 14) {
-            if let imageURL = users.photos?.first?.file,
-               let url = URL(string: imageURL) {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .scaledToFill()
-                } placeholder: {
-                    ProgressView()
-                }
-                .frame(width: 52, height: 52)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.white, lineWidth: 3))
-            } else {
-                Image(systemName: "person.crop.circle.fill")
-                    .resizable()
-                    .foregroundColor(.gray)
-                    .frame(width: 52, height: 52)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.white, lineWidth: 3))
-            }
-            Text(users.firstName ?? "")
-                .font(AppFont.manropeSemiBold(16))
-                .foregroundColor(.black)
-
-            Spacer()
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 14)
     }
 }

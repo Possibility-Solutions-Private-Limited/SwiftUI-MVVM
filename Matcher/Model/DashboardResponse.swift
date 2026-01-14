@@ -23,6 +23,7 @@ struct Profiles: Codable, Identifiable {
     let lat, long, location: String?
     let page_key: Int?
     let photos: [Photo]?
+    let chatting: Chatting?
     let profile: ProfileDetail?
     let rooms: [Room]?
 }

@@ -88,12 +88,16 @@ struct MapView: View {
                 }
                 VStack(spacing: 12) {
                     header
-                    searchBar
+                    if type == 0 {
+                        searchBar
+                    }
                 }
                 .padding(.top, 10)
                 VStack {
                     Spacer()
-                    bottomProfileCards
+                    if type == 0 {
+                        bottomProfileCards
+                    }
                 }
                 .padding(.bottom, 16)
                 .ignoresSafeArea(.keyboard, edges: .bottom)

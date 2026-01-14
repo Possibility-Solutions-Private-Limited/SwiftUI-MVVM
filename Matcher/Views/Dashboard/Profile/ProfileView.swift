@@ -20,8 +20,8 @@ struct ProfileView: View {
                                 user: user,
                                 maxHeight: geo.size.height * 2,
                                 shouldReloadProfile:$shouldReloadProfile
-                            )
-                        }
+                              )
+                         }
                         Spacer(minLength: 10)
                      }
                  }
@@ -615,15 +615,30 @@ struct ProfileView: View {
                 Text("Location :")
                     .font(AppFont.manropeExtraBold(14))
                     .foregroundColor(.black)
-                    .padding(.leading,5)
-                Text("\(user.location ?? "")")
+                    .padding(.leading, 5)
+                
+                Text("\(user.rooms?.first?.location ?? "")")
                     .font(AppFont.manropeMedium(13))
                     .foregroundColor(.black)
                 Spacer()
-                Image("vack")
-                    .padding()
-                    .background(Color.black)
-                    .cornerRadius(8)
+                NavigationLink {
+                    if let latStr = user.rooms?.first?.lat,
+                       let lonStr = user.rooms?.first?.long,
+                       let lat = Double(latStr),
+                       let lon = Double(lonStr) {
+                        MapView(
+                            profiles: [],
+                            lat: lat,
+                            long: lon,
+                            type: 1
+                        )
+                    }
+                } label: {
+                    Image("vack")
+                        .padding()
+                        .background(Color.black)
+                        .cornerRadius(8)
+                }
             }
             .padding(5)
             .background(AppColors.primaryYellow)

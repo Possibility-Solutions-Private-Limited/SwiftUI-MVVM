@@ -5,74 +5,66 @@ struct ChatModel: Codable {
     let status: Int
     let message: String
     let data: [Chat]
-    let users: [Users]?
     enum CodingKeys: String, CodingKey {
         case success
         case status
         case message
         case data
-        case users = "users"
     }
 }
-struct Users: Codable, Identifiable, Hashable {
-    let id: Int?
-    let firstName: String?
-    let lastName: String?
-    let email: String?
-    let mobile: String?
-    let gender: String?
-    let dob: String?
-    let lat: String?
-    let long: String?
-    let location: String?
-    let pageKey: Int?
-    let photos: [Photo]?
-    let profile: Profile?
-    let rooms: [Room]?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case firstName = "first_name"
-        case lastName = "last_name"
-        case email
-        case mobile
-        case gender
-        case dob
-        case lat
-        case long
-        case location
-        case pageKey = "page_key"
-        case photos
-        case profile
-        case rooms
-    }
-    static func == (lhs: Users, rhs: Users) -> Bool {
-        lhs.id == rhs.id
-    }
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-}
-struct Chat: Codable, Identifiable, Hashable {
+final class Chat: ObservableObject, Identifiable, Hashable, Codable {
     let id: Int
     let senderDetail: User
     let receiverDetail: User
-    let lastMessage: LastMessage?
-    let createdAt: String
-    let unseen_message_count : Int?
+    @Published var lastMessage: LastMessage?
+    @Published var createdAt: String
+    @Published var unseen_message_count: Int?
     enum CodingKeys: String, CodingKey {
         case id
         case senderDetail = "sender"
         case receiverDetail = "receiver"
         case lastMessage = "last_message"
         case createdAt = "created_at"
-        case unseen_message_count = "unseen_message_count"
+        case unseen_message_count
+    }
+    init(
+        id: Int,
+        senderDetail: User,
+        receiverDetail: User,
+        lastMessage: LastMessage?,
+        createdAt: String,
+        unseen_message_count: Int?
+    ) {
+        self.id = id
+        self.senderDetail = senderDetail
+        self.receiverDetail = receiverDetail
+        self.lastMessage = lastMessage
+        self.createdAt = createdAt
+        self.unseen_message_count = unseen_message_count
     }
     static func == (lhs: Chat, rhs: Chat) -> Bool {
         lhs.id == rhs.id
     }
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
+    }
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(Int.self, forKey: .id)
+        self.senderDetail = try container.decode(User.self, forKey: .senderDetail)
+        self.receiverDetail = try container.decode(User.self, forKey: .receiverDetail)
+        self.lastMessage = try container.decodeIfPresent(LastMessage.self, forKey: .lastMessage)
+        self.createdAt = try container.decode(String.self, forKey: .createdAt)
+        self.unseen_message_count = try container.decodeIfPresent(Int.self, forKey: .unseen_message_count)
+    }
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(senderDetail, forKey: .senderDetail)
+        try container.encode(receiverDetail, forKey: .receiverDetail)
+        try container.encode(lastMessage, forKey: .lastMessage)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(unseen_message_count, forKey: .unseen_message_count)
     }
 }
 struct LastMessage: Codable {

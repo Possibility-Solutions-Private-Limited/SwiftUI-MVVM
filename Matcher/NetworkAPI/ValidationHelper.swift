@@ -82,7 +82,9 @@ struct AppColors {
     static let backgroundWhite = Color.white
     static let backgroundClear = Color.clear
     static let Black = Color.black
+    static let Blue = Color.blue.opacity(0.9)
     static let Gray = Color.gray
+    static let primaryRed = Color.red
     static let lightGray = Color(hex: "#F4F4E8")
     static let ExtralightGray = Color(hex: "#CDCDCD")
 
@@ -283,6 +285,40 @@ func calculateAge(_ dob: String?) -> Int {
     guard let birthDate = formatter.date(from: dob) else { return 0 }
     let ageComponents = Calendar.current.dateComponents([.year], from: birthDate, to: Date())
     return ageComponents.year ?? 0
+}
+func formattedTimeFromCreatedAt(_ createdAt: String?) -> String {
+    let time = timeFromCreatedAt(createdAt)
+    if time.hours > 0 {
+        return "\(time.hours)h \(time.minutes)m"
+    } else if time.minutes > 0 {
+        return "\(time.minutes)m \(time.seconds)s"
+    } else {
+        return "\(time.seconds)s"
+    }
+}
+func timeFromCreatedAt(_ createdAt: String?) -> (hours: Int, minutes: Int, seconds: Int) {
+    guard let createdAt = createdAt else { return (0, 0, 0) }
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    guard let createdDate = formatter.date(from: createdAt) else {
+        return (0, 0, 0)
+    }
+    let interval = Int(Date().timeIntervalSince(createdDate))
+    guard interval > 0 else { return (0, 0, 0) }
+    let hours = interval / 3600
+    let minutes = (interval % 3600) / 60
+    let seconds = interval % 60
+    return (hours, minutes, seconds)
+}
+func timeOnlyFromCreatedAt(_ createdAt: String?) -> String {
+    guard let createdAt = createdAt else { return "" }
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    guard let date = formatter.date(from: createdAt) else { return "" }
+    let timeFormatter = DateFormatter()
+    timeFormatter.dateFormat = "hh:mm a"
+    timeFormatter.locale = Locale(identifier: "en_US_POSIX")
+    return timeFormatter.string(from: date)
 }
 extension String {
     func cleanDecimal() -> String {
@@ -528,4 +564,19 @@ final class LocationSearchManager: NSObject, ObservableObject, MKLocalSearchComp
             self.results = completer.results
         }
     }
+}
+enum FileKind {
+    case image
+    case audio
+    case unknown
+}
+func detectFileType(from url: URL) -> FileKind {
+    let ext = url.pathExtension.lowercased()
+    if ["jpg", "jpeg", "png", "webp", "gif"].contains(ext) {
+        return .image
+    }
+    if ["m4a", "mp3", "wav", "aac"].contains(ext) {
+        return .audio
+    }
+    return .unknown
 }

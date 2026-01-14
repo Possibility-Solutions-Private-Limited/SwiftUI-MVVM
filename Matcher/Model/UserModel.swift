@@ -29,6 +29,7 @@ struct User: Codable, Identifiable {
     let pageKey: Int?
     let photos: [Photo]?
     let profile: Profile?
+    let chatting: Chatting?
     let rooms: [Room]?
     enum CodingKeys: String, CodingKey {
         case id = "id"
@@ -44,7 +45,26 @@ struct User: Codable, Identifiable {
         case pageKey = "page_key"
         case photos = "photos"
         case profile = "profile"
+        case chatting = "chatting"
         case rooms = "rooms"
+    }
+}
+struct Chatting: Codable, Identifiable {
+    let id: Int?
+    let senderId: Int?
+    let receiverId: Int?
+    let createdAt: String?
+    let updatedAt: String?
+    let deletedAt: String?
+    let unseenMessageCount: Int?
+    enum CodingKeys: String, CodingKey {
+        case id
+        case senderId = "sender_id"
+        case receiverId = "receiver_id"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+        case deletedAt = "deleted_at"
+        case unseenMessageCount = "unseen_message_count"
     }
 }
 struct Photo: Codable, Identifiable {
@@ -72,6 +92,7 @@ struct Profile: Codable, Identifiable {
     let aboutYourself: String?
     let doYouHaveRoom: String?
     let wantLiveWith: Int?
+    let chatting: Chatting?
     let professionalFieldData: FieldData?
     let intoPartiesData: FieldData?
     enum CodingKeys: String, CodingKey {
@@ -87,6 +108,7 @@ struct Profile: Codable, Identifiable {
         case aboutYourself = "about_yourself"
         case doYouHaveRoom = "do_you_have_room"
         case wantLiveWith = "want_live_with"
+        case chatting = "chatting"
         case professionalFieldData = "professional_field_data"
         case intoPartiesData = "into_parties_data"
     }

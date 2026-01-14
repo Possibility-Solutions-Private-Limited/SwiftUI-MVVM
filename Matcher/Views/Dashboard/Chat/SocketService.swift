@@ -10,10 +10,14 @@ class SocketService: ObservableObject {
     private var senderId: String
     private var receiverId: String
     private var chatId: Int
-    init(senderId: Int, receiverId: Int,chatId:Int) {
+    let chat: Chat?
+    private var chatVM: ChatsModel?
+    init(senderId: Int, receiverId: Int, chatId: Int, chat: Chat? = nil, chatVM: ChatsModel? = nil) {
         self.senderId = "\(senderId)"
         self.receiverId = "\(receiverId)"
         self.chatId = chatId
+        self.chat = chat
+        self.chatVM = chatVM
         let socketUrl = URL(string: APIConstants.socketURL)!
         self.manager = SocketManager(socketURL: socketUrl, config: [.log(true), .compress])
         self.socket = manager.defaultSocket
@@ -78,6 +82,10 @@ class SocketService: ObservableObject {
                         isSeen: isSeen
                     )
                     self.messages.append(newMsg)
+                    if let chatVM = self.chatVM, let chat = self.chat {
+                        chatVM.updateLastMessageLocally(message: newMsg, isIncoming: false)
+                        print("📌 Updated last message for chat id: \(chat.id)")
+                    }
                     print("📩 Message received: \(newMsg)")
                 } else {
                     print("⚠️ Invalid sender ID")
