@@ -50,7 +50,7 @@ struct User: Codable, Identifiable {
     }
 }
 struct Chatting: Codable, Identifiable {
-    let id: Int?
+    var id: Int?          
     let senderId: Int?
     let receiverId: Int?
     let createdAt: String?

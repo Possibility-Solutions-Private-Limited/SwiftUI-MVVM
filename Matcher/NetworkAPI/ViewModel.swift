@@ -513,39 +513,66 @@ class DislikesModel: ObservableObject {
         }
     }
 }
-class InteractionModel: ObservableObject {
+@MainActor
+ final class InteractionModel: ObservableObject {
     @Published var InteractedUser: [InteractedUser] = []
     @Published var currentPage: Int = 1
     @Published var isLoading: Bool = false
     @Published var hasMoreData: Bool = true
-    func fetchInteraction(page: Int? = nil) {
-        guard !isLoading else { return }
-        isLoading = true
-        let targetPage = page ?? currentPage
-        let params: [String: Any] = ["page": targetPage]
-        NetworkManager.shared.makeRequest(
-            endpoint: APIConstants.Endpoints.interaction,
-            method: "GET",
-            parameters: params
-        ) { (result: Result<Interaction, Error>) in
-            DispatchQueue.main.async {
-                self.isLoading = false
-                switch result {
-                case .success(let response):
-                    let newUsers = response.data.interacted_user
-                    print("📥 Likes User:", newUsers)
-                    if newUsers.isEmpty {
-                        self.hasMoreData = false
-                    } else {
-                        self.InteractedUser.append(contentsOf: newUsers)
-                        self.currentPage += 1
+        func fetchInteraction(page: Int? = nil) {
+            guard !isLoading else { return }
+            isLoading = true
+            let targetPage = page ?? currentPage
+            let params: [String: Any] = ["page": targetPage]
+            NetworkManager.shared.makeRequest(
+                endpoint: APIConstants.Endpoints.interaction,
+                method: "GET",
+                parameters: params
+            ) { (result: Result<Interaction, Error>) in
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    switch result {
+                    case .success(let response):
+                        let newUsers = response.data.interacted_user
+                        print("📥 Likes User:", newUsers)
+
+                        if newUsers.isEmpty {
+                            self.hasMoreData = false
+                        } else {
+                            self.InteractedUser.append(contentsOf: newUsers)
+                            self.currentPage += 1
+                        }
+
+                    case .failure(let error):
+                        print("❌ Fetch error:", error.localizedDescription)
                     }
-                case .failure(let error):
-                    print("❌ Fetch error: \(error.localizedDescription)")
                 }
             }
         }
-    }
+     func updateChatId(newId: Int, oldId: Int) {
+         guard let index = InteractedUser.firstIndex(where: { $0.user?.id == oldId }) else {
+             print("⚠️ No user found with chat ID:", oldId)
+             return
+         }
+         print("✅ Found user at index:", index)
+         DispatchQueue.main.async {
+             var interacted = self.InteractedUser[index]
+             if interacted.user?.chatting != nil {
+                 interacted.user?.chatting?.id = newId
+             } else {
+                 interacted.user?.chatting = Chatting(
+                     id: newId,
+                     senderId: nil,
+                     receiverId: nil,
+                     createdAt: nil,
+                     updatedAt: nil,
+                     deletedAt: nil,
+                     unseenMessageCount: nil
+                 )
+             }
+             self.InteractedUser[index] = interacted
+         }
+     }
     func loadMore() {
         guard hasMoreData, !isLoading else { return }
         fetchInteraction(page: currentPage)

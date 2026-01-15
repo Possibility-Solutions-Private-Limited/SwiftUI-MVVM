@@ -7,7 +7,7 @@ struct ChatView: View {
     @EnvironmentObject var router: AppRouter
     @StateObject private var socketManager: SocketService
     @StateObject private var Chats = ChatHistoryModel()
-    @ObservedObject private var keyboard = KeyboardResponder()
+    @StateObject var keyboard = KeyboardResponder()
     @State private var showEmojiPicker = false
     @State private var selectedCategory = "Smileys"
     @State private var messageText = ""
@@ -22,6 +22,7 @@ struct ChatView: View {
     @State private var recordedAudioURL: URL?
     @State private var isRecording = false
     @EnvironmentObject var chatVM: ChatsModel
+    @EnvironmentObject var InteractionVM: InteractionModel
     let senderId: Int
     let chatId: Int
     let receiverId: Int
@@ -56,7 +57,7 @@ struct ChatView: View {
                 endPoint: .bottom
             )
             .ignoresSafeArea()
-            VStack(spacing: 0) {
+             VStack(spacing: 0) {
                 HStack {
                     Button(action: {
                         let msg: [String: Any] = [
@@ -95,7 +96,7 @@ struct ChatView: View {
                         OnlineStatusView(isOnline: socketManager.isOtherUserOnline)
                     }
                     Spacer()
-                }
+                 }
                 .padding()
                 ScrollViewReader { scrollViewProxy in
                     ScrollView {
@@ -111,14 +112,18 @@ struct ChatView: View {
                             }
                         }
                     }
-                    .onChange(of: combinedMessages.count) { _, _ in
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                            scrollToLast(scrollViewProxy: scrollViewProxy)
+                    .onChange(of: combinedMessages.count) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            withAnimation(.easeOut) {
+                                scrollViewProxy.scrollTo(combinedMessages.last?.id, anchor: .bottom)
+                            }
                         }
                     }
                     .onAppear {
                         Chats.fetchChatHistory(chatId: "\(chatId)")
-                        scrollToLast(scrollViewProxy: scrollViewProxy)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            scrollViewProxy.scrollTo(combinedMessages.last?.id, anchor: .bottom)
+                        }
                     }
                 }
                 ChatInputBar(
@@ -141,9 +146,9 @@ struct ChatView: View {
                 )
                 .padding(.horizontal)
                 .padding(.top, 8)
-                .padding(.bottom, keyboard.currentHeight == 0 ? 30 : keyboard.currentHeight)
-                .animation(.easeOut(duration: 0.25), value: keyboard.currentHeight)
+                .padding(.bottom, max(keyboard.currentHeight, 30))
             }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .edgesIgnoringSafeArea(.bottom)
         .toolbar(.hidden, for: .navigationBar)
@@ -212,6 +217,9 @@ struct ChatView: View {
             socketManager.goOnline()
             startTimer()
             router.isTabBarHidden = true
+            if self.chatId == 0 {
+                socketManager.injectInteractionVM(InteractionVM)
+            }
         }
         .onDisappear {
             stopTimer()
@@ -278,6 +286,9 @@ struct ChatView: View {
         )
         if self.chat != nil {
         chatVM.updateLastMessageLocally(message: newMessage, isIncoming: false)
+        }
+        if self.chatId == 0 {
+            InteractionVM.updateChatId(newId: 1, oldId: self.chatId)
         }
         socketManager.messages.append(newMessage)
         socketManager.sendMessage(msg: payload)
@@ -390,6 +401,9 @@ struct ChatView: View {
         )
         if chat != nil {
         chatVM.updateLastMessageLocally(message: newMessage, isIncoming: false)
+        }
+        if self.chatId == 0 {
+            InteractionVM.updateChatId(newId: 1, oldId: self.chatId)
         }
         socketManager.messages.append(newMessage)
         socketManager.sendMessage(msg: payload)

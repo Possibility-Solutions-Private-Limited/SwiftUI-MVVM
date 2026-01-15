@@ -2,7 +2,7 @@ import SwiftUI
 
 struct LikeView: View {
     @EnvironmentObject var userAuth: UserAuth
-    @StateObject var interaction = InteractionModel()
+    @StateObject private var interaction = InteractionModel()
     @State private var showNotifications = false
     @State private var selectedUser: InteractedUser? = nil
     private let spacing: CGFloat = 14
@@ -24,15 +24,17 @@ struct LikeView: View {
                             NoRoomsView()
                         } else {
                             ScrollView(showsIndicators: false) {
-                                LazyVGrid(columns: [
-                                    GridItem(.fixed(width), spacing: spacing),
-                                    GridItem(.fixed(width), spacing: spacing)
-                                ], spacing: 15) {
+                                LazyVGrid(
+                                    columns: [
+                                        GridItem(.fixed(width), spacing: spacing),
+                                        GridItem(.fixed(width), spacing: spacing)
+                                    ],
+                                    spacing: 15
+                                ) {
                                     ForEach(interaction.InteractedUser) { user in
                                         ProfileCardView(user: user, width: width) {
                                             selectedUser = user
                                         }
-                                        .id(user.id)
                                         .onAppear {
                                             if user.id == interaction.InteractedUser.last?.id {
                                                 interaction.loadMore()
@@ -50,16 +52,13 @@ struct LikeView: View {
             }
             .navigationDestination(item: $selectedUser) { data in
                 let currentUserId = KeychainHelper.shared.getInt(forKey: "userId") ?? 0
-                var isCurrentUserSender: Bool {
-                    data.user?.chatting?.senderId == currentUserId
-                }
                 ChatView(
                     senderId: currentUserId,
                     chatId: data.user?.chatting?.id ?? 0,
                     receiverId: data.user?.id ?? 0,
                     UserImg: data.user?.photos?.first?.file ?? "",
                     userName: data.user?.first_name ?? ""
-                )
+                ).environmentObject(interaction)
             }
         }
         .onAppear {
@@ -70,20 +69,21 @@ struct LikeView: View {
         HStack {
             if let url = URL(string: userAuth.image), !userAuth.image.isEmpty {
                 AsyncImage(url: url) { phase in
-                    if let image = phase.image {
+                    switch phase {
+                    case .success(let image):
                         image
                             .resizable()
                             .scaledToFill()
                             .frame(width: 60, height: 60)
                             .clipShape(Circle())
                             .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                    } else if phase.error != nil {
+                    case .failure:
                         Image("profile")
                             .resizable()
                             .scaledToFill()
                             .frame(width: 50, height: 50)
                             .clipShape(Circle())
-                    } else {
+                    default:
                         ProgressView()
                             .frame(width: 60, height: 60)
                     }
@@ -115,23 +115,23 @@ struct LikeView: View {
         }
         .padding(.horizontal)
     }
-    struct NoRoomsView: View {
-        var body: some View {
-            VStack(spacing: 10) {
-                Image("likiy")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 120, height: 120)
-                Text("No Matches Nearby")
-                    .font(AppFont.manropeBold(18))
-                    .foregroundColor(.black)
-                Text("Try changing your location or preferences")
-                    .font(AppFont.manrope(12))
-                    .foregroundColor(.black.opacity(0.5))
-             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .toolbar(.hidden, for: .tabBar)
+}
+struct NoRoomsView: View {
+    var body: some View {
+        VStack(spacing: 10) {
+            Image("likiy")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 120, height: 120)
+            Text("No Matches Nearby")
+                .font(AppFont.manropeBold(18))
+                .foregroundColor(.black)
+            Text("Try changing your location or preferences")
+                .font(AppFont.manrope(12))
+                .foregroundColor(.black.opacity(0.5))
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .toolbar(.hidden, for: .tabBar)
     }
 }
 struct ProfileCardView: View {
@@ -148,9 +148,7 @@ struct ProfileCardView: View {
                         .resizable()
                         .scaledToFill()
                 } else if let url = photoURL, !url.isEmpty {
-                    Image("")
-                        .resizable()
-                        .scaledToFill()
+                    Color.clear
                         .onAppear { loader.load(from: url) }
                     ProgressView()
                 } else {
@@ -173,7 +171,6 @@ struct ProfileCardView: View {
                     Text("\(user.user?.first_name ?? "") \(user.user?.last_name ?? "") 🌼")
                         .font(AppFont.manropeSemiBold(14))
                         .foregroundColor(.white)
-                    
                     Text(" \(calculateAge(user.user?.dob ?? ""))")
                         .font(AppFont.manropeExtraBold(16))
                         .foregroundColor(.white)
@@ -186,12 +183,10 @@ struct ProfileCardView: View {
                         .font(AppFont.manropeMedium(11))
                         .padding(.vertical, 6)
                         .padding(.horizontal, 14)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(.white, lineWidth: 1))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(.white))
                         .foregroundColor(.white)
                     Spacer()
-                    Button {
-                        onChatTap()
-                    } label: {
+                    Button(action: onChatTap) {
                         Image(systemName: "paperplane.fill")
                             .resizable()
                             .scaledToFit()
@@ -199,15 +194,14 @@ struct ProfileCardView: View {
                             .foregroundColor(.white)
                             .padding(.vertical, 8)
                             .padding(.horizontal, 14)
-                            .overlay(RoundedRectangle(cornerRadius: 8)
-                                        .stroke(AppColors.primaryYellow, lineWidth: 1))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(AppColors.primaryYellow)
+                        )
                     }
-                    .padding(.top, 12)
-                    .padding(.trailing, 12)
                 }
             }
-            .padding(.leading, 15)
-            .padding(.bottom, 15)
+            .padding(15)
         }
         .background(AppColors.backgroundWhite)
         .clipShape(RoundedRectangle(cornerRadius: 20))

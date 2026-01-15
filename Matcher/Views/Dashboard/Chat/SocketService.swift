@@ -12,6 +12,7 @@ class SocketService: ObservableObject {
     private var chatId: Int
     let chat: Chat?
     private var chatVM: ChatsModel?
+    weak var InteractionVM: InteractionModel?
     init(senderId: Int, receiverId: Int, chatId: Int, chat: Chat? = nil, chatVM: ChatsModel? = nil) {
         self.senderId = "\(senderId)"
         self.receiverId = "\(receiverId)"
@@ -23,6 +24,9 @@ class SocketService: ObservableObject {
         self.socket = manager.defaultSocket
         setupHandlers()
         socket.connect()
+    }
+    func injectInteractionVM(_ vm: InteractionModel) {
+        self.InteractionVM = vm
     }
     private func setupHandlers() {
         socket.on(clientEvent: .connect) { [weak self] _, _ in
@@ -111,7 +115,21 @@ class SocketService: ObservableObject {
         }
     }
     func sendMessage(msg: [String: Any]) {
-        socket.emit("sendMessage", msg)
+        socket.emitWithAck("sendMessage", msg).timingOut(after: 1) { response in
+            guard let first = response.first as? [String: Any],
+                  let chatId = first["chat_id"] as? Int else {
+                print("⚠️ No valid chat_id received")
+                return
+            }
+            print("✅ Received chat_id:", chatId)
+            Task { @MainActor in
+                if self.chatId == 0 {
+                    let oldId = Int(self.receiverId) ?? 0
+                    self.InteractionVM?.updateChatId(newId: chatId, oldId: oldId)
+                }
+                self.chatId = chatId
+            }
+        }
     }
     func goOnline() {
         if socket.status == .connected {

@@ -13,7 +13,7 @@ struct InteractionData: Codable {
 struct InteractedUser: Identifiable, Hashable, Codable {
     var id: Int { intraction_id }
     let intraction_id: Int
-    let user: Profiles?
+    var user: Profiles?
     static func == (lhs: InteractedUser, rhs: InteractedUser) -> Bool {
         lhs.id == rhs.id
     }
