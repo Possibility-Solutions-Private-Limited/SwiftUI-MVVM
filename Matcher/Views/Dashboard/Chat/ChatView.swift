@@ -8,8 +8,6 @@ struct ChatView: View {
     @StateObject private var socketManager: SocketService
     @StateObject private var Chats = ChatHistoryModel()
     @StateObject var keyboard = KeyboardResponder()
-    @State private var showEmojiPicker = false
-    @State private var selectedCategory = "Smileys"
     @State private var messageText = ""
     @State private var timer: Timer?
     @State private var isTyping = false
@@ -23,6 +21,10 @@ struct ChatView: View {
     @State private var isRecording = false
     @EnvironmentObject var chatVM: ChatsModel
     @EnvironmentObject var InteractionVM: InteractionModel
+    let emojiCategories = ["Smileys", "Gestures", "Hearts", "Objects", "Animals", "Food"]
+    @State private var selectedCategory = "Smileys"
+    @State private var selectedEmojis: [String] = []
+    @State private var showEmojiPicker = false
     let senderId: Int
     let chatId: Int
     let receiverId: Int
@@ -156,37 +158,84 @@ struct ChatView: View {
         .sheet(isPresented: $showEmojiPicker) {
             VStack(spacing: 10) {
                 Text("Choose Emoji")
-                    .font(.headline)
-                    .padding(.top)
+                    .font(AppFont.manropeSemiBold(22))
+                    .foregroundColor(AppColors.Black)
+                    .padding(.top, 50)
+                    .padding(.bottom, 5)
                 Picker("Category", selection: $selectedCategory) {
-                    Text("Smileys").tag("Smileys")
-                    Text("Gestures").tag("Gestures")
-                    Text("Hearts").tag("Hearts")
-                    Text("Objects").tag("Objects")
+                    ForEach(emojiCategories, id: \.self) { category in
+                        Text(category).tag(category)
+                    }
                 }
                 .pickerStyle(SegmentedPickerStyle())
                 .padding(.horizontal)
+                .accentColor(AppColors.Blue)
+                .onAppear {
+                    UISegmentedControl.appearance().setTitleTextAttributes(
+                        [.font: UIFont(name: "Manrope-Medium", size: 11)!,
+                         .foregroundColor: UIColor.black],
+                        for: .normal
+                    )
+                    UISegmentedControl.appearance().setTitleTextAttributes(
+                        [.font: UIFont(name: "Manrope-Medium", size: 11)!,
+                         .foregroundColor: UIColor.black],
+                        for: .selected
+                    )
+                }
                 let emojisByCategory: [String: [String]] = [
-                    "Smileys": ["😊", "😂", "😍", "🤣", "😎", "😁", "😢", "🥲", "😇", "🤓"],
-                    "Gestures": ["👍", "👎", "👏", "🙌", "🙏", "🤝", "👊", "👌", "🤞", "✌️"],
-                    "Hearts": ["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "💔", "💖", "💗"],
-                    "Objects": ["🎉", "🎁", "💯", "📱", "📸", "🕹️", "🖊️", "⚽️", "🏆", "🎧"]
+                    "Smileys": ["😊","😂","😍","🤣","😎","😁","😢","🥲","😇","🤓","😡","😱","🤯","🥰","😴","😏","🤔","😤","😜","🤪"],
+                    "Gestures": ["👍","👎","👏","🙌","🙏","🤝","👊","👌","🤞","✌️","🤟","🤘","🫱","🫲","🫴","🫰","🤌","🤏","✋","🤚"],
+                    "Hearts": ["❤️","🧡","💛","💚","💙","💜","🖤","💔","💖","💗","💘","💝","💞","💕","💟","💓","💌","💤","❣️","💯"],
+                    "Objects": ["🎉","🎁","💯","📱","📸","🕹️","🖊️","⚽️","🏆","🎧","🔑","💡","🛒","📚","🖼️","🛋️","🛏️","🚪","🛠️","⏰"],
+                    "Animals": ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🦄","🐝","🐞","🦋","🐌"],
+                    "Food": ["🍏","🍎","🍊","🍋","🍌","🍉","🍇","🍓","🍒","🥑","🍅","🥦","🥕","🌽","🥔","🍔","🍕","🍟","🌭","🍿"]
                 ]
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 5) {
+                let drag = DragGesture()
+                    .onEnded { value in
+                        if value.translation.width < -30 { changeCategory(next: true) }
+                        else if value.translation.width > 30 { changeCategory(next: false) }
+                }
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 8) {
                     ForEach(emojisByCategory[selectedCategory] ?? [], id: \.self) { emoji in
                         Text(emoji)
-                            .font(.system(size: 30))
+                            .font(AppFont.manropeBold(35))
+                            .frame(width: 50, height: 50)
+                            .background(selectedEmojis.contains(emoji) ? AppColors.Blue.opacity(0.3) : AppColors.backgroundClear)
+                            .cornerRadius(10)
+                            .contentShape(Rectangle())
                             .onTapGesture {
-                                messageText += emoji
-                                showEmojiPicker = false
+                                let generator = UIImpactFeedbackGenerator(style: .light)
+                                generator.impactOccurred()
+                                if selectedEmojis.contains(emoji) {
+                                    selectedEmojis.removeAll { $0 == emoji }
+                                } else {
+                                    selectedEmojis.append(emoji)
+                                }
+                                messageText = selectedEmojis.joined()
                             }
                     }
                 }
-                .padding()
+                .padding(.horizontal)
+                .padding(.top, 5)
+                .gesture(drag)
+                .animation(.easeInOut, value: selectedEmojis)
                 Spacer()
+                Button(action: {
+                    showEmojiPicker = false
+                }) {
+                    Text("Done")
+                        .font(AppFont.manropeSemiBold(18))
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(AppColors.Black)
+                        .foregroundColor(AppColors.backgroundWhite)
+                        .cornerRadius(10)
+                        .padding(.horizontal)
+                }
+                .padding(.bottom, 10)
             }
             .padding(.bottom)
-            .presentationDetents([.height(200)])
+            .presentationDetents([.height(400)])
         }
         .actionSheet(isPresented: $showImagePicker) {
             ActionSheet(
@@ -248,6 +297,16 @@ struct ChatView: View {
         audioRecorder?.record()
         isRecording = true
         print("🎙️ Recording started")
+    }
+    func changeCategory(next: Bool) {
+        guard let currentIndex = emojiCategories.firstIndex(of: selectedCategory) else { return }
+        let newIndex: Int
+        if next {
+            newIndex = (currentIndex + 1) % emojiCategories.count
+        } else {
+            newIndex = (currentIndex - 1 + emojiCategories.count) % emojiCategories.count
+        }
+        selectedCategory = emojiCategories[newIndex]
     }
     func stopRecording() {
         guard isRecording else { return }
@@ -326,7 +385,7 @@ struct ChatView: View {
                         Image(systemName: "face.smiling")
                             .foregroundColor(.white)
                             .frame(width: 48, height: 48)
-                            .background(AppColors.Blue)
+                            .background(AppColors.Black)
                             .clipShape(Circle())
                     }
                     HStack(spacing: 4) {
@@ -360,7 +419,7 @@ struct ChatView: View {
                         Image(systemName: messageText.isEmpty ? "mic.fill" : "paperplane.fill")
                             .foregroundColor(.white)
                             .frame(width: 48, height: 48)
-                            .background(isRecording ? AppColors.primaryRed : AppColors.Blue)
+                            .background(isRecording ? AppColors.primaryRed : AppColors.Black)
                             .clipShape(Circle())
                             .scaleEffect(isRecording ? 1.1 : 1.0)
                             .animation(.easeInOut(duration: 0.2), value: isRecording)
@@ -444,6 +503,7 @@ struct ChatView: View {
         userStoppedTyping()
         DispatchQueue.main.async {
           messageText = ""
+          selectedEmojis.removeAll()
         }
     }
     func userStartedTyping() {
