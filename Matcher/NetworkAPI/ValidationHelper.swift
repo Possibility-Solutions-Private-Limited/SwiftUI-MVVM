@@ -287,14 +287,41 @@ func calculateAge(_ dob: String?) -> Int {
     return ageComponents.year ?? 0
 }
 func formattedTimeFromCreatedAt(_ createdAt: String?) -> String {
-    let time = timeFromCreatedAt(createdAt)
-    if time.hours > 0 {
-        return "\(time.hours)h \(time.minutes)m"
-    } else if time.minutes > 0 {
-        return "\(time.minutes)m \(time.seconds)s"
-    } else {
-        return "\(time.seconds)s"
+    guard let createdAt = createdAt,
+          let date = parseDate(createdAt) else {
+        return "Just now"
     }
+    let now = Date()
+    let seconds = Int(now.timeIntervalSince(date))
+    let minute = 60
+    let hour = 60 * minute
+    let day = 24 * hour
+    let week = 7 * day
+    if seconds < minute {
+        return "Just now"
+    } else if seconds < hour {
+        return "\(seconds / minute)m ago"
+    } else if seconds < day {
+        return "\(seconds / hour)h ago"
+    } else if seconds < 2 * day {
+        return "Yesterday"
+    } else if seconds < week {
+        return "\(seconds / day)d ago"
+    } else {
+        return formatDate(date)
+    }
+}
+func parseDate(_ dateString: String) -> Date? {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"
+    return formatter.date(from: dateString)
+}
+func formatDate(_ date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "dd MMM yyyy"
+    return formatter.string(from: date)
 }
 func timeFromCreatedAt(_ createdAt: String?) -> (hours: Int, minutes: Int, seconds: Int) {
     guard let createdAt = createdAt else { return (0, 0, 0) }

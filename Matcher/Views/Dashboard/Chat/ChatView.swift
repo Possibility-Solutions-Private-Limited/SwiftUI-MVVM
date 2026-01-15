@@ -162,11 +162,11 @@ struct ChatView: View {
                     .foregroundColor(AppColors.Black)
                     .padding(.top, 50)
                     .padding(.bottom, 5)
-                Picker("Category", selection: $selectedCategory) {
+                 Picker("Category", selection: $selectedCategory) {
                     ForEach(emojiCategories, id: \.self) { category in
                         Text(category).tag(category)
-                    }
-                }
+                      }
+                 }
                 .pickerStyle(SegmentedPickerStyle())
                 .padding(.horizontal)
                 .accentColor(AppColors.Blue)
@@ -204,17 +204,17 @@ struct ChatView: View {
                             .cornerRadius(10)
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                let generator = UIImpactFeedbackGenerator(style: .light)
-                                generator.impactOccurred()
-                                if selectedEmojis.contains(emoji) {
-                                    selectedEmojis.removeAll { $0 == emoji }
-                                } else {
-                                    selectedEmojis.append(emoji)
-                                }
-                                messageText = selectedEmojis.joined()
+                            let generator = UIImpactFeedbackGenerator(style: .light)
+                            generator.impactOccurred()
+                            if selectedEmojis.contains(emoji) {
+                                selectedEmojis.removeAll { $0 == emoji }
+                            } else {
+                                selectedEmojis.append(emoji)
                             }
+                            messageText = selectedEmojis.joined()
+                        }
                     }
-                }
+                 }
                 .padding(.horizontal)
                 .padding(.top, 5)
                 .gesture(drag)

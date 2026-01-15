@@ -217,7 +217,7 @@ struct ChatListView: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
-                    Text(formattedTimeFromCreatedAt(chat.createdAt))
+                    Text(formattedTimeFromCreatedAt(chat.lastMessage?.createdAt))
                         .font(AppFont.manrope(12))
                         .foregroundColor(.black.opacity(0.5))
                     if (chat.unseen_message_count ?? 0) > 0 {

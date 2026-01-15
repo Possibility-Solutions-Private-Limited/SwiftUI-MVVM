@@ -15,14 +15,18 @@ struct ProfileView: View {
                         .ignoresSafeArea()
                     VStack {
                         header
-                        if let user {
-                            SwipeCard(
-                                user: user,
-                                maxHeight: geo.size.height * 2,
-                                shouldReloadProfile:$shouldReloadProfile
-                              )
-                         }
-                        Spacer(minLength: 10)
+                        if user == nil {
+                            NoProfilesView()
+                        } else {
+                            if let user {
+                                SwipeCard(
+                                    user: user,
+                                    maxHeight: geo.size.height * 2,
+                                    shouldReloadProfile:$shouldReloadProfile
+                                )
+                            }
+                            Spacer(minLength: 10)
+                        }
                      }
                  }
              }
@@ -71,6 +75,24 @@ struct ProfileView: View {
             }
         }
         .padding(.horizontal)
+    }
+    struct NoProfilesView: View {
+        var body: some View {
+            VStack(spacing: 10) {
+                Image("likiy")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
+                Text("No profiles around you right now")
+                    .font(AppFont.manropeBold(18))
+                    .foregroundColor(.black)
+                Text("Update your location or preferences to discover profiles")
+                    .font(AppFont.manrope(12))
+                    .foregroundColor(.black.opacity(0.5))
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .toolbar(.hidden, for: .tabBar)
+        }
     }
     struct SwipeCard: View {
         let user: User
