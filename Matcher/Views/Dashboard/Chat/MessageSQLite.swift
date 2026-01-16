@@ -36,6 +36,17 @@ final class MessageSQLite {
             print("❌ Failed to create messages table: \(error)")
         }
     }
+    func messageExists(id: Int) -> Bool {
+        let sql = "SELECT 1 FROM messages WHERE id = ? LIMIT 1;"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
+            return false
+        }
+        sqlite3_bind_int64(stmt, 1, sqlite3_int64(id))
+        let exists = sqlite3_step(stmt) == SQLITE_ROW
+        sqlite3_finalize(stmt)
+        return exists
+    }
     func saveMessages(_ messages: [Message]) {
         let sql = """
         INSERT OR REPLACE INTO messages
@@ -43,20 +54,22 @@ final class MessageSQLite {
         VALUES (?, ?, ?, ?, ?, ?);
         """
         var stmt: OpaquePointer?
-        if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
-            for msg in messages {
-                sqlite3_bind_int(stmt, 1, Int32(msg.id))
-                sqlite3_bind_int(stmt, 2, Int32(msg.sentby))
-                sqlite3_bind_text(stmt, 3, msg.type ?? "", -1, transient)
-                sqlite3_bind_text(stmt, 4, msg.message ?? "", -1, transient)
-                sqlite3_bind_text(stmt, 5, msg.file ?? "", -1, transient)
-                sqlite3_bind_text(stmt, 6, msg.isSeen, -1, transient)
-
-                if sqlite3_step(stmt) != SQLITE_DONE {
-                    print("❌ Failed to save message:", String(cString: sqlite3_errmsg(db)))
-                }
-                sqlite3_reset(stmt)
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
+            print("❌ Prepare failed:", String(cString: sqlite3_errmsg(db)))
+            return
+        }
+        for msg in messages {
+            sqlite3_bind_int64(stmt, 1, sqlite3_int64(msg.id))
+            sqlite3_bind_int64(stmt, 2, sqlite3_int64(msg.sentby))
+            sqlite3_bind_text(stmt, 3, msg.type?.cString(using: .utf8), -1, transient)
+            sqlite3_bind_text(stmt, 4, msg.message?.cString(using: .utf8), -1, transient)
+            sqlite3_bind_text(stmt, 5, msg.file?.cString(using: .utf8), -1, transient)
+            sqlite3_bind_text(stmt, 6, msg.isSeen.cString(using: .utf8), -1, transient)
+            if sqlite3_step(stmt) != SQLITE_DONE {
+                print("❌ Insert failed:", String(cString: sqlite3_errmsg(db)))
             }
+            sqlite3_reset(stmt)
+            sqlite3_clear_bindings(stmt)
         }
         sqlite3_finalize(stmt)
     }

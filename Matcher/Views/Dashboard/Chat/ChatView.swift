@@ -42,14 +42,6 @@ struct ChatView: View {
         self.userName = userName
         self.chat = chat
         _Chats = StateObject(wrappedValue: ChatHistoryModel(chatId: chatId))
-        print("""
-            🟢 ChatView init called
-            ├─ senderId: \(senderId)
-            ├─ chatId: \(chatId)
-            ├─ receiverId: \(receiverId)
-            ├─ UserImg: \(UserImg)
-            └─ userName: \(userName)
-            """)
         _socketManager = StateObject(wrappedValue: SocketService(senderId: senderId, receiverId: receiverId, chatId: chatId))
     }
     var body: some View {
@@ -112,9 +104,10 @@ struct ChatView: View {
                                     isSeen: message.isSeen
                                 )
                                 .id(message.id)
-                            }
-                        }
-                    }
+                             }
+                         }
+                     }
+                    .scrollIndicators(.hidden)
                     .onChange(of: combinedMessages.count) {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                             withAnimation(.easeOut) {
@@ -269,6 +262,9 @@ struct ChatView: View {
             router.isTabBarHidden = true
             if self.chatId == 0 {
                 socketManager.injectInteractionVM(InteractionVM)
+            }
+            if chat != nil {
+                socketManager.injectChatVM(chatVM)
             }
         }
         .onDisappear {

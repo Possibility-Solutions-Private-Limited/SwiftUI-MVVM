@@ -1,8 +1,8 @@
 import Foundation
 import SocketIO
 class SocketService: ObservableObject {
-    private var manager: SocketManager!
-    private var socket: SocketIOClient!
+    private var manager: SocketManager
+    private var socket: SocketIOClient
     @Published var messages: [Message] = []
     @Published var isOtherUserOnline: Bool? = nil
     private var roomNameToJoin: String? = nil
@@ -10,15 +10,12 @@ class SocketService: ObservableObject {
     private var senderId: String
     private var receiverId: String
     private var chatId: Int
-    let chat: Chat?
-    private var chatVM: ChatsModel?
+    weak var chatVM: ChatsModel?
     weak var InteractionVM: InteractionModel?
     init(senderId: Int, receiverId: Int, chatId: Int, chat: Chat? = nil, chatVM: ChatsModel? = nil) {
         self.senderId = "\(senderId)"
         self.receiverId = "\(receiverId)"
         self.chatId = chatId
-        self.chat = chat
-        self.chatVM = chatVM
         let socketUrl = URL(string: APIConstants.socketURL)!
         self.manager = SocketManager(socketURL: socketUrl, config: [.log(true), .compress])
         self.socket = manager.defaultSocket
@@ -27,6 +24,9 @@ class SocketService: ObservableObject {
     }
     func injectInteractionVM(_ vm: InteractionModel) {
         self.InteractionVM = vm
+    }
+    func injectChatVM(_ vmc: ChatsModel) {
+        self.chatVM = vmc
     }
     private func setupHandlers() {
         socket.on(clientEvent: .connect) { [weak self] _, _ in
@@ -86,9 +86,8 @@ class SocketService: ObservableObject {
                         isSeen: isSeen
                     )
                     self.messages.append(newMsg)
-                    if let chatVM = self.chatVM, let chat = self.chat {
-                        chatVM.updateLastMessage(message: newMsg, isIncoming: false)
-                        print("📌 Updated last message for chat id: \(chat.id)")
+                    Task { @MainActor in
+                        self.chatVM?.updateLastMessage(message: newMsg, isIncoming: false)
                     }
                     print("📩 Message received: \(newMsg)")
                 } else {
@@ -105,13 +104,13 @@ class SocketService: ObservableObject {
                 }
             }
         }
-        socket?.on("typingStatus") { [weak self] data, _ in
+        socket.on("typingStatus") { [weak self] data, _ in
             guard let self = self,
                   let dict = data.first as? [String: Any],
                   let typing = dict["typing"] as? Bool else { return }
-            DispatchQueue.main.async {
+               DispatchQueue.main.async {
                 self.isOtherUserTyping = typing
-            }
+             }
         }
     }
     func sendMessage(msg: [String: Any]) {
@@ -121,13 +120,11 @@ class SocketService: ObservableObject {
                 print("⚠️ No valid chat_id received")
                 return
             }
-            print("✅ Received chat_id:", chatId)
             Task { @MainActor in
                 if self.chatId == 0 {
                     let oldId = Int(self.receiverId) ?? 0
                     self.InteractionVM?.updateChatId(newId: chatId, oldId: oldId)
                     KeychainHelper.shared.saveInt(1, forKey: "shouldReloading")
-                    
                 }
                 self.chatId = chatId
             }
@@ -153,7 +150,6 @@ class SocketService: ObservableObject {
             "sender_id": senderId,
             "receiver_id": receiverId
         ])
-        print("📴 Sent offline status for user: \(senderId)")
     }
     func joinRoom(name: String) {
         if socket.status == .connected {
@@ -175,7 +171,7 @@ class SocketService: ObservableObject {
         socket.emit("destroy", msg)
     }
     func sendTypingStatus(msg: [String: Any]) {
-        socket?.emit("typingStatus", msg)
+        socket.emit("typingStatus", msg)
     }
     func disconnect() {
         goOffline()
