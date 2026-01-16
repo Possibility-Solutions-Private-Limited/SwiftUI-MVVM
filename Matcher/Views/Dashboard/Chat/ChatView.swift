@@ -332,7 +332,7 @@ struct ChatView: View {
             "audioData": audioPayload
         ]
         let newMessage = Message(
-            id: Int.random(in: 1...Int.max),
+            id: UUID().hashValue,
             sentby: senderId,
             chat_id: chatId,
             type: "audio",
@@ -447,7 +447,7 @@ struct ChatView: View {
         ]
         print("📤 Emitting image payload: \(payload)")
         let newMessage = Message(
-            id: Int.random(in: 1...Int.max),
+            id: UUID().hashValue,
             sentby: senderId,
             chat_id: chatId,
             type: "image",
@@ -475,7 +475,7 @@ struct ChatView: View {
         let trimmedText = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else { return }
         let newMessage = Message(
-            id: Int.random(in: 1...Int.max),
+            id: UUID().hashValue,
             sentby: senderId,
             chat_id: chatId,
             type: "text",

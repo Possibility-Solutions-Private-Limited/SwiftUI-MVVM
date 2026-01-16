@@ -77,7 +77,7 @@ class SocketService: ObservableObject {
             DispatchQueue.main.async {
                 if let idInt = Int(senderIdStr) {
                     let newMsg = Message(
-                        id: Int.random(in: 1...Int.max),
+                        id: UUID().hashValue,
                         sentby: idInt,
                         chat_id: chatId,
                         type: type,
