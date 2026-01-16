@@ -6,7 +6,6 @@ struct ChatView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var router: AppRouter
     @StateObject private var socketManager: SocketService
-    @StateObject private var Chats = ChatHistoryModel()
     @StateObject var keyboard = KeyboardResponder()
     @State private var messageText = ""
     @State private var timer: Timer?
@@ -25,6 +24,7 @@ struct ChatView: View {
     @State private var selectedCategory = "Smileys"
     @State private var selectedEmojis: [String] = []
     @State private var showEmojiPicker = false
+    @StateObject private var Chats: ChatHistoryModel
     let senderId: Int
     let chatId: Int
     let receiverId: Int
@@ -41,6 +41,7 @@ struct ChatView: View {
         self.UserImg = UserImg
         self.userName = userName
         self.chat = chat
+        _Chats = StateObject(wrappedValue: ChatHistoryModel(chatId: chatId))
         print("""
             🟢 ChatView init called
             ├─ senderId: \(senderId)
@@ -122,7 +123,7 @@ struct ChatView: View {
                         }
                     }
                     .onAppear {
-                        Chats.fetchChatHistory(chatId: "\(chatId)")
+                        Chats.fetchChatHistory()
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                             scrollViewProxy.scrollTo(combinedMessages.last?.id, anchor: .bottom)
                         }
@@ -344,7 +345,7 @@ struct ChatView: View {
             isSeen: "0"
         )
         if self.chat != nil {
-        chatVM.updateLastMessageLocally(message: newMessage, isIncoming: false)
+        chatVM.updateLastMessage(message: newMessage, isIncoming: false)
         }
         if self.chatId == 0 {
             InteractionVM.updateChatId(newId: 1, oldId: self.chatId)
@@ -459,7 +460,7 @@ struct ChatView: View {
             isSeen: "0"
         )
         if chat != nil {
-        chatVM.updateLastMessageLocally(message: newMessage, isIncoming: false)
+        chatVM.updateLastMessage(message: newMessage, isIncoming: false)
         }
         if self.chatId == 0 {
             InteractionVM.updateChatId(newId: 1, oldId: self.chatId)
@@ -497,7 +498,7 @@ struct ChatView: View {
             "connection_id": "\(receiverId)\(senderId)"
         ]
         if chat != nil {
-        chatVM.updateLastMessageLocally(message: newMessage, isIncoming: false)
+        chatVM.updateLastMessage(message: newMessage, isIncoming: false)
         }
         socketManager.sendMessage(msg: messagePayload)
         userStoppedTyping()

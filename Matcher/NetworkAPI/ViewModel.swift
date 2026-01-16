@@ -417,26 +417,25 @@ class DashboardViewModel: ObservableObject {
 @MainActor
 final class ChatsModel: ObservableObject {
     @Published var chats: [Chat] = []
-    @Published var isLoading = false
+    @Published var hasFetchedFromAPI = false
+    init() {
+        loadChatsFromDB()
+    }
     func fetchChats() {
-        isLoading = true
-        NetworkManager.shared.makeRequest(
-            endpoint: APIConstants.Endpoints.chatUser,
-            method: "GET",
-            parameters: nil
-        ) { (result: Result<ChatModel, Error>) in
+        guard !hasFetchedFromAPI else { return }
+        hasFetchedFromAPI = true
+        NetworkManager.shared.makeRequest(endpoint: APIConstants.Endpoints.chatUser, method: "GET", parameters: nil) { [weak self] (result: Result<ChatModel, Error>) in
             DispatchQueue.main.async {
-                self.isLoading = false
                 if case .success(let response) = result {
-                    self.chats = response.data
+                    ChatListSQLite.shared.clearAllChats()
+                    ChatListSQLite.shared.saveChats(response.data)
+                    self?.loadChatsFromDB()
                 }
             }
         }
     }
-    func updateLastMessageLocally(message: Message,isIncoming: Bool) {
-        guard let index = chats.firstIndex(where: { $0.id == message.chat_id }) else {
-            return
-        }
+    func updateLastMessage(message: Message, isIncoming: Bool) {
+        guard let index = chats.firstIndex(where: { $0.id == message.chat_id }) else { return }
         let oldChat = chats[index]
         let now = ISO8601DateFormatter().string(from: Date())
         let updatedLastMessage = LastMessage(
@@ -447,9 +446,7 @@ final class ChatsModel: ObservableObject {
             isSeen: message.isSeen,
             createdAt: now
         )
-        let newUnseenCount = isIncoming
-            ? (oldChat.unseen_message_count ?? 0) + 1
-            : 0
+        let newUnseenCount = isIncoming ? (oldChat.unseen_message_count ?? 0) + 1 : 0
         let updatedChat = Chat(
             id: oldChat.id,
             senderDetail: oldChat.senderDetail,
@@ -460,19 +457,44 @@ final class ChatsModel: ObservableObject {
         )
         chats.remove(at: index)
         chats.insert(updatedChat, at: 0)
+        ChatListSQLite.shared.saveOrUpdateChat(updatedChat)
     }
-    func markChatRead(chatId: Int) {
-        guard let index = chats.firstIndex(where: { $0.id == chatId }) else { return }
-        let chat = chats[index]
-        let updatedChat = Chat(
-            id: chat.id,
-            senderDetail: chat.senderDetail,
-            receiverDetail: chat.receiverDetail,
-            lastMessage: chat.lastMessage,
-            createdAt: chat.createdAt,
-            unseen_message_count: 0
-        )
-        chats[index] = updatedChat
+    private func loadChatsFromDB() {
+        self.chats = ChatListSQLite.shared.fetchChats()
+        print("✅ Loaded \(chats.count) chats from SQLite")
+    }
+    func resetFetchFlag() {
+        hasFetchedFromAPI = false
+    }
+}
+class ChatHistoryModel: ObservableObject {
+    @Published var messages: [Message] = []
+    private let messageDB: MessageSQLite
+    private let chatId: Int
+    init(chatId: Int) {
+        self.chatId = chatId
+        self.messageDB = MessageSQLite(chatId: chatId)
+        loadChatsFromDB()
+    }
+    func fetchChatHistory() {
+        NetworkManager.shared.makeRequest(
+            endpoint: APIConstants.Endpoints.chatlist,
+            method: "POST",
+            parameters: ["chat_id": chatId]
+        ) { [weak self] (result: Result<MessageModel, Error>) in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if case .success(let response) = result {
+                    self.messageDB.clearMessages()
+                    self.messageDB.saveMessages(response.data)
+                    self.loadChatsFromDB()
+                }
+            }
+        }
+    }
+    private func loadChatsFromDB() {
+        self.messages = messageDB.fetchMessages()
+        print("✅ Loaded \(messages.count) messages for chatId \(chatId)")
     }
 }
 class likesModel: ObservableObject {
@@ -637,25 +659,6 @@ class NotificationsModel: ObservableObject {
     func loadMoreNew() {
         guard hasMoreData, !isLoading else { return }
         fetchNotification(page: currentPage)
-    }
-}
-class ChatHistoryModel: ObservableObject {
-    @Published var messages: [Message] = []
-    func fetchChatHistory(chatId: String) {
-        NetworkManager.shared.makeRequest(
-            endpoint: APIConstants.Endpoints.chatlist, method: "POST",
-            parameters: ["chat_id": chatId]
-        ) { (result: Result<MessageModel, Error>) in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let response):
-                    print("chats: \(response)")
-                    self.messages = response.data
-                case .failure(let error):
-                    print("Error fetching deductions: \(error.localizedDescription)")
-                }
-            }
-        }
     }
 }
 class faqModel: ObservableObject {

@@ -58,7 +58,7 @@ struct LikeView: View {
                     receiverId: data.user?.id ?? 0,
                     UserImg: data.user?.photos?.first?.file ?? "",
                     userName: data.user?.first_name ?? ""
-                ).environmentObject(interaction)
+                 ).environmentObject(interaction)
             }
         }
         .onAppear {

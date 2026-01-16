@@ -52,6 +52,10 @@ struct ChatListView: View {
                 .toolbar(.hidden, for: .tabBar)
             }
             .onAppear {
+                if KeychainHelper.shared.getInt(forKey: "shouldReloading") ?? 0 == 1 {
+                    chatModel.hasFetchedFromAPI = false
+                    KeychainHelper.shared.saveInt(0, forKey: "shouldReloading")
+                }
                 chatModel.fetchChats()
             }
             .navigationDestination(item: $selectedChat) { chat in
@@ -195,6 +199,13 @@ struct ChatListView: View {
                                 }
                                 .foregroundColor(.black.opacity(0.6))
                             }
+                        case "image":
+                            HStack(spacing: 4) {
+                                Image(systemName: "paperclip")
+                                    .font(.system(size: 13))
+                                Text("File")
+                                    .font(AppFont.manrope(14))
+                            } .foregroundColor(.black.opacity(0.6))
                         case "audio":
                             HStack(spacing: 4) {
                                 Image(systemName: "waveform")

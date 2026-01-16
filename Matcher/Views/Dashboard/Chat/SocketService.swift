@@ -87,7 +87,7 @@ class SocketService: ObservableObject {
                     )
                     self.messages.append(newMsg)
                     if let chatVM = self.chatVM, let chat = self.chat {
-                        chatVM.updateLastMessageLocally(message: newMsg, isIncoming: false)
+                        chatVM.updateLastMessage(message: newMsg, isIncoming: false)
                         print("📌 Updated last message for chat id: \(chat.id)")
                     }
                     print("📩 Message received: \(newMsg)")
@@ -126,6 +126,8 @@ class SocketService: ObservableObject {
                 if self.chatId == 0 {
                     let oldId = Int(self.receiverId) ?? 0
                     self.InteractionVM?.updateChatId(newId: chatId, oldId: oldId)
+                    KeychainHelper.shared.saveInt(1, forKey: "shouldReloading")
+                    
                 }
                 self.chatId = chatId
             }
